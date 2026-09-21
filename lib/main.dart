@@ -1,0 +1,26 @@
+import 'package:flutter/material.dart';
+
+import 'screens/auth/login_screen.dart';
+import 'theme/app_theme.dart';
+
+void main() {
+  runApp(const KilasApp());
+}
+
+/// Root widget for the KILAS application.
+///
+/// Configures [MaterialApp] with the centralized [AppTheme]
+/// and sets [LoginScreen] as the initial route.
+class KilasApp extends StatelessWidget {
+  const KilasApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'KILAS',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.light,
+      home: const LoginScreen(),
+    );
+  }
+}
