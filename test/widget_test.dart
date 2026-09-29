@@ -13,7 +13,7 @@ void main() {
     expect(find.text('KILAS'), findsOneWidget);
 
     // Verify that the login button is displayed.
-    expect(find.text('Masuk'), findsOneWidget);
+    expect(find.text('Masuk saja'), findsOneWidget);
 
     // Verify that the method toggle options are displayed.
     expect(find.text('Email'), findsNWidgets(2));
