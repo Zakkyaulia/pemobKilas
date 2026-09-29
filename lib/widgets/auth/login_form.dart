@@ -98,10 +98,8 @@ class _LoginFormState extends State<LoginForm> {
     if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
       return 'Format email tidak valid';
     }
-    // Domain validation per PRD: @student.unand.ac.id
-    if (!email.endsWith('@student.unand.ac.id')) {
-      return 'Gunakan email @student.unand.ac.id';
-    }
+    // Domain validation per PRD: @student.unand.ac.id dihapus agar bebas (gmail.com dll)
+    return null;
     return null;
   }
 
