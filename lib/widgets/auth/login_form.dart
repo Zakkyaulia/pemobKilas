@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
+import '../../utils/validators.dart';
 import 'auth_text_field.dart';
 import 'login_method_toggle.dart';
 
@@ -16,10 +17,10 @@ import 'login_method_toggle.dart';
 /// This widget manages its own form state (controllers, validation,
 /// form key) and delegates the login action to the [onSubmit] callback.
 ///
-/// Form validation follows PRD:
-/// - Email: must be valid email format, domain @student.unand.ac.id
-/// - NIM: must be numeric and non-empty
-/// - Password: must not be empty, minimum 6 characters
+/// Form validation follows PRD and reusable Validators:
+/// - Email: domain @student.unand.ac.id
+/// - NIM: numeric and non-empty
+/// - Password: minimum 8 characters
 class LoginForm extends StatefulWidget {
   const LoginForm({super.key, this.onSubmit});
 
@@ -37,6 +38,7 @@ class LoginForm extends StatefulWidget {
 }
 
 class _LoginFormState extends State<LoginForm> {
+  // (1) key untuk Form dan controller untuk setiap field
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -45,6 +47,7 @@ class _LoginFormState extends State<LoginForm> {
   LoginMethod _selectedMethod = LoginMethod.email;
   bool _isLoading = false;
 
+  // (2) buang controller saat layar ditutup
   @override
   void dispose() {
     _emailController.dispose();
@@ -56,73 +59,40 @@ class _LoginFormState extends State<LoginForm> {
   void _onMethodChanged(LoginMethod method) {
     setState(() {
       _selectedMethod = method;
+      _formKey.currentState?.reset();
     });
   }
 
+  // (3) dijalankan saat tombol Masuk ditekan dengan try/finally & mounted check
   Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
-    final data = <String, String>{
-      'method': _selectedMethod == LoginMethod.email ? 'email' : 'nim',
-      'password': _passwordController.text.trim(),
-    };
+    try {
+      final data = <String, String>{
+        'method': _selectedMethod == LoginMethod.email ? 'email' : 'nim',
+        'password': _passwordController.text.trim(),
+      };
 
-    if (_selectedMethod == LoginMethod.email) {
-      data['email'] = _emailController.text.trim();
-    } else {
-      data['nim'] = _nimController.text.trim();
-    }
+      if (_selectedMethod == LoginMethod.email) {
+        data['email'] = _emailController.text.trim();
+      } else {
+        data['nim'] = _nimController.text.trim();
+      }
 
-    // [MISSING API] Actual login API call should be integrated here.
-    // Currently delegates to the onSubmit callback.
-    // Simulating a brief async delay for UI feedback demonstration.
-    await Future.delayed(const Duration(seconds: 1));
+      // Simulasi delay asinkron sebelum login
+      await Future.delayed(const Duration(seconds: 1));
 
-    if (mounted) {
-      setState(() => _isLoading = false);
-    }
+      if (!mounted) return;
 
-    widget.onSubmit?.call(data);
-  }
-
-  // ── Validators ──────────────────────────────────────────────────────────
-
-  String? _validateEmail(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Email tidak boleh kosong';
+      widget.onSubmit?.call(data);
+    } finally {
+      // Matikan loading di blok finally sesuai ketentuan teknis
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
-    final email = value.trim();
-    // Basic email format check.
-    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
-      return 'Format email tidak valid';
-    }
-    // Domain validation per PRD: @student.unand.ac.id
-    if (!email.endsWith('@student.unand.ac.id')) {
-      return 'Gunakan email @student.unand.ac.id';
-    }
-    return null;
-  }
-
-  String? _validateNim(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'NIM tidak boleh kosong';
-    }
-    if (!RegExp(r'^\d+$').hasMatch(value.trim())) {
-      return 'NIM hanya boleh berisi angka';
-    }
-    return null;
-  }
-
-  String? _validatePassword(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Password tidak boleh kosong';
-    }
-    if (value.trim().length < 6) {
-      return 'Password minimal 6 karakter';
-    }
-    return null;
   }
 
   @override
@@ -142,6 +112,7 @@ class _LoginFormState extends State<LoginForm> {
       ),
       child: Form(
         key: _formKey,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -162,7 +133,7 @@ class _LoginFormState extends State<LoginForm> {
                       hintText: 'nama@student.unand.ac.id',
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
-                      validator: _validateEmail,
+                      validator: Validators.studentEmail,
                       prefixIcon: Icons.email_outlined,
                     )
                   : AuthTextField(
@@ -171,7 +142,7 @@ class _LoginFormState extends State<LoginForm> {
                       hintText: 'Masukkan NIM Anda',
                       controller: _nimController,
                       keyboardType: TextInputType.number,
-                      validator: _validateNim,
+                      validator: Validators.nim,
                       prefixIcon: Icons.badge_outlined,
                     ),
             ),
@@ -184,7 +155,7 @@ class _LoginFormState extends State<LoginForm> {
               controller: _passwordController,
               isPassword: true,
               textInputAction: TextInputAction.done,
-              validator: _validatePassword,
+              validator: Validators.password,
               prefixIcon: Icons.lock_outline_rounded,
             ),
             const SizedBox(height: AppSpacing.xxl),

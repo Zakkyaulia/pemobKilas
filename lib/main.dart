@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'screens/auth/login_screen.dart';
+import 'routes/app_routes.dart';
 import 'theme/app_theme.dart';
 
 void main() {
@@ -10,7 +10,7 @@ void main() {
 /// Root widget for the KILAS application.
 ///
 /// Configures [MaterialApp] with the centralized [AppTheme]
-/// and sets [LoginScreen] as the initial route.
+/// and sets named routes via [AppRoutes].
 class KilasApp extends StatelessWidget {
   const KilasApp({super.key});
 
@@ -20,7 +20,10 @@ class KilasApp extends StatelessWidget {
       title: 'KILAS',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      home: const LoginScreen(),
+      // Named routes dari AppRoutes (Langkah 6)
+      initialRoute: AppRoutes.login,
+      onGenerateRoute: AppRoutes.onGenerateRoute,
+      onUnknownRoute: AppRoutes.onUnknownRoute,
     );
   }
 }

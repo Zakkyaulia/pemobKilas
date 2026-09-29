@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../routes/app_routes.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
@@ -34,20 +35,8 @@ class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
 
   void _handleLogin(BuildContext context, Map<String, String> data) {
-    // [MISSING API] Login API integration goes here.
-    // For now, show a snackbar with the submitted data.
-    final method = data['method'] ?? 'unknown';
-    final identifier = method == 'email'
-        ? data['email'] ?? ''
-        : data['nim'] ?? '';
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Login: $method — $identifier'),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
-    );
+    // Isian benar -> pindah ke Home, Login dibuang dari stack (Langkah 6)
+    Navigator.pushReplacementNamed(context, AppRoutes.home);
   }
 
   void _handleBiometric(BuildContext context) {
