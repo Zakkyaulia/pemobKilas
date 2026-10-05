@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'screens/auth/login_screen.dart';
+import 'screens/home/home_screen.dart';
 import 'theme/app_theme.dart';
+import 'theme/home_colors.dart';
 
 void main() {
   runApp(const KilasApp());
@@ -19,8 +20,10 @@ class KilasApp extends StatelessWidget {
     return MaterialApp(
       title: 'KILAS',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      home: const LoginScreen(),
+      theme: AppTheme.light.copyWith(
+        extensions: <ThemeExtension<dynamic>>[StatusColors.light],
+      ),
+      home: const HomeScreen(),
     );
   }
 }
