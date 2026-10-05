@@ -13,6 +13,7 @@ import '../../widgets/home/status_badge.dart';
 import '../../widgets/home/user_avatar.dart';
 import 'data/mock_reports.dart';
 import 'models/report_model.dart';
+import 'report_detail_screen.dart';
 
 /// Toast icon size (HTML `text-[18px]`).
 const double _kToastIconSize = 18;
@@ -31,15 +32,96 @@ const double _kToastHMargin = 40;
 
 /// Home screen — Beranda feed assembling header, cards, and bottom nav.
 ///
-/// ```
-/// Scaffold
-///  └── Stack
-///       ├── RefreshIndicator + ListView (scrollable feed)
-///       ├── HomeAppBar (fixed top, frosted glass)
-///       └── HomeBottomNav (fixed bottom, frosted glass)
-/// ```
-class HomeScreen extends StatelessWidget {
+/// Mengelola state feed laporan lokal `_reports` dan menangani navigasi
+/// ke [ReportDetailScreen] serta menerima data return (pop result).
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  late List<ReportModel> _reports;
+
+  @override
+  void initState() {
+    super.initState();
+    _reports = List<ReportModel>.from(mockReports);
+  }
+
+  /// 5. Navigation / Result Workflow:
+  /// Berpindah ke [ReportDetailScreen] membawa objek data [ReportModel],
+  /// lalu menunggu (await) nilai result yang dikembalikan saat user kembali.
+  Future<void> _navigateToDetail(ReportModel report) async {
+    final updatedReport = await Navigator.push<ReportModel>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ReportDetailScreen(report: report),
+      ),
+    );
+
+    // Jika ada hasil perubahan data dari halaman detail, perbarui state feed
+    if (updatedReport != null && mounted) {
+      setState(() {
+        final index = _reports.indexWhere((r) => r.id == updatedReport.id);
+        if (index != -1) {
+          _reports[index] = updatedReport;
+        }
+      });
+    }
+  }
+
+  void _handleFeedUpvote(int index, bool isUpvoted, int count) {
+    setState(() {
+      _reports[index] = _reports[index].copyWith(
+        isUpvoted: isUpvoted,
+        upvoteCount: count,
+      );
+    });
+
+    // 4. Feedback: SnackBar
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isUpvoted ? Icons.thumb_up : Icons.thumb_up_alt_outlined,
+                size: _kToastIconSize,
+                color: isUpvoted ? Colors.greenAccent : Colors.orangeAccent,
+              ),
+              const SizedBox(width: _kToastGap),
+              Text(
+                isUpvoted ? 'Upvote ditambahkan (+1)' : 'Upvote ditarik (-1)',
+                style: HomeTextStyles.labelMd.copyWith(
+                  color: HomeColors.inverseOnSurface,
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: HomeColors.inverseSurface,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(9999),
+          ),
+          elevation: 20,
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: _kToastVPadding,
+          ),
+          margin: const EdgeInsets.fromLTRB(
+            _kToastHMargin,
+            0,
+            _kToastHMargin,
+            _kToastBottomMargin,
+          ),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+  }
 
   void _showShareToast(BuildContext context) {
     ScaffoldMessenger.of(context)
@@ -114,7 +196,7 @@ class HomeScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       const PullToRefreshHint(),
-                      for (int i = 0; i < mockReports.length; i++) ...[
+                      for (int i = 0; i < _reports.length; i++) ...[
                         if (i > 0)
                           const Divider(
                             height: 1,
@@ -122,7 +204,10 @@ class HomeScreen extends StatelessWidget {
                             color: HomeColors.surfaceContainer,
                           ),
                         _FeedItem(
-                          report: mockReports[i],
+                          report: _reports[i],
+                          onTap: () => _navigateToDetail(_reports[i]),
+                          onUpvoteChanged: (isUpvoted, count) =>
+                              _handleFeedUpvote(i, isUpvoted, count),
                           onSharePressed: () => _showShareToast(context),
                         ),
                       ],
@@ -159,10 +244,14 @@ class HomeScreen extends StatelessWidget {
 class _FeedItem extends StatelessWidget {
   const _FeedItem({
     required this.report,
+    this.onTap,
+    this.onUpvoteChanged,
     this.onSharePressed,
   });
 
   final ReportModel report;
+  final VoidCallback? onTap;
+  final void Function(bool isUpvoted, int count)? onUpvoteChanged;
   final VoidCallback? onSharePressed;
 
   @override
@@ -177,6 +266,8 @@ class _FeedItem extends StatelessWidget {
         contentDescription: report.contentDescription!,
         upvoteCount: report.upvoteCount,
         isUpvoted: report.isUpvoted,
+        onTap: onTap,
+        onUpvoteChanged: onUpvoteChanged,
         onSharePressed: onSharePressed,
       );
     }
@@ -190,6 +281,8 @@ class _FeedItem extends StatelessWidget {
       imageSemanticLabel: report.imageSemanticLabel,
       upvoteCount: report.upvoteCount,
       isUpvoted: report.isUpvoted,
+      onTap: onTap,
+      onUpvoteChanged: onUpvoteChanged,
       onSharePressed: onSharePressed,
     );
   }

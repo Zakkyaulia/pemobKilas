@@ -37,9 +37,6 @@ const double _kSearchIconSize = 24;
 /// Backdrop blur sigma matching Tailwind `backdrop-blur-xl` (24px).
 const double _kBlurSigma = 24;
 
-/// Logo image URL from the HTML reference.
-const String _kLogoUrl =
-    'https://lh3.googleusercontent.com/aida/AEtjO1V5x6XcYLkVRl7VhJTw6lNACmLYMohVB-_AysCYDqamhrlZr3yOby6xHiE2hETw3sjOJhLod-avEzKVoZyS5vbuopWFLcRfxB5_y-v_HuZPky55aSQfYYodgcjRwdiNbK8w_7MUmfsDfTH9rmxsbLwV_fCSmUjGKWVZKMeN7ggYAFhtRznTa4ZvEqmUMRL0G3evbmUr9jxvSs1UZUF_cr_xduW51yt29OAZJ2pkwQn5sQAxzKY5BxkJOs0';
 
 /// Fixed frosted-glass header bar for the home screen.
 ///
@@ -93,8 +90,8 @@ class _LogoBrand extends StatelessWidget {
       children: [
         SizedBox(
           height: _kLogoHeight,
-          child: Image.network(
-            _kLogoUrl,
+          child: Image.asset(
+            'assets/icons/app_logo.png',
             height: _kLogoHeight,
             fit: BoxFit.contain,
             errorBuilder: (_, _, _) => Container(
