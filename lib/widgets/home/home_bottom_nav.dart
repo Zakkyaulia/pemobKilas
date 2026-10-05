@@ -201,7 +201,7 @@ class _NavItem extends StatelessWidget {
   }
 }
 
-/// Notification icon with a red dot badge.
+/// Notification icon with a red dot badge centered above the label.
 class _BadgedIcon extends StatelessWidget {
   const _BadgedIcon({required this.icon, required this.iconColor});
 
@@ -211,10 +211,11 @@ class _BadgedIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: _kNavIconSize + _kDotSize,
+      width: _kNavIconSize,
       height: _kNavIconSize,
       child: Stack(
         clipBehavior: Clip.none,
+        alignment: Alignment.center,
         children: [
           Icon(icon, size: _kNavIconSize, color: iconColor),
           Positioned(
