@@ -54,6 +54,7 @@ class ReportModel {
     this.description,
     this.imageUrl,
     this.imageHeight,
+    this.aspectRatio,
     this.imageSemanticLabel,
     // ── Content (official) ──────────────────────────────────
     this.contentIcon,
@@ -62,6 +63,7 @@ class ReportModel {
     // ── Interaction ─────────────────────────────────────────
     required this.upvoteCount,
     this.isUpvoted = false,
+    this.isBookmarked = false,
   });
 
   final String id;
@@ -97,6 +99,7 @@ class ReportModel {
   final String? description;
   final String? imageUrl;
   final double? imageHeight;
+  final double? aspectRatio;
   final String? imageSemanticLabel;
 
   // Content — official variant
@@ -107,6 +110,7 @@ class ReportModel {
   // Interaction
   final int upvoteCount;
   final bool isUpvoted;
+  final bool isBookmarked;
 
   /// Creates a copy of this [ReportModel] with the given fields replaced with new values.
   ReportModel copyWith({
@@ -135,12 +139,14 @@ class ReportModel {
     String? description,
     String? imageUrl,
     double? imageHeight,
+    double? aspectRatio,
     String? imageSemanticLabel,
     IconData? contentIcon,
     String? contentTitle,
     String? contentDescription,
     int? upvoteCount,
     bool? isUpvoted,
+    bool? isBookmarked,
   }) {
     return ReportModel(
       id: id ?? this.id,
@@ -168,12 +174,14 @@ class ReportModel {
       description: description ?? this.description,
       imageUrl: imageUrl ?? this.imageUrl,
       imageHeight: imageHeight ?? this.imageHeight,
+      aspectRatio: aspectRatio ?? this.aspectRatio,
       imageSemanticLabel: imageSemanticLabel ?? this.imageSemanticLabel,
       contentIcon: contentIcon ?? this.contentIcon,
       contentTitle: contentTitle ?? this.contentTitle,
       contentDescription: contentDescription ?? this.contentDescription,
       upvoteCount: upvoteCount ?? this.upvoteCount,
       isUpvoted: isUpvoted ?? this.isUpvoted,
+      isBookmarked: isBookmarked ?? this.isBookmarked,
     );
   }
 }

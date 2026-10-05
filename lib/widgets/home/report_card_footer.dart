@@ -15,6 +15,7 @@ class ReportCardFooter extends StatelessWidget {
     super.key,
     required this.upvoteCount,
     this.isUpvoted = false,
+    this.isBookmarked = false,
     this.onUpvoteChanged,
     this.onBookmarkChanged,
     this.onSharePressed,
@@ -25,6 +26,9 @@ class ReportCardFooter extends StatelessWidget {
 
   /// Whether the upvote starts in active state.
   final bool isUpvoted;
+
+  /// Whether the bookmark starts in active state.
+  final bool isBookmarked;
 
   /// Called when the upvote state changes.
   final void Function(bool isUpvoted, int count)? onUpvoteChanged;
@@ -50,7 +54,10 @@ class ReportCardFooter extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              BookmarkButton(onChanged: onBookmarkChanged),
+              BookmarkButton(
+                initialIsBookmarked: isBookmarked,
+                onChanged: onBookmarkChanged,
+              ),
               const SizedBox(width: _kActionGap),
               ShareButton(onPressed: onSharePressed),
             ],

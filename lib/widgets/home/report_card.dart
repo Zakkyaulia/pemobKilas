@@ -25,9 +25,11 @@ class ReportCard extends StatelessWidget {
     required this.description,
     this.imageUrl,
     this.imageHeight = 224,
+    this.aspectRatio,
     this.imageSemanticLabel,
     required this.upvoteCount,
     this.isUpvoted = false,
+    this.isBookmarked = false,
     this.onUpvoteChanged,
     this.onBookmarkChanged,
     this.onSharePressed,
@@ -49,6 +51,9 @@ class ReportCard extends StatelessWidget {
   /// Height of the image container (default 224px = Tailwind `h-56`).
   final double imageHeight;
 
+  /// Optional dynamic aspect ratio (e.g. 16/9, 1/1, 4/3, 9/16).
+  final double? aspectRatio;
+
   /// Accessibility label for the image.
   final String? imageSemanticLabel;
 
@@ -57,6 +62,9 @@ class ReportCard extends StatelessWidget {
 
   /// Whether the upvote starts active.
   final bool isUpvoted;
+
+  /// Whether the bookmark starts active.
+  final bool isBookmarked;
 
   /// Upvote state change callback.
   final void Function(bool isUpvoted, int count)? onUpvoteChanged;
@@ -87,7 +95,8 @@ class ReportCard extends StatelessWidget {
               const SizedBox(height: _kSectionGap),
               NetworkImageBox(
                 imageUrl: imageUrl!,
-                height: imageHeight,
+                height: aspectRatio == null ? imageHeight : null,
+                aspectRatio: aspectRatio,
                 semanticLabel: imageSemanticLabel,
               ),
             ],
@@ -95,6 +104,7 @@ class ReportCard extends StatelessWidget {
             ReportCardFooter(
               upvoteCount: upvoteCount,
               isUpvoted: isUpvoted,
+              isBookmarked: isBookmarked,
               onUpvoteChanged: onUpvoteChanged,
               onBookmarkChanged: onBookmarkChanged,
               onSharePressed: onSharePressed,

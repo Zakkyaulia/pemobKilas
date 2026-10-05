@@ -54,6 +54,16 @@ class _UpvoteButtonState extends State<UpvoteButton> {
     _count = widget.initialCount;
   }
 
+  @override
+  void didUpdateWidget(covariant UpvoteButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialIsUpvoted != widget.initialIsUpvoted ||
+        oldWidget.initialCount != widget.initialCount) {
+      _isUpvoted = widget.initialIsUpvoted;
+      _count = widget.initialCount;
+    }
+  }
+
   void _toggle() {
     setState(() {
       _isUpvoted = !_isUpvoted;

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../theme/app_spacing.dart';
 import '../../theme/home_colors.dart';
@@ -123,7 +124,65 @@ class _HomeScreenState extends State<HomeScreen> {
       );
   }
 
-  void _showShareToast(BuildContext context) {
+  void _handleFeedBookmark(int index, bool isBookmarked) {
+    setState(() {
+      _reports[index] = _reports[index].copyWith(
+        isBookmarked: isBookmarked,
+      );
+    });
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                size: _kToastIconSize,
+                color: isBookmarked ? Colors.blueAccent : Colors.white,
+              ),
+              const SizedBox(width: _kToastGap),
+              Text(
+                isBookmarked
+                    ? 'Laporan disimpan ke bookmark'
+                    : 'Laporan dihapus dari bookmark',
+                style: HomeTextStyles.labelMd.copyWith(
+                  color: HomeColors.inverseOnSurface,
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: HomeColors.inverseSurface,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(9999),
+          ),
+          elevation: 20,
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: _kToastVPadding,
+          ),
+          margin: const EdgeInsets.fromLTRB(
+            _kToastHMargin,
+            0,
+            _kToastHMargin,
+            _kToastBottomMargin,
+          ),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+  }
+
+  Future<void> _showShareToast(BuildContext context, String reportId) async {
+    // Menyalin tautan unik laporan secara nyata ke clipboard perangkat
+    await Clipboard.setData(
+      ClipboardData(text: 'https://kilas.app/p/$reportId'),
+    );
+
+    if (!context.mounted) return;
+
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
@@ -208,7 +267,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           onTap: () => _navigateToDetail(_reports[i]),
                           onUpvoteChanged: (isUpvoted, count) =>
                               _handleFeedUpvote(i, isUpvoted, count),
-                          onSharePressed: () => _showShareToast(context),
+                          onBookmarkChanged: (isBookmarked) =>
+                              _handleFeedBookmark(i, isBookmarked),
+                          onSharePressed: () =>
+                              _showShareToast(context, _reports[i].id),
                         ),
                       ],
                     ],
@@ -246,12 +308,14 @@ class _FeedItem extends StatelessWidget {
     required this.report,
     this.onTap,
     this.onUpvoteChanged,
+    this.onBookmarkChanged,
     this.onSharePressed,
   });
 
   final ReportModel report;
   final VoidCallback? onTap;
   final void Function(bool isUpvoted, int count)? onUpvoteChanged;
+  final void Function(bool isBookmarked)? onBookmarkChanged;
   final VoidCallback? onSharePressed;
 
   @override
@@ -266,8 +330,10 @@ class _FeedItem extends StatelessWidget {
         contentDescription: report.contentDescription!,
         upvoteCount: report.upvoteCount,
         isUpvoted: report.isUpvoted,
+        isBookmarked: report.isBookmarked,
         onTap: onTap,
         onUpvoteChanged: onUpvoteChanged,
+        onBookmarkChanged: onBookmarkChanged,
         onSharePressed: onSharePressed,
       );
     }
@@ -278,11 +344,14 @@ class _FeedItem extends StatelessWidget {
       description: report.description!,
       imageUrl: report.imageUrl,
       imageHeight: report.imageHeight ?? 224,
+      aspectRatio: report.aspectRatio,
       imageSemanticLabel: report.imageSemanticLabel,
       upvoteCount: report.upvoteCount,
       isUpvoted: report.isUpvoted,
+      isBookmarked: report.isBookmarked,
       onTap: onTap,
       onUpvoteChanged: onUpvoteChanged,
+      onBookmarkChanged: onBookmarkChanged,
       onSharePressed: onSharePressed,
     );
   }
