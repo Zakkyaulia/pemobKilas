@@ -2,16 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../../theme/home_colors.dart';
 
-/// Button size (HTML `w-9 h-9` = 36px).
-const double _kButtonSize = 36;
+/// Button size (40px circular container matching upvote height).
+const double _kButtonSize = 40;
 
-/// Icon size (HTML `text-[20px]`).
-const double _kIconSize = 20;
+/// Icon size (22px).
+const double _kIconSize = 22;
 
-/// Share / send button that triggers an [onPressed] callback.
-///
-/// The parent screen is responsible for showing the toast notification
-/// ("Tautan disalin ke clipboard") via [ScaffoldMessenger].
+/// Share button with circular touch target that triggers an [onPressed] callback.
 class ShareButton extends StatelessWidget {
   const ShareButton({super.key, this.onPressed});
 
@@ -22,12 +19,17 @@ class ShareButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onPressed,
-      child: const SizedBox(
+      behavior: HitTestBehavior.opaque,
+      child: Container(
         width: _kButtonSize,
         height: _kButtonSize,
-        child: Center(
+        decoration: const BoxDecoration(
+          color: HomeColors.surfaceSubtle,
+          shape: BoxShape.circle,
+        ),
+        child: const Center(
           child: Icon(
-            Icons.send,
+            Icons.share_outlined,
             size: _kIconSize,
             color: HomeColors.onSurfaceVariant,
           ),

@@ -21,6 +21,7 @@ class OfficialInfoCard extends StatelessWidget {
     required this.contentDescription,
     required this.upvoteCount,
     this.isUpvoted = false,
+    this.isBookmarked = false,
     this.onUpvoteChanged,
     this.onBookmarkChanged,
     this.onSharePressed,
@@ -44,6 +45,9 @@ class OfficialInfoCard extends StatelessWidget {
 
   /// Whether the upvote starts active.
   final bool isUpvoted;
+
+  /// Whether the bookmark starts active.
+  final bool isBookmarked;
 
   /// Upvote state change callback.
   final void Function(bool isUpvoted, int count)? onUpvoteChanged;
@@ -78,6 +82,7 @@ class OfficialInfoCard extends StatelessWidget {
             ReportCardFooter(
               upvoteCount: upvoteCount,
               isUpvoted: isUpvoted,
+              isBookmarked: isBookmarked,
               onUpvoteChanged: onUpvoteChanged,
               onBookmarkChanged: onBookmarkChanged,
               onSharePressed: onSharePressed,

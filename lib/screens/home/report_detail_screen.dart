@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../theme/app_spacing.dart';
 import '../../theme/home_colors.dart';
@@ -81,7 +82,14 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
       );
   }
 
-  void _handleShare() {
+  Future<void> _handleShare() async {
+    // Menyalin tautan unik laporan secara nyata ke clipboard perangkat
+    await Clipboard.setData(
+      ClipboardData(text: 'https://kilas.app/p/${_report.id}'),
+    );
+
+    if (!mounted) return;
+
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
@@ -116,6 +124,10 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
   }
 
   void _handleBookmark(bool isBookmarked) {
+    setState(() {
+      _report = _report.copyWith(isBookmarked: isBookmarked);
+    });
+
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
@@ -180,12 +192,6 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
             ),
           ),
           centerTitle: true,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.share_outlined, color: HomeColors.onSurface),
-              onPressed: _handleShare,
-            ),
-          ],
         ),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(AppSpacing.lg),
@@ -233,7 +239,8 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                 const SizedBox(height: 16),
                 NetworkImageBox(
                   imageUrl: _report.imageUrl!,
-                  height: 260,
+                  height: _report.aspectRatio == null ? 260 : null,
+                  aspectRatio: _report.aspectRatio,
                   semanticLabel: _report.imageSemanticLabel,
                 ),
               ] else if (_report.contentTitle != null) ...[
@@ -253,6 +260,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
               ReportCardFooter(
                 upvoteCount: _report.upvoteCount,
                 isUpvoted: _report.isUpvoted,
+                isBookmarked: _report.isBookmarked,
                 onUpvoteChanged: _handleUpvote,
                 onBookmarkChanged: _handleBookmark,
                 onSharePressed: _handleShare,
