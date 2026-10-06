@@ -7,6 +7,8 @@ import '../../widgets/auth/biometric_login_button.dart';
 import '../../widgets/auth/login_form.dart';
 import '../../widgets/auth/login_header.dart';
 import '../../widgets/auth/student_guide_link.dart';
+import '../home/home_screen.dart';
+import 'register_screen.dart';
 
 /// The Login screen for KILAS — Mahasiswa authentication.
 ///
@@ -43,10 +45,16 @@ class LoginScreen extends StatelessWidget {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Login: $method — $identifier'),
+        content: Text('Login sukses: $method — $identifier'),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        backgroundColor: AppColors.primaryBlue,
       ),
+    );
+
+    // Navigasi ke HomeScreen setelah login
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (context) => const HomeScreen()),
     );
   }
 
@@ -131,7 +139,9 @@ class LoginScreen extends StatelessWidget {
         Text('Belum punya akun? ', style: AppTextStyles.body),
         GestureDetector(
           onTap: () {
-            // TODO: Navigate to registration screen when implemented.
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => const RegisterScreen()),
+            );
           },
           child: Text('Daftar', style: AppTextStyles.link),
         ),

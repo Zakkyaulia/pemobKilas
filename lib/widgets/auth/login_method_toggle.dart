@@ -58,14 +58,14 @@ class LoginMethodToggle extends StatelessWidget {
           curve: Curves.easeInOut,
           padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
           decoration: BoxDecoration(
-            color: isActive ? AppColors.accentMint : Colors.transparent,
+            color: isActive ? AppColors.accentCyan : Colors.transparent,
             borderRadius: AppRadius.fullAll,
           ),
           alignment: Alignment.center,
           child: Text(
             label,
             style: AppTextStyles.toggleLabel.copyWith(
-              color: isActive ? AppColors.primaryGreen : AppColors.textMuted,
+              color: isActive ? AppColors.primaryBlue : AppColors.textMuted,
             ),
           ),
         ),

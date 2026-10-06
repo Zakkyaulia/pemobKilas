@@ -116,7 +116,7 @@ class HomeBottomNav extends StatelessWidget {
                           const Expanded(child: SizedBox()),
                           _NavItem(
                             icon: Icons.notifications_none,
-                            label: 'Notif',
+                            label: 'Notifikasi',
                             isActive: currentIndex == 3,
                             showBadge: true,
                             onTap: () => onTap?.call(3),

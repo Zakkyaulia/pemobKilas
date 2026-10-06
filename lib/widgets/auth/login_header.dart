@@ -31,19 +31,19 @@ class LoginHeader extends StatelessWidget {
         const SizedBox(height: AppSpacing.xxl),
 
         // ── Logo / Mascot ─────────────────────────────────────────────
-        // [MISSING ASSET] Logo/mascot belum tersedia di project.
-        // Menggunakan placeholder container dengan icon.
         Container(
           width: 80,
           height: 80,
-          decoration: BoxDecoration(
-            color: AppColors.accentMint.withValues(alpha: 0.3),
+          decoration: const BoxDecoration(
+            color: AppColors.accentCyan,
             shape: BoxShape.circle,
           ),
-          child: const Icon(
-            Icons.school_rounded,
-            size: 40,
-            color: AppColors.primaryGreen,
+          child: ClipOval(
+            child: Image.asset(
+              'assets/icons/app_logo.png',
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => const Icon(Icons.school, color: AppColors.primaryBlue, size: 40),
+            ),
           ),
         ),
         const SizedBox(height: AppSpacing.lg),
@@ -52,15 +52,12 @@ class LoginHeader extends StatelessWidget {
         Text(
           'KILAS',
           style: AppTextStyles.heading.copyWith(
-            color: AppColors.primaryGreen,
-            letterSpacing: 2,
+            color: AppColors.textPrimary,
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
 
         // ── Campus Status Micro-Banner ────────────────────────────────
-        // [ASSUMPTION] Diimplementasikan sebagai UI statis karena
-        // tidak dijelaskan dalam PRD.
         Container(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
@@ -73,37 +70,41 @@ class LoginHeader extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 8,
-                height: 8,
-                decoration: const BoxDecoration(
-                  color: AppColors.primaryGreen,
-                  shape: BoxShape.circle,
+              Text(
+                'Kabar Lintas Andalas',
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.primaryBlue,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(width: AppSpacing.sm),
+              const SizedBox(width: AppSpacing.xs),
+              const Text('•', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+              const SizedBox(width: AppSpacing.xs),
               Text(
-                'Universitas Andalas',
+                'Limau Manis',
                 style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.primaryGreen,
-                  fontWeight: FontWeight.w600,
+                  color: AppColors.accentBrownGold,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: AppSpacing.lg),
+        const SizedBox(height: AppSpacing.md),
 
         // ── Supporting Description ────────────────────────────────────
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
           child: Text(
-            'Kabar Lintas Andalas — Platform pelaporan kondisi kampus berbasis visual dan lokasi.',
-            style: AppTextStyles.body,
+            'Sistem Terpadu Pelaporan Insiden & Titik\nHotspot Kampus UNAND',
+            style: AppTextStyles.body.copyWith(
+              color: AppColors.textSecondary,
+              height: 1.4,
+            ),
             textAlign: TextAlign.center,
           ),
         ),
-        const SizedBox(height: AppSpacing.xxxl),
+        const SizedBox(height: AppSpacing.xxl),
       ],
     );
   }

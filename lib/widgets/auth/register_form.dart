@@ -5,39 +5,20 @@ import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 import 'auth_text_field.dart';
 
-/// The authentication form card for the Login screen.
-///
-/// Contains:
-/// - Login method toggle (Email / NIM)
-/// - Conditional fields based on selected method
-/// - Submit button with loading state
-///
-/// This widget manages its own form state (controllers, validation,
-/// form key) and delegates the login action to the [onSubmit] callback.
-///
-/// Form validation follows PRD:
-/// - Email: must be valid email format, domain @student.unand.ac.id
-/// - NIM: must be numeric and non-empty
-/// - Password: must not be empty, minimum 6 characters
-class LoginForm extends StatefulWidget {
-  const LoginForm({super.key, this.onSubmit});
+class RegisterForm extends StatefulWidget {
+  const RegisterForm({super.key, this.onSubmit});
 
-  /// Called when the form is valid and the user taps "Masuk".
-  ///
-  /// Receives a map with keys:
-  /// - `method`: 'email' or 'nim'
-  /// - `email`: email address (only for email method)
-  /// - `nim`: NIM string (only for NIM method)
-  /// - `password`: password string
   final void Function(Map<String, String> data)? onSubmit;
 
   @override
-  State<LoginForm> createState() => _LoginFormState();
+  State<RegisterForm> createState() => _RegisterFormState();
 }
 
-class _LoginFormState extends State<LoginForm> {
+class _RegisterFormState extends State<RegisterForm> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
+  final _nimController = TextEditingController();
   final _passwordController = TextEditingController();
 
   bool _isLoading = false;
@@ -45,6 +26,8 @@ class _LoginFormState extends State<LoginForm> {
   @override
   void dispose() {
     _emailController.dispose();
+    _usernameController.dispose();
+    _nimController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -55,14 +38,13 @@ class _LoginFormState extends State<LoginForm> {
     setState(() => _isLoading = true);
 
     final data = <String, String>{
-      'method': 'email',
       'email': _emailController.text.trim(),
+      'username': _usernameController.text.trim(),
+      'nim': _nimController.text.trim(),
       'password': _passwordController.text.trim(),
     };
 
-    // [MISSING API] Actual login API call should be integrated here.
-    // Currently delegates to the onSubmit callback.
-    // Simulating a brief async delay for UI feedback demonstration.
+    // Simulasi delay API
     await Future.delayed(const Duration(seconds: 1));
 
     if (mounted) {
@@ -72,27 +54,28 @@ class _LoginFormState extends State<LoginForm> {
     widget.onSubmit?.call(data);
   }
 
-  // ── Validators ──────────────────────────────────────────────────────────
-
   String? _validateEmail(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Email tidak boleh kosong';
-    }
-    final email = value.trim();
-    // Basic email format check.
-    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
-      return 'Format email tidak valid!';
+    if (value == null || value.trim().isEmpty) return 'Email tidak boleh kosong';
+    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value.trim())) {
+      return 'Format email tidak valid (harus mengandung "@")';
     }
     return null;
   }
 
+  String? _validateRequired(String? value, String label) {
+    if (value == null || value.trim().isEmpty) return '$label tidak boleh kosong';
+    return null;
+  }
+
+  String? _validateNim(String? value) {
+    if (value == null || value.trim().isEmpty) return 'NIM tidak boleh kosong';
+    if (!RegExp(r'^\d+$').hasMatch(value.trim())) return 'NIM hanya boleh berisi angka';
+    return null;
+  }
+
   String? _validatePassword(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Password tidak boleh kosong';
-    }
-    if (value.trim().length < 6) {
-      return 'Password minimal 6 karakter';
-    }
+    if (value == null || value.trim().isEmpty) return 'Password tidak boleh kosong';
+    if (value.trim().length < 6) return 'Password minimal 6 karakter';
     return null;
   }
 
@@ -116,9 +99,16 @@ class _LoginFormState extends State<LoginForm> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // ── Email Field ─────────────────────────────────────────────
             AuthTextField(
-              key: const ValueKey('email'),
+              label: 'Username',
+              hintText: 'Masukkan username',
+              controller: _usernameController,
+              validator: (v) => _validateRequired(v, 'Username'),
+              prefixIcon: Icons.person_outline,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+
+            AuthTextField(
               label: 'Email',
               hintText: 'Masukkan alamat email',
               controller: _emailController,
@@ -128,10 +118,19 @@ class _LoginFormState extends State<LoginForm> {
             ),
             const SizedBox(height: AppSpacing.lg),
 
-            // ── Password Field ──────────────────────────────────────────
+            AuthTextField(
+              label: 'NIM (Kelengkapan Profil)',
+              hintText: 'Masukkan NIM',
+              controller: _nimController,
+              keyboardType: TextInputType.number,
+              validator: _validateNim,
+              prefixIcon: Icons.badge_outlined,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+
             AuthTextField(
               label: 'Password',
-              hintText: 'Masukkan password',
+              hintText: 'Buat password',
               controller: _passwordController,
               isPassword: true,
               textInputAction: TextInputAction.done,
@@ -140,7 +139,6 @@ class _LoginFormState extends State<LoginForm> {
             ),
             const SizedBox(height: AppSpacing.xxl),
 
-            // ── Submit Button ───────────────────────────────────────────
             SizedBox(
               height: 52,
               child: ElevatedButton(
@@ -156,7 +154,7 @@ class _LoginFormState extends State<LoginForm> {
                           ),
                         ),
                       )
-                    : const Text('Masuk'),
+                    : const Text('Daftar Akun'),
               ),
             ),
           ],

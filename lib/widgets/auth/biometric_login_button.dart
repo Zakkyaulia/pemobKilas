@@ -54,7 +54,7 @@ class BiometricLoginButton extends StatelessWidget {
                 child: const Icon(
                   Icons.fingerprint_rounded,
                   size: 28,
-                  color: AppColors.primaryGreen,
+                  color: AppColors.primaryBlue,
                 ),
               ),
               const SizedBox(height: AppSpacing.sm),

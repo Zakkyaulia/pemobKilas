@@ -17,7 +17,7 @@ abstract final class AppTheme {
 
       // ── Color scheme ──────────────────────────────────────────────────
       colorScheme: const ColorScheme.light(
-        primary: AppColors.primaryGreen,
+        primary: AppColors.primaryBlue,
         onPrimary: AppColors.onPrimary,
         surface: AppColors.surface,
         onSurface: AppColors.textPrimary,
@@ -44,7 +44,7 @@ abstract final class AppTheme {
       // ── Elevated Button ───────────────────────────────────────────────
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primaryGreen,
+          backgroundColor: AppColors.primaryBlue,
           foregroundColor: AppColors.onPrimary,
           disabledBackgroundColor: AppColors.disabled,
           disabledForegroundColor: AppColors.onPrimary.withValues(alpha: 0.7),

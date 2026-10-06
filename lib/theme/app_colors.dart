@@ -21,24 +21,24 @@ abstract final class AppColors {
   static const Color textPrimary = Color(0xFF0B1C30);
 
   /// Secondary text color — body copy, descriptions.
-  static const Color textSecondary = Color(0xFF3E4947);
+  static const Color textSecondary = Color(0xFF434656);
 
   /// Muted text / icon color — placeholders, disabled states.
   static const Color textMuted = Color(0xFF6E7977);
 
   // ── Brand ───────────────────────────────────────────────────────────────
-  /// Primary brand green — CTA buttons, active indicators.
-  static const Color primaryGreen = Color(0xFF005C55);
+  /// Primary brand blue — CTA buttons, active indicators.
+  static const Color primaryBlue = Color(0xFF0048D4);
 
-  /// Accent mint — toggle highlight, badges, secondary accent.
-  static const Color accentMint = Color(0xFF9CF2E8);
+  /// Accent cyan — toggle highlight, badges, secondary accent.
+  static const Color accentCyan = Color(0xFF89F5E7);
 
   /// Accent brown/gold — status badges, special labels.
   static const Color accentBrownGold = Color(0xFF734700);
 
   // ── Semantic ────────────────────────────────────────────────────────────
   /// Error color for form validation.
-  static const Color error = Color(0xFFD32F2F);
+  static const Color error = Color(0xFFEF4444);
 
   /// Divider / border color.
   static const Color border = Color(0xFFE0E0E0);
@@ -47,7 +47,7 @@ abstract final class AppColors {
   static const Color inputBorder = Color(0xFFD0D5DD);
 
   /// Input field focused border color.
-  static const Color inputBorderFocused = Color(0xFF005C55);
+  static const Color inputBorderFocused = Color(0xFF0048D4);
 
   /// Disabled state overlay.
   static const Color disabled = Color(0xFFBDBDBD);

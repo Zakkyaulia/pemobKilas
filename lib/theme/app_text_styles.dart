@@ -83,12 +83,12 @@ abstract final class AppTextStyles {
   );
 
   // ── Links / Secondary ──────────────────────────────────────────────────
-  /// Link text — 14px, semi-bold (w600), line-height 20px, primary green.
+  /// Link text — 14px, semi-bold (w600), line-height 20px, primary blue.
   static TextStyle get link => _base(
     fontSize: 14,
     fontWeight: FontWeight.w600,
     height: 20,
-    color: AppColors.primaryGreen,
+    color: AppColors.primaryBlue,
   );
 
   /// Caption — 12px, medium (w500), line-height 16px, muted.
