@@ -7,7 +7,7 @@ import '../../widgets/auth/biometric_login_button.dart';
 import '../../widgets/auth/login_form.dart';
 import '../../widgets/auth/login_header.dart';
 import '../../widgets/auth/student_guide_link.dart';
-import '../home/home_screen.dart';
+import '../main_screen.dart';
 import 'register_screen.dart';
 
 /// The Login screen for KILAS — Mahasiswa authentication.
@@ -52,9 +52,9 @@ class LoginScreen extends StatelessWidget {
       ),
     );
 
-    // Navigasi ke HomeScreen setelah login
+    // Navigasi ke MainScreen setelah login (yang memuat HomeScreen)
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => const HomeScreen()),
+      MaterialPageRoute(builder: (context) => const MainScreen()),
     );
   }
 

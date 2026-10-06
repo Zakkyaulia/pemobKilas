@@ -5,7 +5,6 @@ import '../../theme/app_spacing.dart';
 import '../../theme/home_colors.dart';
 import '../../theme/home_text_styles.dart';
 import '../../widgets/home/home_app_bar.dart';
-import '../../widgets/home/home_bottom_nav.dart';
 import '../../widgets/home/official_info_card.dart';
 import '../../widgets/home/pull_to_refresh_hint.dart';
 import '../../widgets/home/report_card.dart';
@@ -286,14 +285,6 @@ class _HomeScreenState extends State<HomeScreen> {
             left: 0,
             right: 0,
             child: HomeAppBar(),
-          ),
-
-          // ── Fixed bottom nav ─────────────────────────────────────
-          const Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: HomeBottomNav(),
           ),
         ],
       ),

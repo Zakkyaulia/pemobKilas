@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'screens/auth/login_screen.dart';
-import 'screens/home/home_screen.dart';
 import 'theme/app_theme.dart';
 import 'theme/home_colors.dart';
 
