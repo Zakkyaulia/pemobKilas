@@ -28,6 +28,8 @@ class UpvoteButton extends StatefulWidget {
     required this.initialCount,
     this.initialIsUpvoted = false,
     this.onChanged,
+    this.cooldownDuration = const Duration(seconds: 2),
+    this.onCooldownTriggered,
   });
 
   /// Starting vote count.
@@ -39,6 +41,12 @@ class UpvoteButton extends StatefulWidget {
   /// Called when the upvote state changes.
   final void Function(bool isUpvoted, int count)? onChanged;
 
+  /// Cooldown duration between consecutive taps (anti-spam validation).
+  final Duration cooldownDuration;
+
+  /// Called when the user taps within the cooldown period (validation rejection).
+  final VoidCallback? onCooldownTriggered;
+
   @override
   State<UpvoteButton> createState() => _UpvoteButtonState();
 }
@@ -46,6 +54,7 @@ class UpvoteButton extends StatefulWidget {
 class _UpvoteButtonState extends State<UpvoteButton> {
   late bool _isUpvoted;
   late int _count;
+  DateTime? _lastTapTime;
 
   @override
   void initState() {
@@ -65,6 +74,18 @@ class _UpvoteButtonState extends State<UpvoteButton> {
   }
 
   void _toggle() {
+    final now = DateTime.now();
+
+    // ── 3. Validation: Cooldown rate-limit check (< 2 detik dianggap spam/invalid) ──
+    if (_lastTapTime != null &&
+        now.difference(_lastTapTime!) < widget.cooldownDuration) {
+      widget.onCooldownTriggered?.call();
+      return; // Tolak aksi: state tidak berubah
+    }
+
+    _lastTapTime = now;
+
+    // ── 2. State: Update status dan jumlah vote hanya jika lolos validasi ──
     setState(() {
       _isUpvoted = !_isUpvoted;
       _count += _isUpvoted ? 1 : -1;

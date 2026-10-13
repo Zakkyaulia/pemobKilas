@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../theme/app_palette.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/home_colors.dart';
 import '../../theme/home_text_styles.dart';
@@ -37,7 +38,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
   }
 
   void _handleUpvote(bool isUpvoted, int count) {
-    // 2. State update & 3. Validation
+    // 2. State: Update status dan jumlah vote setelah lolos validasi cooldown
     setState(() {
       _report = _report.copyWith(
         isUpvoted: isUpvoted,
@@ -45,7 +46,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
       );
     });
 
-    // 4. Feedback: SnackBar
+    // 4. Feedback Sukses: SnackBar konfirmasi vote ditambahkan / ditarik
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
@@ -78,6 +79,44 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
           ),
           margin: const EdgeInsets.all(AppSpacing.lg),
           duration: const Duration(seconds: 2),
+        ),
+      );
+  }
+
+  /// 3. Validation & 4. Feedback (Rejection):
+  /// Ditampilkan ketika user men-tap upvote berturut-turut dalam jeda < 2 detik.
+  /// Aksi ditolak (state tidak berubah), dan pesan peringatan halus ditampilkan.
+  void _handleUpvoteCooldown() {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(
+                Icons.hourglass_empty_rounded,
+                color: HomeColors.statusCondition,
+                size: 20,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Tunggu sebentar sebelum vote lagi',
+                  style: HomeTextStyles.bodySm.copyWith(
+                    color: HomeColors.inverseOnSurface,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: HomeColors.inverseSurface,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          margin: const EdgeInsets.all(AppSpacing.lg),
+          duration: const Duration(milliseconds: 1500),
         ),
       );
   }
@@ -171,16 +210,16 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
         Navigator.pop(context, _report);
       },
       child: Scaffold(
-        backgroundColor: HomeColors.surfacePure,
+        backgroundColor: AppPalette.surface(context),
         appBar: AppBar(
-          backgroundColor: HomeColors.surfacePure,
+          backgroundColor: AppPalette.surface(context),
           elevation: 0,
           scrolledUnderElevation: 1,
           leading: IconButton(
-            icon: const Icon(
+            icon: Icon(
               Icons.arrow_back_ios_new,
               size: 20,
-              color: HomeColors.onSurface,
+              color: AppPalette.textPrimary(context),
             ),
             onPressed: () => Navigator.pop(context, _report),
           ),
@@ -188,7 +227,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
             'Detail Laporan',
             style: HomeTextStyles.headlineSm.copyWith(
               fontWeight: FontWeight.w700,
-              color: HomeColors.onSurface,
+              color: AppPalette.textPrimary(context),
             ),
           ),
           centerTitle: true,
@@ -217,7 +256,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                   _report.title!,
                   style: HomeTextStyles.headlineSm.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: HomeColors.onSurface,
+                    color: AppPalette.textPrimary(context),
                     height: 1.35,
                   ),
                 ),
@@ -228,7 +267,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                 Text(
                   _report.description!,
                   style: HomeTextStyles.bodyMd.copyWith(
-                    color: HomeColors.onSurfaceVariant,
+                    color: AppPalette.textSecondary(context),
                     height: 1.65,
                   ),
                 ),
@@ -253,7 +292,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
               ],
 
               const SizedBox(height: 24),
-              const Divider(height: 1, thickness: 1, color: HomeColors.surfaceContainer),
+              Divider(height: 1, thickness: 1, color: AppPalette.divider(context)),
               const SizedBox(height: 16),
 
               // Baris Interaksi (Upvote, Bookmark, Share)
@@ -262,6 +301,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                 isUpvoted: _report.isUpvoted,
                 isBookmarked: _report.isBookmarked,
                 onUpvoteChanged: _handleUpvote,
+                onUpvoteCooldown: _handleUpvoteCooldown,
                 onBookmarkChanged: _handleBookmark,
                 onSharePressed: _handleShare,
               ),
@@ -330,10 +370,10 @@ class _LocationCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: HomeColors.surfaceSubtle,
+        color: AppPalette.surfaceSubtle(context),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: HomeColors.surfaceContainer,
+          color: AppPalette.divider(context),
           width: 1,
         ),
       ),
@@ -365,14 +405,14 @@ class _LocationCard extends StatelessWidget {
                   locationName,
                   style: HomeTextStyles.labelLg.copyWith(
                     fontWeight: FontWeight.w700,
-                    color: HomeColors.onSurface,
+                    color: AppPalette.textPrimary(context),
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   'Koordinat: $coordinate',
                   style: HomeTextStyles.bodySm.copyWith(
-                    color: HomeColors.onSurfaceVariant,
+                    color: AppPalette.textSecondary(context),
                     fontSize: 12,
                   ),
                 ),

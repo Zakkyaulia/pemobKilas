@@ -2,7 +2,9 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import '../../theme/app_palette.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/app_theme_controller.dart';
 import '../../theme/home_colors.dart';
 import '../../theme/home_shadows.dart';
 import '../../theme/home_text_styles.dart';
@@ -37,11 +39,10 @@ const double _kSearchIconSize = 24;
 /// Backdrop blur sigma matching Tailwind `backdrop-blur-xl` (24px).
 const double _kBlurSigma = 24;
 
-
 /// Fixed frosted-glass header bar for the home screen.
 ///
-/// Contains the KILAS logo, "UNAND" badge, tagline text, and a
-/// search action button. Uses [BackdropFilter] for the glass effect.
+/// Contains the KILAS logo, "UNAND" badge, tagline text, theme mode toggle button,
+/// and a search action button. Uses [BackdropFilter] for the glass effect.
 class HomeAppBar extends StatelessWidget {
   const HomeAppBar({super.key, this.onSearchPressed});
 
@@ -56,11 +57,11 @@ class HomeAppBar extends StatelessWidget {
         filter: ImageFilter.blur(sigmaX: _kBlurSigma, sigmaY: _kBlurSigma),
         child: Container(
           padding: EdgeInsets.only(top: topPadding),
-          decoration: const BoxDecoration(
-            color: Color(0xD9FFFFFF), // surfacePure at 85% (#FFFFFF / 0.85)
+          decoration: BoxDecoration(
+            color: AppPalette.glassBackground(context),
             boxShadow: HomeShadows.headerGlass,
             border: Border(
-              bottom: BorderSide(color: HomeColors.surfaceContainer),
+              bottom: BorderSide(color: AppPalette.divider(context)),
             ),
           ),
           child: SizedBox(
@@ -71,6 +72,8 @@ class HomeAppBar extends StatelessWidget {
               child: Row(
                 children: [
                   Expanded(child: _LogoBrand()),
+                  const _ThemeToggleButton(),
+                  const SizedBox(width: 4),
                   _SearchButton(onPressed: onSearchPressed),
                 ],
               ),
@@ -121,7 +124,7 @@ class _LogoBrand extends StatelessWidget {
                   Text(
                     'KILAS',
                     style: HomeTextStyles.headlineSm.copyWith(
-                      color: HomeColors.onSurface,
+                      color: AppPalette.textPrimary(context),
                       height: 1.0,
                       letterSpacing: -0.45,
                     ),
@@ -134,7 +137,7 @@ class _LogoBrand extends StatelessWidget {
               Text(
                 'Halo Mahasiswa, Pantau Kampus',
                 style: HomeTextStyles.labelSm.copyWith(
-                  color: HomeColors.onSurfaceVariant,
+                  color: AppPalette.textSecondary(context),
                   height: 1.0,
                 ),
                 maxLines: 1,
@@ -160,14 +163,54 @@ class _UnandBadge extends StatelessWidget {
         vertical: _kBadgeVPadding,
       ),
       decoration: BoxDecoration(
-        color: HomeColors.surfaceContainerHigh,
+        color: AppPalette.isDark(context)
+            ? const Color(0xFF1E293B)
+            : HomeColors.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(9999),
       ),
       child: Text(
         'UNAND',
         style: HomeTextStyles.labelSm.copyWith(
-          color: HomeColors.primary,
+          color: HomeColors.primaryContainer,
           fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
+/// Circular theme mode toggle button (Matahari / Bulan).
+class _ThemeToggleButton extends StatelessWidget {
+  const _ThemeToggleButton();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = AppPalette.isDark(context);
+    return Tooltip(
+      message: isDark ? 'Beralih ke Mode Terang' : 'Beralih ke Mode Gelap',
+      child: GestureDetector(
+        onTap: AppThemeController.toggle,
+        behavior: HitTestBehavior.opaque,
+        child: SizedBox(
+          width: _kSearchButtonSize,
+          height: _kSearchButtonSize,
+          child: Center(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              transitionBuilder: (child, animation) {
+                return RotationTransition(
+                  turns: animation,
+                  child: FadeTransition(opacity: animation, child: child),
+                );
+              },
+              child: Icon(
+                isDark ? Icons.light_mode_rounded : Icons.dark_mode_outlined,
+                key: ValueKey<bool>(isDark),
+                size: 22,
+                color: isDark ? const Color(0xFFFACC15) : AppPalette.textPrimary(context),
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -184,14 +227,14 @@ class _SearchButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onPressed,
-      child: const SizedBox(
+      child: SizedBox(
         width: _kSearchButtonSize,
         height: _kSearchButtonSize,
         child: Center(
           child: Icon(
             Icons.search,
             size: _kSearchIconSize,
-            color: HomeColors.onSurface,
+            color: AppPalette.textPrimary(context),
           ),
         ),
       ),

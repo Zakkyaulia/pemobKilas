@@ -30,23 +30,10 @@ class PullToRefreshHint extends StatelessWidget {
             bottom: BorderSide(color: HomeColors.surfaceContainer),
           ),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(
-              Icons.south,
-              size: _kIconSize,
-              color: HomeColors.primary,
-            ),
-            const SizedBox(width: _kGap),
-            Text(
-              'TARIK UNTUK MEMUAT BARU',
-              style: HomeTextStyles.labelSm.copyWith(
-                color: HomeColors.onSurfaceVariant,
-                letterSpacing: 1.2,
-              ),
-            ),
-          ],
+        child: const Icon(
+          Icons.south,
+          size: _kIconSize,
+          color: HomeColors.primary,
         ),
       ),
     );

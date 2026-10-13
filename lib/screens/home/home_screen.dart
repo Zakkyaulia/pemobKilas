@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../theme/app_palette.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/home_colors.dart';
 import '../../theme/home_text_styles.dart';
 import '../../widgets/home/home_app_bar.dart';
 import '../../widgets/home/official_info_card.dart';
-import '../../widgets/home/pull_to_refresh_hint.dart';
 import '../../widgets/home/report_card.dart';
 import '../../widgets/home/report_card_header.dart';
 import '../../widgets/home/status_badge.dart';
@@ -119,6 +119,55 @@ class _HomeScreenState extends State<HomeScreen> {
             _kToastBottomMargin,
           ),
           duration: const Duration(seconds: 2),
+        ),
+      );
+  }
+
+  /// 3. Validation & 4. Feedback (Feed Level):
+  /// Memberikan feedback ketika tap upvote di feed dilakukan terlalu cepat (< 2 detik).
+  void _handleFeedUpvoteCooldown() {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.hourglass_empty_rounded,
+                size: _kToastIconSize,
+                color: HomeColors.statusCondition,
+              ),
+              const SizedBox(width: _kToastGap),
+              Flexible(
+                child: Text(
+                  'Tunggu sebentar sebelum vote lagi',
+                  style: HomeTextStyles.labelMd.copyWith(
+                    color: HomeColors.inverseOnSurface,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: HomeColors.inverseSurface,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(9999),
+          ),
+          elevation: 20,
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: _kToastVPadding,
+          ),
+          margin: const EdgeInsets.fromLTRB(
+            _kToastHMargin,
+            0,
+            _kToastHMargin,
+            _kToastBottomMargin,
+          ),
+          duration: const Duration(milliseconds: 1500),
         ),
       );
   }
@@ -236,7 +285,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final bottomNavHeight = 64 + bottomPadding + 20;
 
     return Scaffold(
-      backgroundColor: HomeColors.canvasBase,
+      backgroundColor: AppPalette.canvas(context),
       body: Stack(
         children: [
           // ── Scrollable feed ──────────────────────────────────────
@@ -250,22 +299,22 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               children: [
                 Container(
-                  color: HomeColors.surfacePure,
+                  color: AppPalette.surface(context),
                   child: Column(
                     children: [
-                      const PullToRefreshHint(),
                       for (int i = 0; i < _reports.length; i++) ...[
                         if (i > 0)
-                          const Divider(
+                          Divider(
                             height: 1,
                             thickness: 1,
-                            color: HomeColors.surfaceContainer,
+                            color: AppPalette.divider(context),
                           ),
                         _FeedItem(
                           report: _reports[i],
                           onTap: () => _navigateToDetail(_reports[i]),
                           onUpvoteChanged: (isUpvoted, count) =>
                               _handleFeedUpvote(i, isUpvoted, count),
+                          onUpvoteCooldown: _handleFeedUpvoteCooldown,
                           onBookmarkChanged: (isBookmarked) =>
                               _handleFeedBookmark(i, isBookmarked),
                           onSharePressed: () =>
@@ -299,6 +348,7 @@ class _FeedItem extends StatelessWidget {
     required this.report,
     this.onTap,
     this.onUpvoteChanged,
+    this.onUpvoteCooldown,
     this.onBookmarkChanged,
     this.onSharePressed,
   });
@@ -306,6 +356,7 @@ class _FeedItem extends StatelessWidget {
   final ReportModel report;
   final VoidCallback? onTap;
   final void Function(bool isUpvoted, int count)? onUpvoteChanged;
+  final VoidCallback? onUpvoteCooldown;
   final void Function(bool isBookmarked)? onBookmarkChanged;
   final VoidCallback? onSharePressed;
 
@@ -324,6 +375,7 @@ class _FeedItem extends StatelessWidget {
         isBookmarked: report.isBookmarked,
         onTap: onTap,
         onUpvoteChanged: onUpvoteChanged,
+        onUpvoteCooldown: onUpvoteCooldown,
         onBookmarkChanged: onBookmarkChanged,
         onSharePressed: onSharePressed,
       );
@@ -342,6 +394,7 @@ class _FeedItem extends StatelessWidget {
       isBookmarked: report.isBookmarked,
       onTap: onTap,
       onUpvoteChanged: onUpvoteChanged,
+      onUpvoteCooldown: onUpvoteCooldown,
       onBookmarkChanged: onBookmarkChanged,
       onSharePressed: onSharePressed,
     );

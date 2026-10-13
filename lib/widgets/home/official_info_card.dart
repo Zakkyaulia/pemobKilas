@@ -23,6 +23,7 @@ class OfficialInfoCard extends StatelessWidget {
     this.isUpvoted = false,
     this.isBookmarked = false,
     this.onUpvoteChanged,
+    this.onUpvoteCooldown,
     this.onBookmarkChanged,
     this.onSharePressed,
     this.onTap,
@@ -51,6 +52,9 @@ class OfficialInfoCard extends StatelessWidget {
 
   /// Upvote state change callback.
   final void Function(bool isUpvoted, int count)? onUpvoteChanged;
+
+  /// Upvote cooldown rejection callback.
+  final VoidCallback? onUpvoteCooldown;
 
   /// Bookmark state change callback.
   final void Function(bool isBookmarked)? onBookmarkChanged;
@@ -84,6 +88,7 @@ class OfficialInfoCard extends StatelessWidget {
               isUpvoted: isUpvoted,
               isBookmarked: isBookmarked,
               onUpvoteChanged: onUpvoteChanged,
+              onUpvoteCooldown: onUpvoteCooldown,
               onBookmarkChanged: onBookmarkChanged,
               onSharePressed: onSharePressed,
             ),
