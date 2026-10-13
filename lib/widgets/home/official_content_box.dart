@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../theme/app_palette.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/home_colors.dart';
 import '../../theme/home_shadows.dart';
@@ -49,9 +50,11 @@ class OfficialContentBox extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(_kInnerPadding),
       decoration: BoxDecoration(
-        color: HomeColors.surfaceContainerLow,
+        color: AppPalette.isDark(context)
+            ? const Color(0xFF162544)
+            : HomeColors.surfaceContainerLow,
         borderRadius: AppRadius.mediumAll,
-        border: Border.all(color: HomeColors.surfaceContainer),
+        border: Border.all(color: AppPalette.divider(context)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -76,13 +79,13 @@ class _IconCircle extends StatelessWidget {
     return Container(
       width: _kIconCircleSize,
       height: _kIconCircleSize,
-      decoration: const BoxDecoration(
-        color: HomeColors.surfacePure,
+      decoration: BoxDecoration(
+        color: AppPalette.surface(context),
         shape: BoxShape.circle,
         boxShadow: HomeShadows.sm,
       ),
       alignment: Alignment.center,
-      child: Icon(icon, size: _kIconSize, color: HomeColors.primary),
+      child: const Icon(Icons.campaign, size: _kIconSize, color: HomeColors.primaryContainer),
     );
   }
 }
@@ -105,14 +108,14 @@ class _TextContent extends StatelessWidget {
           style: HomeTextStyles.headlineSm.copyWith(
             fontSize: _kTitleFontSize,
             fontWeight: FontWeight.w700,
-            color: HomeColors.onSurface,
+            color: AppPalette.textPrimary(context),
           ),
         ),
         const SizedBox(height: _kDescriptionTopMargin),
         Text(
           description,
           style: HomeTextStyles.bodyMd.copyWith(
-            color: HomeColors.onSurfaceVariant,
+            color: AppPalette.textSecondary(context),
             height: 1.625,
           ),
           maxLines: 2,

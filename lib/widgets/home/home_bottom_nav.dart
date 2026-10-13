@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import '../../theme/app_palette.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/home_colors.dart';
 import '../../theme/home_shadows.dart';
@@ -88,9 +89,12 @@ class HomeBottomNav extends StatelessWidget {
                 ),
                 child: Container(
                   padding: EdgeInsets.only(bottom: bottomPadding),
-                  decoration: const BoxDecoration(
-                    color: Color(0xE6FFFFFF), // surfacePure at 90%
+                  decoration: BoxDecoration(
+                    color: AppPalette.glassBackground(context),
                     boxShadow: HomeShadows.bottomNavGlass,
+                    border: Border(
+                      top: BorderSide(color: AppPalette.divider(context)),
+                    ),
                   ),
                   child: SizedBox(
                     height: _kNavHeight,
@@ -170,9 +174,9 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final iconColor =
-        isActive ? HomeColors.primaryContainer : HomeColors.onSurfaceVariant;
+        isActive ? HomeColors.primaryContainer : AppPalette.textSecondary(context);
     final labelColor =
-        isActive ? HomeColors.primary : HomeColors.onSurfaceVariant;
+        isActive ? HomeColors.primaryContainer : AppPalette.textSecondary(context);
     final labelWeight = isActive ? FontWeight.w700 : FontWeight.w700;
 
     return Expanded(
@@ -284,7 +288,7 @@ class _ProfileNavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final labelColor =
-        isActive ? HomeColors.primary : HomeColors.onSurfaceVariant;
+        isActive ? HomeColors.primaryContainer : AppPalette.textSecondary(context);
 
     return Expanded(
       child: GestureDetector(

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'screens/auth/login_screen.dart';
+import 'screens/splash/splash_screen.dart';
 import 'theme/app_theme.dart';
+import 'theme/app_theme_controller.dart';
 import 'theme/home_colors.dart';
 
 void main() {
@@ -11,19 +12,28 @@ void main() {
 /// Root widget for the KILAS application.
 ///
 /// Configures [MaterialApp] with the centralized [AppTheme]
-/// and sets [LoginScreen] as the initial route.
+/// and sets [SplashScreen] as the initial animated entry point.
 class KilasApp extends StatelessWidget {
   const KilasApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'KILAS',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.light.copyWith(
-        extensions: <ThemeExtension<dynamic>>[StatusColors.light],
-      ),
-      home: const LoginScreen(),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: AppThemeController.themeMode,
+      builder: (context, currentMode, _) {
+        return MaterialApp(
+          title: 'KILAS',
+          debugShowCheckedModeBanner: false,
+          themeMode: currentMode,
+          theme: AppTheme.light.copyWith(
+            extensions: <ThemeExtension<dynamic>>[StatusColors.light],
+          ),
+          darkTheme: AppTheme.dark.copyWith(
+            extensions: <ThemeExtension<dynamic>>[StatusColors.light],
+          ),
+          home: const SplashScreen(),
+        );
+      },
     );
   }
 }

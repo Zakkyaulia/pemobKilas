@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../theme/app_palette.dart';
 import '../../theme/home_colors.dart';
 import '../../theme/home_text_styles.dart';
 
@@ -131,7 +132,7 @@ class _NameRow extends StatelessWidget {
             style: HomeTextStyles.headlineSm.copyWith(
               fontSize: _kNameFontSize,
               fontWeight: FontWeight.w700,
-              color: HomeColors.onSurface,
+              color: AppPalette.textPrimary(context),
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -151,7 +152,7 @@ class _NameRow extends StatelessWidget {
             child: Text(
               header.username!,
               style: HomeTextStyles.labelSm.copyWith(
-                color: HomeColors.onSurfaceVariant,
+                color: AppPalette.textSecondary(context),
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -185,7 +186,7 @@ class _MetaRow extends StatelessWidget {
           child: Text(
             text,
             style: HomeTextStyles.bodySm.copyWith(
-              color: HomeColors.onSurfaceVariant,
+              color: AppPalette.textSecondary(context),
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,

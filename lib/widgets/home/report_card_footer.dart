@@ -17,6 +17,7 @@ class ReportCardFooter extends StatelessWidget {
     this.isUpvoted = false,
     this.isBookmarked = false,
     this.onUpvoteChanged,
+    this.onUpvoteCooldown,
     this.onBookmarkChanged,
     this.onSharePressed,
   });
@@ -32,6 +33,9 @@ class ReportCardFooter extends StatelessWidget {
 
   /// Called when the upvote state changes.
   final void Function(bool isUpvoted, int count)? onUpvoteChanged;
+
+  /// Called when upvote tap is rejected due to cooldown (validation feedback).
+  final VoidCallback? onUpvoteCooldown;
 
   /// Called when the bookmark state changes.
   final void Function(bool isBookmarked)? onBookmarkChanged;
@@ -50,6 +54,7 @@ class ReportCardFooter extends StatelessWidget {
             initialCount: upvoteCount,
             initialIsUpvoted: isUpvoted,
             onChanged: onUpvoteChanged,
+            onCooldownTriggered: onUpvoteCooldown,
           ),
           Row(
             mainAxisSize: MainAxisSize.min,

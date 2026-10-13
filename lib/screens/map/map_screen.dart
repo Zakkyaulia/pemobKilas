@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../theme/home_colors.dart';
+import '../../theme/app_palette.dart';
 import '../../theme/home_text_styles.dart';
 import '../../widgets/map/map_view.dart';
 
@@ -11,7 +11,7 @@ class MapScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: HomeColors.canvasBase,
+      backgroundColor: AppPalette.canvas(context),
       body: SafeArea(
         bottom: false, // Biarkan peta tembus ke bawah layar
         child: Column(
@@ -20,18 +20,20 @@ class MapScreen extends StatelessWidget {
             Container(
               height: 64,
               width: double.infinity,
-              color: HomeColors.surfacePure,
+              color: AppPalette.surface(context),
               alignment: Alignment.centerLeft,
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
                 'Peta Hotspot Laporan',
-                style: HomeTextStyles.headlineMd,
+                style: HomeTextStyles.headlineMd.copyWith(
+                  color: AppPalette.textPrimary(context),
+                ),
               ),
             ),
-            const Divider(
+            Divider(
               height: 1, 
               thickness: 1, 
-              color: HomeColors.surfaceContainer,
+              color: AppPalette.divider(context),
             ),
             
             // Komponen peta yang responsif dan mengisi ruang

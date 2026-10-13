@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../theme/app_palette.dart';
 import '../../theme/app_spacing.dart';
-import '../../theme/home_colors.dart';
 import '../../theme/home_text_styles.dart';
 import 'network_image_box.dart';
 import 'report_card_footer.dart';
@@ -31,6 +31,7 @@ class ReportCard extends StatelessWidget {
     this.isUpvoted = false,
     this.isBookmarked = false,
     this.onUpvoteChanged,
+    this.onUpvoteCooldown,
     this.onBookmarkChanged,
     this.onSharePressed,
     this.onTap,
@@ -69,6 +70,9 @@ class ReportCard extends StatelessWidget {
   /// Upvote state change callback.
   final void Function(bool isUpvoted, int count)? onUpvoteChanged;
 
+  /// Upvote cooldown rejection callback.
+  final VoidCallback? onUpvoteCooldown;
+
   /// Bookmark state change callback.
   final void Function(bool isBookmarked)? onBookmarkChanged;
 
@@ -106,6 +110,7 @@ class ReportCard extends StatelessWidget {
               isUpvoted: isUpvoted,
               isBookmarked: isBookmarked,
               onUpvoteChanged: onUpvoteChanged,
+              onUpvoteCooldown: onUpvoteCooldown,
               onBookmarkChanged: onBookmarkChanged,
               onSharePressed: onSharePressed,
             ),
@@ -135,7 +140,7 @@ class _TitleDescription extends StatelessWidget {
           title,
           style: HomeTextStyles.headlineSm.copyWith(
             fontWeight: FontWeight.w700,
-            color: HomeColors.onSurface,
+            color: AppPalette.textPrimary(context),
             height: 1.375,
           ),
         ),
@@ -143,7 +148,7 @@ class _TitleDescription extends StatelessWidget {
         Text(
           description,
           style: HomeTextStyles.bodyMd.copyWith(
-            color: HomeColors.onSurfaceVariant,
+            color: AppPalette.textSecondary(context),
             height: 1.625,
           ),
           maxLines: 2,
