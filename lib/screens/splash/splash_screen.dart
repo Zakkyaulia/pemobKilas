@@ -131,23 +131,6 @@ class _SplashScreenState extends State<SplashScreen>
                         position: _slideAnimation,
                         child: Column(
                           children: [
-                            // Judul Aplikasi
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  'KILAS',
-                                  style: HomeTextStyles.headlineLg.copyWith(
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 2,
-                                    color: const Color(0xFF4880FF),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-
                             // Subtitle Resmi
                             Text(
                               'KABAR LINTAS ANDALAS',
