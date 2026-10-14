@@ -46,31 +46,24 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
 
-    // Efek cahaya berdenyut di belakang logo (pulsing halo)
-    _glowAnimation = Tween<double>(begin: 0.4, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.2, 0.9, curve: Curves.easeInOut),
-      ),
-    );
-
-    // Animasi teks judul dan tagline meluncur dari bawah
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.25),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.30, 0.80, curve: Curves.easeOutCubic),
-      ),
-    );
+    // Animasi teks judul dan tagline meluncur dari bawah (sinkron dengan logo)
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: const Interval(0.0, 0.60, curve: Curves.easeOutCubic),
+          ),
+        );
 
     _controller.forward();
 
     // Otomatis berpindah ke LoginScreen setelah animasi dinikmati (~4 detik total)
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        Future.delayed(const Duration(milliseconds: 1200), _navigateToNextScreen);
+        Future.delayed(
+          const Duration(milliseconds: 1200),
+          _navigateToNextScreen,
+        );
       }
     });
   }
@@ -100,34 +93,10 @@ class _SplashScreenState extends State<SplashScreen>
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF081024), // Deep civic navy
+      backgroundColor: Colors.white,
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // ── Background Ambient Glow Rings ───────────────────────
-          AnimatedBuilder(
-            animation: _glowAnimation,
-            builder: (context, child) {
-              return Center(
-                child: Container(
-                  width: 320 * _glowAnimation.value,
-                  height: 320 * _glowAnimation.value,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        HomeColors.primary.withValues(alpha: 0.35 * _glowAnimation.value),
-                        HomeColors.primaryContainer.withValues(alpha: 0.12 * _glowAnimation.value),
-                        Colors.transparent,
-                      ],
-                      stops: const [0.0, 0.5, 1.0],
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-
           // ── Konten Utama (Logo + Judul + Tagline) ───────────────
           Center(
             child: AnimatedBuilder(
@@ -138,46 +107,24 @@ class _SplashScreenState extends State<SplashScreen>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      // Logo KILAS dengan Container Card Elegan & Shadow Halus
+                      // Logo KILAS langsung tanpa box
                       ScaleTransition(
                         scale: _scaleAnimation,
-                        child: Container(
-                          width: 110,
-                          height: 110,
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF0F1E3D),
-                            borderRadius: BorderRadius.circular(28),
-                            border: Border.all(
-                              color: HomeColors.primary.withValues(alpha: 0.45),
-                              width: 1.5,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: HomeColors.primary.withValues(alpha: 0.35),
-                                blurRadius: 28,
-                                spreadRadius: 2,
-                                offset: const Offset(0, 8),
-                              ),
-                            ],
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(16),
-                            child: Image.asset(
-                              'assets/icons/app_logo.png',
-                              fit: BoxFit.contain,
-                              errorBuilder: (context, error, stackTrace) {
-                                return const Icon(
-                                  Icons.bolt_rounded,
-                                  size: 64,
-                                  color: HomeColors.primaryContainer,
-                                );
-                              },
-                            ),
-                          ),
+                        child: Image.asset(
+                          'assets/icons/app_logo_rev1.png',
+                          width: 200,
+                          height: 200,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Icon(
+                              Icons.bolt_rounded,
+                              size: 64,
+                              color: HomeColors.primaryContainer,
+                            );
+                          },
                         ),
                       ),
-                      const SizedBox(height: 28),
+                      const SizedBox(height: 10),
 
                       // Nama Aplikasi & Tagline
                       SlideTransition(
@@ -189,16 +136,7 @@ class _SplashScreenState extends State<SplashScreen>
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  'KI',
-                                  style: HomeTextStyles.headlineLg.copyWith(
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 2,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                Text(
-                                  'LAS',
+                                  'KILAS',
                                   style: HomeTextStyles.headlineLg.copyWith(
                                     fontSize: 32,
                                     fontWeight: FontWeight.w900,
@@ -218,45 +156,6 @@ class _SplashScreenState extends State<SplashScreen>
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 4,
                                 color: const Color(0xFF94A3B8),
-                              ),
-                            ),
-                            const SizedBox(height: 14),
-
-                            // Badge info kecil kampus UNAND
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.06),
-                                borderRadius: BorderRadius.circular(9999),
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.12),
-                                  width: 1,
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Container(
-                                    width: 6,
-                                    height: 6,
-                                    decoration: const BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Color(0xFF10B981), // Emerald green pulse
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Universitas Andalas',
-                                    style: HomeTextStyles.bodySm.copyWith(
-                                      fontSize: 11,
-                                      color: const Color(0xFFCBD5E1),
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
                               ),
                             ),
                           ],
@@ -289,15 +188,6 @@ class _SplashScreenState extends State<SplashScreen>
                           Color(0xFF3B82F6),
                         ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Mobile Programming',
-                    style: HomeTextStyles.labelSm.copyWith(
-                      color: const Color(0xFF64748B),
-                      fontSize: 10,
-                      letterSpacing: 1.2,
                     ),
                   ),
                 ],
