@@ -11,6 +11,7 @@ import '../../widgets/home/report_card.dart';
 import '../../widgets/home/report_card_header.dart';
 import '../../widgets/home/status_badge.dart';
 import '../../widgets/home/user_avatar.dart';
+import '../search/search_filter_screen.dart';
 import 'data/mock_reports.dart';
 import 'models/report_model.dart';
 import 'report_detail_screen.dart';
@@ -69,6 +70,62 @@ class _HomeScreenState extends State<HomeScreen> {
           _reports[index] = updatedReport;
         }
       });
+    }
+  }
+
+  /// Navigasi ke halaman Cari & Filter, lalu terima hasil filter dari pop result.
+  /// Ini mendemonstrasikan Navigation/Result workflow: mengirim data antar screen.
+  Future<void> _navigateToSearch() async {
+    final filterResult = await Navigator.push<SearchFilterResult>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const SearchFilterScreen(),
+      ),
+    );
+
+    // 5. Navigation/Result: Terima data result dari screen Cari & Filter
+    if (filterResult != null && mounted) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.filter_list,
+                    size: _kToastIconSize, color: Colors.blueAccent),
+                const SizedBox(width: _kToastGap),
+                Flexible(
+                  child: Text(
+                    'Filter diterapkan: ${filterResult.resultCount} laporan',
+                    style: HomeTextStyles.labelMd.copyWith(
+                      color: HomeColors.inverseOnSurface,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: HomeColors.inverseSurface,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(9999),
+            ),
+            elevation: 20,
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,
+              vertical: _kToastVPadding,
+            ),
+            margin: const EdgeInsets.fromLTRB(
+              _kToastHMargin,
+              0,
+              _kToastHMargin,
+              _kToastBottomMargin,
+            ),
+            duration: const Duration(seconds: 2),
+          ),
+        );
     }
   }
 
@@ -329,11 +386,11 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
 
           // ── Fixed header ─────────────────────────────────────────
-          const Positioned(
+          Positioned(
             top: 0,
             left: 0,
             right: 0,
-            child: HomeAppBar(),
+            child: HomeAppBar(onSearchPressed: _navigateToSearch),
           ),
         ],
       ),
