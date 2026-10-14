@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../screens/report/create_report_screen.dart';
 import '../theme/app_palette.dart';
 import '../widgets/home/home_bottom_nav.dart';
 import 'home/home_screen.dart';
@@ -58,9 +59,8 @@ class _MainScreenState extends State<MainScreen> {
   void _onTabTapped(int index) {
     if (index == 2) {
       // FAB Tap -> Tangani fungsi buat laporan baru di sini
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Buat Laporan Baru')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Buat Laporan Baru')));
       return;
     }
     final pageIndex = _navToPage(index);
@@ -126,11 +126,7 @@ class _PlaceholderPage extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 56,
-              color: AppPalette.textSecondary(context),
-            ),
+            Icon(icon, size: 56, color: AppPalette.textSecondary(context)),
             const SizedBox(height: 16),
             Text(
               title,
@@ -154,4 +150,3 @@ class _PlaceholderPage extends StatelessWidget {
     );
   }
 }
-

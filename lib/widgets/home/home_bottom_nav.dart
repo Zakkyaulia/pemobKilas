@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-
+import '../../screens/report/create_report_screen.dart';
 import '../../theme/app_palette.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/home_colors.dart';
@@ -141,14 +141,31 @@ class HomeBottomNav extends StatelessWidget {
 
           // FAB outside the ClipRect: not clipped, still tappable.
           Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [_FabCenter(onTap: () => onTap?.call(2))],
+  top: 0,
+  left: 0,
+  right: 0,
+  child: Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [
+      _FabCenter(
+        onTap: () async {
+          // Ganti onTap?.call(2) menjadi logika navigasi Push
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const CreateReportScreen(),
             ),
-          ),
+          );
+
+          if (result == true) {
+            // Lakukan sesuatu jika laporan berhasil dikirim (opsional)
+            // Misalnya: memanggil fungsi refresh data
+          }
+        },
+      )
+    ],
+  ),
+),
         ],
       ),
     );
