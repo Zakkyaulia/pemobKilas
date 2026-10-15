@@ -45,6 +45,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late List<ReportModel> _reports;
 
+  /// Filter terakhir yang diterapkan di halaman Cari & Filter (disimpan di memori).
+  SearchFilterResult? _lastFilter;
+
   @override
   void initState() {
     super.initState();
@@ -79,12 +82,16 @@ class _HomeScreenState extends State<HomeScreen> {
     final filterResult = await Navigator.push<SearchFilterResult>(
       context,
       MaterialPageRoute(
-        builder: (context) => const SearchFilterScreen(),
+        // Kirim filter terakhir ke screen berikutnya agar pilihan user tidak reset
+        builder: (context) => SearchFilterScreen(initialFilter: _lastFilter),
       ),
     );
 
     // 5. Navigation/Result: Terima data result dari screen Cari & Filter
+    // (null berarti user kembali tanpa menekan "Terapkan filter")
     if (filterResult != null && mounted) {
+      _lastFilter = filterResult;
+
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(

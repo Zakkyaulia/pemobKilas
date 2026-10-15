@@ -34,31 +34,20 @@ const double _kRadiusSm = 8;
 // ─── Data Models ──────────────────────────────────────────────────────────────
 
 /// Enum for report categories.
-enum ReportCategory {
-  kondisiKampus,
-  informasiPenting,
-}
+enum ReportCategory { kondisiKampus, informasiPenting }
 
 /// Enum for sorting.
-enum SortMode {
-  terbaru,
-  upvoteTerbanyak,
-}
+enum SortMode { terbaru, upvoteTerbanyak }
 
 /// Enum for time range.
-enum TimeRange {
-  hariIni,
-  tujuhHari,
-  bulanIni,
-  semua,
-}
+enum TimeRange { hariIni, tujuhHari, bulanIni, semua }
 
 /// Preview result item.
 class SearchResultItem {
   const SearchResultItem({
     required this.title,
     required this.location,
-    required this.timeAgo,
+    required this.age,
     required this.upvoteCount,
     required this.imageUrl,
     required this.category,
@@ -66,10 +55,34 @@ class SearchResultItem {
 
   final String title;
   final String location;
-  final String timeAgo;
+
+  /// Umur laporan sejak dibuat. Dipakai untuk filter rentang waktu & urutan terbaru.
+  final Duration age;
   final int upvoteCount;
   final String imageUrl;
   final ReportCategory category;
+
+  /// Label waktu relatif yang ditampilkan di UI, diturunkan dari [age].
+  String get timeAgo {
+    if (age.inHours < 1) return '${age.inMinutes}m lalu';
+    if (age.inDays < 1) return '${age.inHours} jam lalu';
+    if (age.inDays == 1) return 'Kemarin';
+    return '${age.inDays} hari lalu';
+  }
+}
+
+/// Batas umur maksimal laporan untuk setiap rentang waktu (null = tanpa batas).
+Duration? _maxAgeFor(TimeRange range) {
+  switch (range) {
+    case TimeRange.hariIni:
+      return const Duration(days: 1);
+    case TimeRange.tujuhHari:
+      return const Duration(days: 7);
+    case TimeRange.bulanIni:
+      return const Duration(days: 30);
+    case TimeRange.semua:
+      return null;
+  }
 }
 
 /// Return data when "Terapkan filter" is pressed.
@@ -91,128 +104,137 @@ class SearchFilterResult {
 
 // ─── Static Mock Data ─────────────────────────────────────────────────────────
 
-const List<SearchResultItem> _kMockResults = [
-  SearchResultItem(
-    title: 'Lampu Koridor GKB Lantai 3',
-    location: 'Gedung Kuliah Bersa...',
-    timeAgo: '2 jam lalu',
-    upvoteCount: 38,
-    imageUrl:
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuCdbZW47ogPynpDzdG32WMlEctLMsUNyyXLC0m1MCtLoI-r1GqnCyuSjAKUVIWoMfC6KUrDhrCnaOgzgUPpxPdeUsoteiPJaDhupg2E3auy-DaEzK6o-7wfyCwZkYJMSlgbvfXxW7JWbLor94mGeETE7P_OE8WgKHtwu1ZmJhBRERmtIWF25NoYkk_5cz-M08X__4XRlxK56vUisHYjA55usx-gfRKkQNLbQNMBhyR7KSxeK_jnObDL',
-    category: ReportCategory.kondisiKampus,
-  ),
-  SearchResultItem(
-    title: 'Pohon Tumbang Sebagian A...',
-    location: 'Tangga Sayap Barat C...',
-    timeAgo: '5 jam lalu',
-    upvoteCount: 19,
-    imageUrl:
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuDhulrtRVYTzfPtie0w7FaqMEbrW1xBHiOaigYreoY2A4wWQ8VekDw7g_o7CPzzqkxx5Mr3dQHlF1dgkZKybtJ7NS98Mx58xUj9aAXIamvRatDKvrmn-RblqYuSbnurXCNFeBs2SfpoPKVqH9l3f22oiOfvFyspAVEPGpIX1JFwnS78EwkV93JyB3NNccIbNnwBrOx0mujBMedVk6aT15PwKnhLcmDHjbJmBCaUKmcmWl2Ud8m9uBsV',
-    category: ReportCategory.kondisiKampus,
-  ),
-  SearchResultItem(
-    title: 'Ditemukan Dompet Hitam a...',
-    location: 'Selasar GKB Lt. 1',
-    timeAgo: 'Kemarin',
-    upvoteCount: 45,
-    imageUrl:
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuCdnOTwLApErt0cbY9ePBdGUGMH2jG4BfLKq153ygCGBc_vOEcsmVt3Lk2OJLn7Z9dAG9Qxh-PXQHHmBJuhlCo2jDy785d-P2yFXTYjXC-_b4CcccD2nmdenYc_BcvvGJOJ7ZciQtkHhjC5FwE8GAxFF0oDKTaKiX_qba4rIkDBlkLRC4KJZ7ZZGsEl9GjSnKVlRbrmjW_obdBw6ZPm6ZbGUuoHt97lT3MnrcQCwO56tGe0cneSmRb8',
-    category: ReportCategory.informasiPenting,
-  ),
-];
+const String _kImgLamp =
+    'https://lh3.googleusercontent.com/aida-public/AB6AXuCdbZW47ogPynpDzdG32WMlEctLMsUNyyXLC0m1MCtLoI-r1GqnCyuSjAKUVIWoMfC6KUrDhrCnaOgzgUPpxPdeUsoteiPJaDhupg2E3auy-DaEzK6o-7wfyCwZkYJMSlgbvfXxW7JWbLor94mGeETE7P_OE8WgKHtwu1ZmJhBRERmtIWF25NoYkk_5cz-M08X__4XRlxK56vUisHYjA55usx-gfRKkQNLbQNMBhyR7KSxeK_jnObDL';
+const String _kImgTree =
+    'https://lh3.googleusercontent.com/aida-public/AB6AXuDhulrtRVYTzfPtie0w7FaqMEbrW1xBHiOaigYreoY2A4wWQ8VekDw7g_o7CPzzqkxx5Mr3dQHlF1dgkZKybtJ7NS98Mx58xUj9aAXIamvRatDKvrmn-RblqYuSbnurXCNFeBs2SfpoPKVqH9l3f22oiOfvFyspAVEPGpIX1JFwnS78EwkV93JyB3NNccIbNnwBrOx0mujBMedVk6aT15PwKnhLcmDHjbJmBCaUKmcmWl2Ud8m9uBsV';
+const String _kImgWallet =
+    'https://lh3.googleusercontent.com/aida-public/AB6AXuCdnOTwLApErt0cbY9ePBdGUGMH2jG4BfLKq153ygCGBc_vOEcsmVt3Lk2OJLn7Z9dAG9Qxh-PXQHHmBJuhlCo2jDy785d-P2yFXTYjXC-_b4CcccD2nmdenYc_BcvvGJOJ7ZciQtkHhjC5FwE8GAxFF0oDKTaKiX_qba4rIkDBlkLRC4KJZ7ZZGsEl9GjSnKVlRbrmjW_obdBw6ZPm6ZbGUuoHt97lT3MnrcQCwO56tGe0cneSmRb8';
+const String _kImgAc =
+    'https://lh3.googleusercontent.com/aida-public/AB6AXuCQjRXiN2w4dCPIVQhWlufSduDBSOqq2UCDygQfUyfqSojlTedSVb-jV0eQv01FkURvr7Qgez_9haHqOHRzyrTMm3-zTxvYqLoT_9pOnwvzbpXntLaJrl15dn9w9LqHV6h_Q-VTAArbnGCIPrkLxKjPYJlR_v1VSLY4KUOIjrOZXQlOZdLstSB2MYxJK3RiWV-7pjLLrSMmfoav9T6019ykOx4WMX3P7hAfHAQKUCS_DHnrVSu8_buT';
 
-// All possible results for filtering simulation
+/// Data dummy sengaja diacak (kategori, umur laporan, upvote) supaya
+/// efek setiap filter — kategori, rentang waktu, dan urutan — terlihat jelas.
 const List<SearchResultItem> _kAllMockResults = [
-  ..._kMockResults,
   SearchResultItem(
-    title: 'AC Ruang Kuliah GKB C 204 bocor',
-    location: 'Gedung GKB C',
-    timeAgo: '15m lalu',
-    upvoteCount: 42,
-    imageUrl:
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuCQjRXiN2w4dCPIVQhWlufSduDBSOqq2UCDygQfUyfqSojlTedSVb-jV0eQv01FkURvr7Qgez_9haHqOHRzyrTMm3-zTxvYqLoT_9pOnwvzbpXntLaJrl15dn9w9LqHV6h_Q-VTAArbnGCIPrkLxKjPYJlR_v1VSLY4KUOIjrOZXQlOZdLstSB2MYxJK3RiWV-7pjLLrSMmfoav9T6019ykOx4WMX3P7hAfHAQKUCS_DHnrVSu8_buT',
-    category: ReportCategory.kondisiKampus,
-  ),
-  SearchResultItem(
-    title: 'Genangan Air di Bundaran PKM',
-    location: 'Bundaran PKM UNAND',
-    timeAgo: '1 jam lalu',
-    upvoteCount: 31,
-    imageUrl:
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuCQjRXiN2w4dCPIVQhWlufSduDBSOqq2UCDygQfUyfqSojlTedSVb-jV0eQv01FkURvr7Qgez_9haHqOHRzyrTMm3-zTxvYqLoT_9pOnwvzbpXntLaJrl15dn9w9LqHV6h_Q-VTAArbnGCIPrkLxKjPYJlR_v1VSLY4KUOIjrOZXQlOZdLstSB2MYxJK3RiWV-7pjLLrSMmfoav9T6019ykOx4WMX3P7hAfHAQKUCS_DHnrVSu8_buT',
-    category: ReportCategory.kondisiKampus,
-  ),
-  SearchResultItem(
-    title: 'Keran Toilet Lantai 2 Rusak',
-    location: 'Gedung GKB A Lt. 2',
-    timeAgo: '3 jam lalu',
-    upvoteCount: 15,
-    imageUrl:
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuDhulrtRVYTzfPtie0w7FaqMEbrW1xBHiOaigYreoY2A4wWQ8VekDw7g_o7CPzzqkxx5Mr3dQHlF1dgkZKybtJ7NS98Mx58xUj9aAXIamvRatDKvrmn-RblqYuSbnurXCNFeBs2SfpoPKVqH9l3f22oiOfvFyspAVEPGpIX1JFwnS78EwkV93JyB3NNccIbNnwBrOx0mujBMedVk6aT15PwKnhLcmDHjbJmBCaUKmcmWl2Ud8m9uBsV',
-    category: ReportCategory.kondisiKampus,
-  ),
-  SearchResultItem(
-    title: 'Pipa Air Bocor Jalur Utama',
-    location: 'Jalan Utama Kampus',
-    timeAgo: '6 jam lalu',
-    upvoteCount: 28,
-    imageUrl:
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuCdnOTwLApErt0cbY9ePBdGUGMH2jG4BfLKq153ygCGBc_vOEcsmVt3Lk2OJLn7Z9dAG9Qxh-PXQHHmBJuhlCo2jDy785d-P2yFXTYjXC-_b4CcccD2nmdenYc_BcvvGJOJ7ZciQtkHhjC5FwE8GAxFF0oDKTaKiX_qba4rIkDBlkLRC4KJZ7ZZGsEl9GjSnKVlRbrmjW_obdBw6ZPm6ZbGUuoHt97lT3MnrcQCwO56tGe0cneSmRb8',
-    category: ReportCategory.kondisiKampus,
-  ),
-  SearchResultItem(
-    title: 'Jalan Berlubang Depan FE',
-    location: 'Depan Fakultas Ekonomi',
-    timeAgo: '8 jam lalu',
-    upvoteCount: 55,
-    imageUrl:
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuCdbZW47ogPynpDzdG32WMlEctLMsUNyyXLC0m1MCtLoI-r1GqnCyuSjAKUVIWoMfC6KUrDhrCnaOgzgUPpxPdeUsoteiPJaDhupg2E3auy-DaEzK6o-7wfyCwZkYJMSlgbvfXxW7JWbLor94mGeETE7P_OE8WgKHtwu1ZmJhBRERmtIWF25NoYkk_5cz-M08X__4XRlxK56vUisHYjA55usx-gfRKkQNLbQNMBhyR7KSxeK_jnObDL',
+    title: 'Lampu Koridor GKB Lantai 3 Padam',
+    location: 'Gedung Kuliah Bersama Lt. 3',
+    age: Duration(hours: 2),
+    upvoteCount: 38,
+    imageUrl: _kImgLamp,
     category: ReportCategory.kondisiKampus,
   ),
   SearchResultItem(
     title: 'Jadwal Wisuda Semester Ganjil',
     location: 'Auditorium UNAND',
-    timeAgo: '1 hari lalu',
+    age: Duration(days: 12),
     upvoteCount: 120,
-    imageUrl:
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuCdnOTwLApErt0cbY9ePBdGUGMH2jG4BfLKq153ygCGBc_vOEcsmVt3Lk2OJLn7Z9dAG9Qxh-PXQHHmBJuhlCo2jDy785d-P2yFXTYjXC-_b4CcccD2nmdenYc_BcvvGJOJ7ZciQtkHhjC5FwE8GAxFF0oDKTaKiX_qba4rIkDBlkLRC4KJZ7ZZGsEl9GjSnKVlRbrmjW_obdBw6ZPm6ZbGUuoHt97lT3MnrcQCwO56tGe0cneSmRb8',
+    imageUrl: _kImgWallet,
     category: ReportCategory.informasiPenting,
+  ),
+  SearchResultItem(
+    title: 'Ditemukan Dompet Hitam di Selasar',
+    location: 'Selasar GKB Lt. 1',
+    age: Duration(days: 1, hours: 3),
+    upvoteCount: 45,
+    imageUrl: _kImgWallet,
+    category: ReportCategory.informasiPenting,
+  ),
+  SearchResultItem(
+    title: 'AC Ruang Kuliah GKB C 204 Bocor',
+    location: 'Gedung GKB C',
+    age: Duration(minutes: 15),
+    upvoteCount: 42,
+    imageUrl: _kImgAc,
+    category: ReportCategory.kondisiKampus,
   ),
   SearchResultItem(
     title: 'Pengumuman UAS Susulan',
     location: 'Rektorat UNAND',
-    timeAgo: '2 hari lalu',
+    age: Duration(days: 3),
     upvoteCount: 88,
-    imageUrl:
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuDhulrtRVYTzfPtie0w7FaqMEbrW1xBHiOaigYreoY2A4wWQ8VekDw7g_o7CPzzqkxx5Mr3dQHlF1dgkZKybtJ7NS98Mx58xUj9aAXIamvRatDKvrmn-RblqYuSbnurXCNFeBs2SfpoPKVqH9l3f22oiOfvFyspAVEPGpIX1JFwnS78EwkV93JyB3NNccIbNnwBrOx0mujBMedVk6aT15PwKnhLcmDHjbJmBCaUKmcmWl2Ud8m9uBsV',
+    imageUrl: _kImgTree,
     category: ReportCategory.informasiPenting,
   ),
   SearchResultItem(
-    title: 'Lampu Taman Padam Blok B',
-    location: 'Taman Blok B',
-    timeAgo: '4 jam lalu',
-    upvoteCount: 12,
-    imageUrl:
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuCdbZW47ogPynpDzdG32WMlEctLMsUNyyXLC0m1MCtLoI-r1GqnCyuSjAKUVIWoMfC6KUrDhrCnaOgzgUPpxPdeUsoteiPJaDhupg2E3auy-DaEzK6o-7wfyCwZkYJMSlgbvfXxW7JWbLor94mGeETE7P_OE8WgKHtwu1ZmJhBRERmtIWF25NoYkk_5cz-M08X__4XRlxK56vUisHYjA55usx-gfRKkQNLbQNMBhyR7KSxeK_jnObDL',
+    title: 'Pohon Tumbang di Tangga Sayap Barat',
+    location: 'Tangga Sayap Barat',
+    age: Duration(hours: 5),
+    upvoteCount: 19,
+    imageUrl: _kImgTree,
     category: ReportCategory.kondisiKampus,
   ),
   SearchResultItem(
-    title: 'Kursi Patah Aula Rapat Dekan',
-    location: 'Aula FT Lt. 3',
-    timeAgo: '7 jam lalu',
-    upvoteCount: 9,
-    imageUrl:
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuDhulrtRVYTzfPtie0w7FaqMEbrW1xBHiOaigYreoY2A4wWQ8VekDw7g_o7CPzzqkxx5Mr3dQHlF1dgkZKybtJ7NS98Mx58xUj9aAXIamvRatDKvrmn-RblqYuSbnurXCNFeBs2SfpoPKVqH9l3f22oiOfvFyspAVEPGpIX1JFwnS78EwkV93JyB3NNccIbNnwBrOx0mujBMedVk6aT15PwKnhLcmDHjbJmBCaUKmcmWl2Ud8m9uBsV',
+    title: 'Jalan Berlubang Depan FE',
+    location: 'Depan Fakultas Ekonomi',
+    age: Duration(days: 20),
+    upvoteCount: 55,
+    imageUrl: _kImgLamp,
     category: ReportCategory.kondisiKampus,
+  ),
+  SearchResultItem(
+    title: 'Kunci Motor Hilang di Parkiran FT',
+    location: 'Parkiran Fakultas Teknik',
+    age: Duration(minutes: 40),
+    upvoteCount: 7,
+    imageUrl: _kImgWallet,
+    category: ReportCategory.informasiPenting,
+  ),
+  SearchResultItem(
+    title: 'Genangan Air di Bundaran PKM',
+    location: 'Bundaran PKM UNAND',
+    age: Duration(days: 4),
+    upvoteCount: 31,
+    imageUrl: _kImgAc,
+    category: ReportCategory.kondisiKampus,
+  ),
+  SearchResultItem(
+    title: 'Pemadaman Listrik Terjadwal Rektorat',
+    location: 'Gedung Rektorat',
+    age: Duration(hours: 6),
+    upvoteCount: 64,
+    imageUrl: _kImgLamp,
+    category: ReportCategory.informasiPenting,
+  ),
+  SearchResultItem(
+    title: 'Keran Toilet Lantai 2 Rusak',
+    location: 'Gedung GKB A Lt. 2',
+    age: Duration(days: 45),
+    upvoteCount: 15,
+    imageUrl: _kImgTree,
+    category: ReportCategory.kondisiKampus,
+  ),
+  SearchResultItem(
+    title: 'Pendaftaran Beasiswa Prestasi Dibuka',
+    location: 'Biro Kemahasiswaan',
+    age: Duration(days: 18),
+    upvoteCount: 96,
+    imageUrl: _kImgWallet,
+    category: ReportCategory.informasiPenting,
   ),
   SearchResultItem(
     title: 'Projector Rusak di Lab Komputer',
     location: 'Lab Komputer FT',
-    timeAgo: 'Kemarin',
+    age: Duration(days: 1, hours: 5),
     upvoteCount: 22,
-    imageUrl:
-        'https://lh3.googleusercontent.com/aida-public/AB6AXuCdnOTwLApErt0cbY9ePBdGUGMH2jG4BfLKq153ygCGBc_vOEcsmVt3Lk2OJLn7Z9dAG9Qxh-PXQHHmBJuhlCo2jDy785d-P2yFXTYjXC-_b4CcccD2nmdenYc_BcvvGJOJ7ZciQtkHhjC5FwE8GAxFF0oDKTaKiX_qba4rIkDBlkLRC4KJZ7ZZGsEl9GjSnKVlRbrmjW_obdBw6ZPm6ZbGUuoHt97lT3MnrcQCwO56tGe0cneSmRb8',
+    imageUrl: _kImgAc,
     category: ReportCategory.kondisiKampus,
+  ),
+  SearchResultItem(
+    title: 'Kursi Patah di Aula FT',
+    location: 'Aula FT Lt. 3',
+    age: Duration(days: 60),
+    upvoteCount: 9,
+    imageUrl: _kImgTree,
+    category: ReportCategory.kondisiKampus,
+  ),
+  SearchResultItem(
+    title: 'Lowongan Asisten Lab Semester Depan',
+    location: 'Lab Dasar FMIPA',
+    age: Duration(days: 35),
+    upvoteCount: 27,
+    imageUrl: _kImgLamp,
+    category: ReportCategory.informasiPenting,
   ),
 ];
 
@@ -225,9 +247,14 @@ const List<SearchResultItem> _kAllMockResults = [
 /// 2. State        → Pemisahan Draft State (pilihan UI saat ini) vs Applied State (filter aktif yang menghasilkan data)
 /// 3. Validation   → Minimal 1 kategori harus dipilih pada draft sebelum diterapkan
 /// 4. Feedback     → Floating SnackBar error jika validasi gagal, SnackBar sukses + auto-scroll ke Pratinjau Hasil jika berhasil
-/// 5. Navigation   → Mengembalikan [SearchFilterResult] dari applied state ke screen pemanggil via tombol back (←)
+/// 5. Navigation   → Menerima [initialFilter] dari screen pemanggil saat dibuka, dan mengembalikan
+///                   [SearchFilterResult] ke screen pemanggil via tombol back (←) jika filter diterapkan
 class SearchFilterScreen extends StatefulWidget {
-  const SearchFilterScreen({super.key});
+  const SearchFilterScreen({super.key, this.initialFilter});
+
+  /// Data yang dikirim dari screen pemanggil: filter terakhir yang diterapkan user.
+  /// Null jika user belum pernah menerapkan filter (pakai nilai default).
+  final SearchFilterResult? initialFilter;
 
   @override
   State<SearchFilterScreen> createState() => _SearchFilterScreenState();
@@ -240,9 +267,7 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   /// Kategori yang dipilih user pada draft (bisa lebih dari satu).
-  final Set<ReportCategory> _draftCategories = {
-    ReportCategory.kondisiKampus,
-  };
+  final Set<ReportCategory> _draftCategories = {ReportCategory.kondisiKampus};
 
   /// Mode sorting pada draft.
   SortMode _draftSortMode = SortMode.terbaru;
@@ -252,16 +277,16 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
 
   // ── Applied State (Filter aktif yang menghasilkan data pratinjau) ───────
   String _appliedQuery = '';
-  Set<ReportCategory> _appliedCategories = {
-    ReportCategory.kondisiKampus,
-  };
+  Set<ReportCategory> _appliedCategories = {ReportCategory.kondisiKampus};
   SortMode _appliedSortMode = SortMode.terbaru;
   TimeRange _appliedTimeRange = TimeRange.tujuhHari;
 
   /// Hasil laporan yang benar-benar aktif/diterapkan.
   List<SearchResultItem> _appliedResults = [];
 
-  /// Result filter yang disimpan untuk dikembalikan saat tombol Back ditekan.
+  /// Result filter yang dikembalikan saat tombol Back ditekan.
+  /// Tetap null selama user belum menekan "Terapkan filter" di sesi ini,
+  /// sehingga screen pemanggil tidak menampilkan pesan "Filter diterapkan".
   SearchFilterResult? _appliedResult;
 
   final ScrollController _scrollController = ScrollController();
@@ -270,7 +295,24 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
   @override
   void initState() {
     super.initState();
-    // Inisialisasi applied state awal saat screen pertama kali dibuka
+
+    // Pakai data yang dikirim screen pemanggil sebagai draft & applied state awal
+    final initial = widget.initialFilter;
+    if (initial != null) {
+      _searchController.text = initial.query;
+      _draftCategories
+        ..clear()
+        ..addAll(initial.categories);
+      _draftSortMode = initial.sortMode;
+      _draftTimeRange = initial.timeRange;
+
+      _appliedQuery = initial.query;
+      _appliedCategories = Set.from(initial.categories);
+      _appliedSortMode = initial.sortMode;
+      _appliedTimeRange = initial.timeRange;
+    }
+
+    // Inisialisasi hasil pratinjau awal saat screen pertama kali dibuka
     _executeAppliedFilter();
   }
 
@@ -296,26 +338,29 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
     // Filter by search query
     if (query.isNotEmpty) {
       results = results
-          .where((item) =>
-              item.title.toLowerCase().contains(query) ||
-              item.location.toLowerCase().contains(query))
+          .where(
+            (item) =>
+                item.title.toLowerCase().contains(query) ||
+                item.location.toLowerCase().contains(query),
+          )
           .toList();
+    }
+
+    // Filter by time range
+    final maxAge = _maxAgeFor(_appliedTimeRange);
+    if (maxAge != null) {
+      results = results.where((item) => item.age < maxAge).toList();
     }
 
     // Sort
     if (_appliedSortMode == SortMode.upvoteTerbanyak) {
       results.sort((a, b) => b.upvoteCount.compareTo(a.upvoteCount));
+    } else {
+      // Terbaru: umur laporan paling kecil di atas
+      results.sort((a, b) => a.age.compareTo(b.age));
     }
-    // terbaru is default order
 
     _appliedResults = results;
-    _appliedResult = SearchFilterResult(
-      query: _appliedQuery,
-      categories: Set.from(_appliedCategories),
-      sortMode: _appliedSortMode,
-      timeRange: _appliedTimeRange,
-      resultCount: results.length,
-    );
   }
 
   // ── 3. Validation ──────────────────────────────────────────────────────
@@ -337,8 +382,11 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
         SnackBar(
           content: Row(
             children: [
-              const Icon(Icons.warning_amber_rounded,
-                  color: Colors.orangeAccent, size: 20),
+              const Icon(
+                Icons.warning_amber_rounded,
+                color: Colors.orangeAccent,
+                size: 20,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -371,7 +419,11 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
         SnackBar(
           content: Row(
             children: [
-              const Icon(Icons.check_circle, color: Color(0xFF10B981), size: 20),
+              const Icon(
+                Icons.check_circle,
+                color: Color(0xFF10B981),
+                size: 20,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -418,6 +470,15 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
 
       // Jalankan proses filter
       _executeAppliedFilter();
+
+      // Simpan result untuk dikembalikan ke screen pemanggil saat Back
+      _appliedResult = SearchFilterResult(
+        query: _appliedQuery,
+        categories: Set.from(_appliedCategories),
+        sortMode: _appliedSortMode,
+        timeRange: _appliedTimeRange,
+        resultCount: _appliedResults.length,
+      );
     });
 
     // 4. Feedback (sukses)
@@ -435,7 +496,8 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
     });
   }
 
-  /// Menutup halaman dan mengembalikan applied filter terakhir ke screen sebelumnya.
+  /// Menutup halaman dan mengembalikan applied filter terakhir ke screen sebelumnya
+  /// (null jika user tidak menekan "Terapkan filter").
   void _handleBack() {
     Navigator.pop(context, _appliedResult);
   }
@@ -535,8 +597,11 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                   // Back button
                   GestureDetector(
                     onTap: _handleBack,
-                    child: const Icon(Icons.arrow_back,
-                        color: _kTextDark, size: 24),
+                    child: const Icon(
+                      Icons.arrow_back,
+                      color: _kTextDark,
+                      size: 24,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   // Title
@@ -555,8 +620,7 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.refresh_rounded,
-                            color: _kPrimary, size: 14),
+                        Icon(Icons.refresh_rounded, color: _kPrimary, size: 14),
                         const SizedBox(width: 4),
                         Text(
                           'Reset',
@@ -669,10 +733,12 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
   // ── Kategori Section ───────────────────────────────────────────────────
 
   Widget _buildKategoriSection() {
-    final kondisiSelected =
-        _draftCategories.contains(ReportCategory.kondisiKampus);
-    final infoSelected =
-        _draftCategories.contains(ReportCategory.informasiPenting);
+    final kondisiSelected = _draftCategories.contains(
+      ReportCategory.kondisiKampus,
+    );
+    final infoSelected = _draftCategories.contains(
+      ReportCategory.informasiPenting,
+    );
 
     // Count items per category
     final kondisiCount = _kAllMockResults
@@ -715,15 +781,17 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
           _buildCategoryCard(
             isSelected: kondisiSelected,
             iconBgColor: _kConditionBg,
-            iconWidget: Icon(Icons.location_on_outlined,
-                color: _kConditionBorder, size: 20),
+            iconWidget: Icon(
+              Icons.location_on_outlined,
+              color: _kConditionBorder,
+              size: 20,
+            ),
             title: 'Kondisi Kampus',
             badgeCount: kondisiCount,
             badgeLabel: 'aktif',
             badgeBgColor: _kConditionBg,
             badgeTextColor: _kConditionText,
-            description:
-                'Fasilitas rusak, jalan berlubang, pohon\ntumbang, lampu padam.',
+            description: 'Fasilitas rusak, jalan berlubang, pohon\ntumbang, lampu padam.',
             onTap: () => _toggleCategory(ReportCategory.kondisiKampus),
           ),
           const SizedBox(height: 12),
@@ -732,8 +800,11 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
           _buildCategoryCard(
             isSelected: infoSelected,
             iconBgColor: _kBgBlue100,
-            iconWidget:
-                Icon(Icons.campaign_outlined, color: _kPrimary, size: 20),
+            iconWidget: Icon(
+              Icons.campaign_outlined,
+              color: _kPrimary,
+              size: 20,
+            ),
             title: 'Informasi Penting',
             badgeCount: infoCount,
             badgeLabel: 'aktif',
@@ -806,7 +877,9 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                       // Badge count
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: badgeBgColor,
                           borderRadius: BorderRadius.circular(_kRadiusFull),
@@ -851,7 +924,8 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
               ),
               child: isSelected
                   ? const Center(
-                      child: Icon(Icons.check, color: _kBgWhite, size: 16))
+                      child: Icon(Icons.check, color: _kBgWhite, size: 16),
+                    )
                   : null,
             ),
           ],
@@ -934,9 +1008,7 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon,
-                  size: 16,
-                  color: isSelected ? _kPrimary : _kTextBody),
+              Icon(icon, size: 16, color: isSelected ? _kPrimary : _kTextBody),
               const SizedBox(width: 6),
               Text(
                 label,
@@ -972,25 +1044,13 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
           const SizedBox(height: 12),
           Row(
             children: [
-              _buildTimeChip(
-                label: 'Hari ini',
-                range: TimeRange.hariIni,
-              ),
+              _buildTimeChip(label: 'Hari ini', range: TimeRange.hariIni),
               const SizedBox(width: 8),
-              _buildTimeChip(
-                label: '7 hari',
-                range: TimeRange.tujuhHari,
-              ),
+              _buildTimeChip(label: '7 hari', range: TimeRange.tujuhHari),
               const SizedBox(width: 8),
-              _buildTimeChip(
-                label: 'Bulan ini',
-                range: TimeRange.bulanIni,
-              ),
+              _buildTimeChip(label: 'Bulan ini', range: TimeRange.bulanIni),
               const SizedBox(width: 8),
-              _buildTimeChip(
-                label: 'Semua',
-                range: TimeRange.semua,
-              ),
+              _buildTimeChip(label: 'Semua', range: TimeRange.semua),
             ],
           ),
         ],
@@ -998,10 +1058,7 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
     );
   }
 
-  Widget _buildTimeChip({
-    required String label,
-    required TimeRange range,
-  }) {
+  Widget _buildTimeChip({required String label, required TimeRange range}) {
     final isSelected = _draftTimeRange == range;
     return Expanded(
       child: GestureDetector(
@@ -1037,7 +1094,7 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
 
   Widget _buildPratinjauHasil() {
     // Show max 3 preview items from applied results
-    final previewItems = _appliedResults.take(3).toList();
+    final previewItems = _appliedResults.take(100).toList();
 
     return Padding(
       key: _previewKey,
@@ -1092,10 +1149,7 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                     if (i > 0)
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 2),
-                        child: Divider(
-                          height: 1,
-                          color: _kDivider,
-                        ),
+                        child: Divider(height: 1, color: _kDivider),
                       ),
                     _buildResultItem(previewItems[i]),
                   ],
@@ -1209,8 +1263,7 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    const Icon(Icons.location_on,
-                        size: 11, color: _kTextMeta),
+                    const Icon(Icons.location_on, size: 11, color: _kTextMeta),
                     const SizedBox(width: 2),
                     Flexible(
                       child: Text(
@@ -1261,9 +1314,11 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.arrow_upward,
-                    size: 10,
-                    color: isCondition ? _kPrimary : _kTextBody),
+                Icon(
+                  Icons.arrow_upward,
+                  size: 10,
+                  color: isCondition ? _kPrimary : _kTextBody,
+                ),
                 const SizedBox(width: 4),
                 Text(
                   '${item.upvoteCount}',
