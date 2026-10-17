@@ -12,7 +12,7 @@ import '../../widgets/home/report_card_header.dart';
 import '../../widgets/home/status_badge.dart';
 import '../../widgets/home/user_avatar.dart';
 import '../search/search_filter_screen.dart';
-import 'data/mock_reports.dart';
+import 'data/report_repository.dart';
 import 'models/report_model.dart';
 import 'report_detail_screen.dart';
 
@@ -43,7 +43,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late List<ReportModel> _reports;
+  final ReportRepository _repo = ReportRepository.instance;
 
   /// Filter terakhir yang diterapkan di halaman Cari & Filter (disimpan di memori).
   SearchFilterResult? _lastFilter;
@@ -51,7 +51,18 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _reports = List<ReportModel>.from(mockReports);
+    // Listen to repository changes (e.g. from detail screen) to rebuild feed
+    _repo.addListener(_onRepoChanged);
+  }
+
+  @override
+  void dispose() {
+    _repo.removeListener(_onRepoChanged);
+    super.dispose();
+  }
+
+  void _onRepoChanged() {
+    if (mounted) setState(() {});
   }
 
   /// 5. Navigation / Result Workflow:
@@ -67,12 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // Jika ada hasil perubahan data dari halaman detail, perbarui state feed
     if (updatedReport != null && mounted) {
-      setState(() {
-        final index = _reports.indexWhere((r) => r.id == updatedReport.id);
-        if (index != -1) {
-          _reports[index] = updatedReport;
-        }
-      });
+      _repo.updateById(updatedReport.id, updatedReport);
     }
   }
 
@@ -137,12 +143,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _handleFeedUpvote(int index, bool isUpvoted, int count) {
-    setState(() {
-      _reports[index] = _reports[index].copyWith(
-        isUpvoted: isUpvoted,
-        upvoteCount: count,
-      );
-    });
+    _repo.updateAt(index, _repo[index].copyWith(
+      isUpvoted: isUpvoted,
+      upvoteCount: count,
+    ));
 
     // 4. Feedback: SnackBar
     ScaffoldMessenger.of(context)
@@ -237,11 +241,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _handleFeedBookmark(int index, bool isBookmarked) {
-    setState(() {
-      _reports[index] = _reports[index].copyWith(
-        isBookmarked: isBookmarked,
-      );
-    });
+    _repo.updateAt(index, _repo[index].copyWith(
+      isBookmarked: isBookmarked,
+    ));
 
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -366,7 +368,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   color: AppPalette.surface(context),
                   child: Column(
                     children: [
-                      for (int i = 0; i < _reports.length; i++) ...[
+                      for (int i = 0; i < _repo.length; i++) ...[
                         if (i > 0)
                           Divider(
                             height: 1,
@@ -374,15 +376,15 @@ class _HomeScreenState extends State<HomeScreen> {
                             color: AppPalette.divider(context),
                           ),
                         _FeedItem(
-                          report: _reports[i],
-                          onTap: () => _navigateToDetail(_reports[i]),
+                          report: _repo[i],
+                          onTap: () => _navigateToDetail(_repo[i]),
                           onUpvoteChanged: (isUpvoted, count) =>
                               _handleFeedUpvote(i, isUpvoted, count),
                           onUpvoteCooldown: _handleFeedUpvoteCooldown,
                           onBookmarkChanged: (isBookmarked) =>
                               _handleFeedBookmark(i, isBookmarked),
                           onSharePressed: () =>
-                              _showShareToast(context, _reports[i].id),
+                              _showShareToast(context, _repo[i].id),
                         ),
                       ],
                     ],

@@ -11,6 +11,8 @@ import '../../widgets/home/report_card_footer.dart';
 import '../../widgets/home/report_card_header.dart';
 import '../../widgets/home/status_badge.dart';
 import '../../widgets/home/user_avatar.dart';
+import '../../widgets/home/video_player_box.dart';
+import 'data/report_repository.dart';
 import 'models/report_model.dart';
 
 /// Screen detail untuk melihat laporan secara penuh tanpa terpotong,
@@ -39,12 +41,14 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
 
   void _handleUpvote(bool isUpvoted, int count) {
     // 2. State: Update status dan jumlah vote setelah lolos validasi cooldown
+    final updated = _report.copyWith(
+      isUpvoted: isUpvoted,
+      upvoteCount: count,
+    );
     setState(() {
-      _report = _report.copyWith(
-        isUpvoted: isUpvoted,
-        upvoteCount: count,
-      );
+      _report = updated;
     });
+    ReportRepository.instance.updateById(updated.id, updated);
 
     // 4. Feedback Sukses: SnackBar konfirmasi vote ditambahkan / ditarik
     ScaffoldMessenger.of(context)
@@ -163,9 +167,11 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
   }
 
   void _handleBookmark(bool isBookmarked) {
+    final updated = _report.copyWith(isBookmarked: isBookmarked);
     setState(() {
-      _report = _report.copyWith(isBookmarked: isBookmarked);
+      _report = updated;
     });
+    ReportRepository.instance.updateById(updated.id, updated);
 
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -273,15 +279,21 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                 ),
               ],
 
-              // Gambar Bukti Laporan (Jika Ada)
+              // Media Bukti Laporan (Foto atau Video)
               if (_report.imageUrl != null) ...[
                 const SizedBox(height: 16),
-                NetworkImageBox(
-                  imageUrl: _report.imageUrl!,
-                  height: _report.aspectRatio == null ? 260 : null,
-                  aspectRatio: _report.aspectRatio,
-                  semanticLabel: _report.imageSemanticLabel,
-                ),
+                if (isVideoMedia(_report.imageUrl))
+                  VideoPlayerBox(
+                    videoUrl: _report.imageUrl!,
+                    aspectRatio: _report.aspectRatio ?? 16 / 9,
+                  )
+                else
+                  NetworkImageBox(
+                    imageUrl: _report.imageUrl!,
+                    height: _report.aspectRatio == null ? 260 : null,
+                    aspectRatio: _report.aspectRatio,
+                    semanticLabel: _report.imageSemanticLabel,
+                  ),
               ] else if (_report.contentTitle != null) ...[
                 const SizedBox(height: 16),
                 OfficialContentBox(

@@ -1,9 +1,12 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../theme/app_radius.dart';
 import '../../theme/home_colors.dart';
 
-/// Displays a network image with rounded corners, a coloured
+/// Displays a network or local image with rounded corners, a coloured
 /// placeholder while loading, and an error fallback.
 ///
 /// Supports fixed [height] or dynamic [aspectRatio] (e.g. 16:9, 1:1, 4:3, 9:16).
@@ -17,7 +20,7 @@ class NetworkImageBox extends StatelessWidget {
     this.semanticLabel,
   });
 
-  /// URL of the image to display.
+  /// URL or local file path of the image to display.
   final String imageUrl;
 
   /// Optional fixed height of the image container.
@@ -31,15 +34,39 @@ class NetworkImageBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget content = Image.network(
-      imageUrl,
-      fit: BoxFit.cover,
-      width: double.infinity,
-      height: height,
-      semanticLabel: semanticLabel,
-      loadingBuilder: _loadingBuilder,
-      errorBuilder: _errorBuilder,
-    );
+    final isNetwork =
+        imageUrl.startsWith('http://') || imageUrl.startsWith('https://');
+
+    Widget content;
+    if (isNetwork) {
+      content = Image.network(
+        imageUrl,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: height,
+        semanticLabel: semanticLabel,
+        loadingBuilder: _loadingBuilder,
+        errorBuilder: _errorBuilder,
+      );
+    } else if (kIsWeb) {
+      content = Image.network(
+        imageUrl,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: height,
+        semanticLabel: semanticLabel,
+        errorBuilder: _errorBuilder,
+      );
+    } else {
+      content = Image.file(
+        File(imageUrl),
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: height,
+        semanticLabel: semanticLabel,
+        errorBuilder: _errorBuilder,
+      );
+    }
 
     if (aspectRatio != null) {
       content = AspectRatio(
