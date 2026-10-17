@@ -6,6 +6,7 @@ import '../../theme/home_text_styles.dart';
 import 'network_image_box.dart';
 import 'report_card_footer.dart';
 import 'report_card_header.dart';
+import 'video_player_box.dart';
 
 /// Gap between title and description (Tailwind `gap-1` = 4px).
 const double _kTitleDescGap = 4;
@@ -97,12 +98,18 @@ class ReportCard extends StatelessWidget {
             _TitleDescription(title: title, description: description),
             if (imageUrl != null) ...[
               const SizedBox(height: _kSectionGap),
-              NetworkImageBox(
-                imageUrl: imageUrl!,
-                height: aspectRatio == null ? imageHeight : null,
-                aspectRatio: aspectRatio,
-                semanticLabel: imageSemanticLabel,
-              ),
+              if (isVideoMedia(imageUrl))
+                VideoPlayerBox(
+                  videoUrl: imageUrl!,
+                  aspectRatio: aspectRatio ?? 16 / 9,
+                )
+              else
+                NetworkImageBox(
+                  imageUrl: imageUrl!,
+                  height: aspectRatio == null ? imageHeight : null,
+                  aspectRatio: aspectRatio,
+                  semanticLabel: imageSemanticLabel,
+                ),
             ],
             const SizedBox(height: _kSectionGap),
             ReportCardFooter(

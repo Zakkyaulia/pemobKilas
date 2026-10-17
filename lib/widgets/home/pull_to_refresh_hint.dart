@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/home_colors.dart';
-import '../../theme/home_text_styles.dart';
-
-/// Gap between icon and text (Tailwind `gap-1.5` = 6px).
-const double _kGap = 6;
 
 /// Bounce icon size (HTML `text-[16px]`).
 const double _kIconSize = 16;

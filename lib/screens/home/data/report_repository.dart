@@ -43,6 +43,12 @@ class ReportRepository extends ChangeNotifier {
     }
   }
 
+  /// Tambahkan laporan baru di urutan teratas (paling baru).
+  void addReport(ReportModel report) {
+    _reports.insert(0, report);
+    notifyListeners();
+  }
+
   /// Find the index of a report by its [id]. Returns -1 if not found.
   int indexById(String id) => _reports.indexWhere((r) => r.id == id);
 }

@@ -1,7 +1,13 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../theme/app_palette.dart';
 import '../../theme/app_spacing.dart';
+import '../../widgets/home/upvote_button.dart';
+import '../../widgets/home/video_player_box.dart';
 import '../home/data/report_repository.dart';
 import '../home/models/report_model.dart';
 import '../home/report_detail_screen.dart';
@@ -9,24 +15,17 @@ import '../home/report_detail_screen.dart';
 // ─── Design constants ─────────────────────────────────────────────────────────
 
 /// Colors from the Figma CSS export.
-const Color _kBgCanvas = Color(0xFFF8F9FF);
 const Color _kBgWhite = Color(0xFFFFFFFF);
 const Color _kBgBlue100 = Color(0xFFE5EEFF);
-const Color _kTextDark = Color(0xFF0B1C30);
-const Color _kTextMuted = Color(0xFF5C6070);
-const Color _kTextBody = Color(0xFF434656);
-const Color _kTextMeta = Color(0xFF737687);
 const Color _kPrimary = Color(0xFF0048D4);
 const Color _kPrimaryDeep = Color(0xFF0B3A9C);
 const Color _kBorderPrimary = Color(0xFF0048D4);
-const Color _kBorderLight = Color(0xFFE5EEFF);
 const Color _kConditionBg = Color(0xFFFEF3DC);
 const Color _kConditionText = Color(0xFF653E00);
 const Color _kConditionBorder = Color(0xFF9C6200);
 const Color _kStatusCondition = Color(0xFFF59E0B);
 const Color _kStatusInfo = Color(0xFF0048D4);
 const Color _kBorderOutline = Color(0xFFC3CADB);
-const Color _kDivider = Color(0x99DCE9FF); // 60% opacity
 
 /// Radius tokens.
 const double _kRadiusFull = 9999;
@@ -472,7 +471,7 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
         _handleBack();
       },
       child: Scaffold(
-        backgroundColor: _kBgCanvas,
+        backgroundColor: AppPalette.canvas(context),
         body: Column(
           children: [
             // ── Header (white bg) ──────────────────────────────────────
@@ -515,7 +514,7 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
 
   Widget _buildHeader(double topPadding) {
     return Container(
-      color: _kBgWhite,
+      color: AppPalette.surface(context),
       child: Column(
         children: [
           SizedBox(height: topPadding),
@@ -528,9 +527,9 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                   // Back button
                   GestureDetector(
                     onTap: _handleBack,
-                    child: const Icon(
+                    child: Icon(
                       Icons.arrow_back,
-                      color: _kTextDark,
+                      color: AppPalette.textPrimary(context),
                       size: 24,
                     ),
                   ),
@@ -541,7 +540,7 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
-                      color: _kTextDark,
+                      color: AppPalette.textPrimary(context),
                     ),
                   ),
                   const Spacer(),
@@ -568,28 +567,32 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
               ),
             ),
           ),
-          // Thin blue separator line
-          Container(height: 2, color: _kBgBlue100),
+          // Separator line
+          Container(height: 1, color: AppPalette.divider(context)),
         ],
       ),
     );
   }
 
   Widget _buildSearchBar() {
+    final isDark = AppPalette.isDark(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       child: Container(
         height: 48,
         decoration: BoxDecoration(
-          color: _kBgWhite,
+          color: AppPalette.surface(context),
           borderRadius: BorderRadius.circular(_kRadiusFull),
-          border: Border.all(color: _kBorderPrimary, width: 1.5),
+          border: Border.all(
+            color: isDark ? const Color(0xFF3B82F6) : _kBorderPrimary,
+            width: 1.5,
+          ),
         ),
         child: Row(
           children: [
             const SizedBox(width: 16),
             // Search icon
-            const Icon(Icons.search, color: _kTextMuted, size: 20),
+            Icon(Icons.search, color: AppPalette.textSecondary(context), size: 20),
             const SizedBox(width: 10),
             // Text field (transparent to avoid double-box border nesting)
             Expanded(
@@ -601,14 +604,14 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 14,
                   fontWeight: FontWeight.w400,
-                  color: _kTextDark,
+                  color: AppPalette.textPrimary(context),
                 ),
                 decoration: InputDecoration(
                   hintText: 'Cari laporan kampus...',
                   hintStyle: GoogleFonts.plusJakartaSans(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
-                    color: _kTextMuted,
+                    color: AppPalette.textSecondary(context),
                   ),
                   filled: false,
                   fillColor: Colors.transparent,
@@ -639,8 +642,10 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                     child: Container(
                       width: 28,
                       height: 28,
-                      decoration: const BoxDecoration(
-                        color: _kBgBlue100,
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? AppPalette.surfaceSubtle(context)
+                            : _kBgBlue100,
                         shape: BoxShape.circle,
                       ),
                       child: const Center(
@@ -694,7 +699,7 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: _kTextDark,
+                  color: AppPalette.textPrimary(context),
                 ),
               ),
               Text(
@@ -702,7 +707,7 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 12,
                   fontWeight: FontWeight.w400,
-                  color: _kTextMuted,
+                  color: AppPalette.textSecondary(context),
                 ),
               ),
             ],
@@ -769,10 +774,10 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: _kBgWhite,
+          color: AppPalette.surface(context),
           borderRadius: BorderRadius.circular(_kRadiusMd),
           border: Border.all(
-            color: isSelected ? _kBorderPrimary : _kBorderLight,
+            color: isSelected ? _kBorderPrimary : AppPalette.divider(context),
             width: 1.5,
           ),
         ),
@@ -802,7 +807,7 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
-                          color: _kTextDark,
+                          color: AppPalette.textPrimary(context),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -833,7 +838,7 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 12,
                       fontWeight: FontWeight.w400,
-                      color: _kTextBody,
+                      color: AppPalette.textSecondary(context),
                       height: 1.4,
                     ),
                   ),
@@ -879,14 +884,14 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
             style: GoogleFonts.plusJakartaSans(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: _kTextDark,
+              color: AppPalette.textPrimary(context),
             ),
           ),
           const SizedBox(height: 12),
           Container(
             height: 48,
             decoration: BoxDecoration(
-              color: _kBgBlue100,
+              color: AppPalette.surfaceSubtle(context),
               borderRadius: BorderRadius.circular(_kRadiusFull),
             ),
             child: Row(
@@ -933,21 +938,29 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
         duration: const Duration(milliseconds: 200),
         margin: const EdgeInsets.all(4),
         decoration: BoxDecoration(
-          color: isSelected ? _kBgWhite : Colors.transparent,
+          color: isSelected ? AppPalette.surface(context) : Colors.transparent,
           borderRadius: BorderRadius.circular(_kRadiusFull),
         ),
         child: Center(
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 16, color: isSelected ? _kPrimary : _kTextBody),
+              Icon(
+                icon,
+                size: 16,
+                color: isSelected
+                    ? _kPrimary
+                    : AppPalette.textSecondary(context),
+              ),
               const SizedBox(width: 6),
               Text(
                 label,
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
-                  color: isSelected ? _kPrimary : _kTextBody,
+                  color: isSelected
+                      ? _kPrimary
+                      : AppPalette.textSecondary(context),
                 ),
               ),
             ],
@@ -970,7 +983,7 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
             style: GoogleFonts.plusJakartaSans(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: _kTextDark,
+              color: AppPalette.textPrimary(context),
             ),
           ),
           const SizedBox(height: 12),
@@ -1001,11 +1014,11 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
           duration: const Duration(milliseconds: 200),
           height: 40,
           decoration: BoxDecoration(
-            color: isSelected ? _kPrimary : _kBgWhite,
+            color: isSelected ? _kPrimary : AppPalette.surface(context),
             borderRadius: BorderRadius.circular(_kRadiusFull),
             border: isSelected
                 ? null
-                : Border.all(color: _kBorderLight, width: 1.5),
+                : Border.all(color: AppPalette.divider(context), width: 1.5),
           ),
           child: Center(
             child: Text(
@@ -1013,7 +1026,9 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
-                color: isSelected ? _kBgWhite : _kTextBody,
+                color: isSelected
+                    ? _kBgWhite
+                    : AppPalette.textSecondary(context),
               ),
             ),
           ),
@@ -1043,7 +1058,7 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: _kTextDark,
+                  color: AppPalette.textPrimary(context),
                 ),
               ),
               Text(
@@ -1064,13 +1079,19 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
           else
             Container(
               decoration: BoxDecoration(
-                color: _kBgWhite,
+                color: AppPalette.surface(context),
                 borderRadius: BorderRadius.circular(_kRadiusLg),
-                boxShadow: const [
+                border: Border.all(
+                  color: AppPalette.divider(context),
+                  width: 1,
+                ),
+                boxShadow: [
                   BoxShadow(
-                    color: Color(0x0D000000),
-                    blurRadius: 2,
-                    offset: Offset(0, 1),
+                    color: AppPalette.isDark(context)
+                        ? Colors.black26
+                        : const Color(0x0D000000),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
                   ),
                 ],
               ),
@@ -1081,7 +1102,10 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                     if (i > 0)
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 2),
-                        child: Divider(height: 1, color: _kDivider),
+                        child: Divider(
+                          height: 1,
+                          color: AppPalette.divider(context),
+                        ),
                       ),
                     _buildResultItem(previewItems[i]),
                   ],
@@ -1098,19 +1122,23 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 40),
       decoration: BoxDecoration(
-        color: _kBgBlue100,
+        color: AppPalette.surfaceSubtle(context),
         borderRadius: BorderRadius.circular(_kRadiusLg),
       ),
       child: Column(
         children: [
-          Icon(Icons.search_off, color: _kTextMuted, size: 40),
+          Icon(
+            Icons.search_off,
+            color: AppPalette.textSecondary(context),
+            size: 40,
+          ),
           const SizedBox(height: 8),
           Text(
             'Tidak ada laporan ditemukan',
             style: GoogleFonts.plusJakartaSans(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: _kTextBody,
+              color: AppPalette.textPrimary(context),
             ),
           ),
           const SizedBox(height: 4),
@@ -1119,7 +1147,7 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
             style: GoogleFonts.plusJakartaSans(
               fontSize: 12,
               fontWeight: FontWeight.w400,
-              color: _kTextMuted,
+              color: AppPalette.textSecondary(context),
             ),
           ),
         ],
@@ -1154,45 +1182,7 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
         child: Row(
           children: [
             // Thumbnail
-            Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(_kRadiusSm),
-                  child: Container(
-                    width: 48,
-                    height: 48,
-                    color: _kBgBlue100,
-                    child: Image.network(
-                      item.imageUrl,
-                      width: 48,
-                      height: 48,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => Container(
-                        width: 48,
-                        height: 48,
-                        color: _kBgBlue100,
-                        child: const Icon(Icons.image, color: _kTextMeta),
-                      ),
-                    ),
-                  ),
-                ),
-                // Status dot
-                Positioned(
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: statusColor,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(6),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+            _buildThumbnail(item, statusColor),
             const SizedBox(width: 12),
             // Text content
             Expanded(
@@ -1204,7 +1194,7 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: _kTextDark,
+                      color: AppPalette.textPrimary(context),
                       letterSpacing: 0.14,
                     ),
                     maxLines: 1,
@@ -1213,7 +1203,11 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.location_on, size: 11, color: _kTextMeta),
+                      Icon(
+                        Icons.location_on,
+                        size: 11,
+                        color: AppPalette.textSecondary(context),
+                      ),
                       const SizedBox(width: 2),
                       Flexible(
                         child: Text(
@@ -1221,7 +1215,7 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 12,
                             fontWeight: FontWeight.w400,
-                            color: _kTextMeta,
+                            color: AppPalette.textSecondary(context),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -1231,8 +1225,8 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                       Container(
                         width: 4,
                         height: 4,
-                        decoration: const BoxDecoration(
-                          color: _kTextMeta,
+                        decoration: BoxDecoration(
+                          color: AppPalette.textSecondary(context),
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -1242,7 +1236,7 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
-                          color: _kTextBody,
+                          color: AppPalette.textSecondary(context),
                           letterSpacing: 0.4,
                         ),
                       ),
@@ -1252,54 +1246,128 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
               ),
             ),
             const SizedBox(width: 12),
-            // Upvote badge
-            GestureDetector(
-              onTap: () {
+            // Upvote button (reusable modular component with anti-spam cooldown)
+            UpvoteButton(
+              initialCount: item.upvoteCount,
+              initialIsUpvoted: item.isUpvoted,
+              onChanged: (isUpvoted, count) {
                 final repo = ReportRepository.instance;
                 final report = item.report ??
                     repo.reports.firstWhere(
                       (r) => r.id == item.id,
                       orElse: () => repo.reports.first,
                     );
-                final newIsUpvoted = !report.isUpvoted;
-                final newCount = report.upvoteCount + (newIsUpvoted ? 1 : -1);
                 final updated = report.copyWith(
-                  isUpvoted: newIsUpvoted,
-                  upvoteCount: newCount,
+                  isUpvoted: isUpvoted,
+                  upvoteCount: count,
                 );
                 repo.updateById(updated.id, updated);
               },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: item.isUpvoted
-                      ? const Color(0x1A0048D4) // 10% primary
-                      : _kBgBlue100,
-                  borderRadius: BorderRadius.circular(_kRadiusFull),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.arrow_upward,
-                      size: 10,
-                      color: item.isUpvoted ? _kPrimary : _kTextBody,
+              onCooldownTriggered: () {
+                ScaffoldMessenger.of(context)
+                  ..hideCurrentSnackBar()
+                  ..showSnackBar(
+                    const SnackBar(
+                      content: Text('Tunggu sebentar sebelum memberi vote lagi.'),
+                      duration: Duration(seconds: 1),
+                      behavior: SnackBarBehavior.floating,
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${item.upvoteCount}',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: item.isUpvoted ? _kPrimary : _kTextBody,
-                        letterSpacing: 0.4,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                  );
+              },
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildThumbnail(SearchResultItem item, Color statusColor) {
+    final hasMedia = item.imageUrl.isNotEmpty;
+    final isNetwork =
+        item.imageUrl.startsWith('http://') || item.imageUrl.startsWith('https://');
+    final isVideo = isVideoMedia(item.imageUrl);
+    final isCondition = item.category == ReportCategory.kondisiKampus;
+
+    Widget mediaContent;
+    if (!hasMedia) {
+      mediaContent = _buildCategoryFallback(isCondition);
+    } else if (isVideo) {
+      mediaContent = Container(
+        width: 48,
+        height: 48,
+        color: const Color(0xFF0F172A),
+        child: const Center(
+          child: Icon(
+            Icons.play_circle_fill_rounded,
+            color: Colors.white,
+            size: 24,
+          ),
+        ),
+      );
+    } else if (isNetwork) {
+      mediaContent = Image.network(
+        item.imageUrl,
+        width: 48,
+        height: 48,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => _buildCategoryFallback(isCondition),
+      );
+    } else {
+      mediaContent = kIsWeb
+          ? Image.network(
+              item.imageUrl,
+              width: 48,
+              height: 48,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => _buildCategoryFallback(isCondition),
+            )
+          : Image.file(
+              File(item.imageUrl),
+              width: 48,
+              height: 48,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => _buildCategoryFallback(isCondition),
+            );
+    }
+
+    return Stack(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(_kRadiusSm),
+          child: SizedBox(
+            width: 48,
+            height: 48,
+            child: mediaContent,
+          ),
+        ),
+        Positioned(
+          right: 0,
+          bottom: 0,
+          child: Container(
+            width: 12,
+            height: 12,
+            decoration: BoxDecoration(
+              color: statusColor,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(6),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCategoryFallback(bool isCondition) {
+    return Container(
+      width: 48,
+      height: 48,
+      color: isCondition ? _kConditionBg : _kBgBlue100,
+      child: Center(
+        child: Icon(
+          isCondition ? Icons.apartment_rounded : Icons.campaign_rounded,
+          color: isCondition ? _kConditionBorder : _kPrimary,
+          size: 22,
         ),
       ),
     );
@@ -1309,12 +1377,12 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
 
   Widget _buildFooter(double bottomPadding) {
     return Container(
-      color: _kBgWhite,
+      color: AppPalette.surface(context),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Blue accent line
-          Container(height: 2, color: _kBgBlue100),
+          // Accent line / divider
+          Container(height: 1, color: AppPalette.divider(context)),
           Padding(
             padding: EdgeInsets.fromLTRB(
               AppSpacing.lg,
@@ -1331,6 +1399,8 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _kPrimary,
                   foregroundColor: _kBgWhite,
+                  padding: EdgeInsets.zero,
+                  alignment: Alignment.center,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(_kRadiusMd),
                   ),
@@ -1338,6 +1408,7 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     const Icon(Icons.filter_list, size: 18, color: _kBgWhite),
                     const SizedBox(width: 8),
@@ -1347,6 +1418,7 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
                         color: _kBgWhite,
+                        height: 1.0,
                       ),
                     ),
                   ],

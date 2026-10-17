@@ -18,7 +18,6 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
-  late Animation<double> _glowAnimation;
   late Animation<Offset> _slideAnimation;
 
   @override

@@ -11,6 +11,7 @@ import '../../widgets/home/report_card_footer.dart';
 import '../../widgets/home/report_card_header.dart';
 import '../../widgets/home/status_badge.dart';
 import '../../widgets/home/user_avatar.dart';
+import '../../widgets/home/video_player_box.dart';
 import 'data/report_repository.dart';
 import 'models/report_model.dart';
 
@@ -278,15 +279,21 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                 ),
               ],
 
-              // Gambar Bukti Laporan (Jika Ada)
+              // Media Bukti Laporan (Foto atau Video)
               if (_report.imageUrl != null) ...[
                 const SizedBox(height: 16),
-                NetworkImageBox(
-                  imageUrl: _report.imageUrl!,
-                  height: _report.aspectRatio == null ? 260 : null,
-                  aspectRatio: _report.aspectRatio,
-                  semanticLabel: _report.imageSemanticLabel,
-                ),
+                if (isVideoMedia(_report.imageUrl))
+                  VideoPlayerBox(
+                    videoUrl: _report.imageUrl!,
+                    aspectRatio: _report.aspectRatio ?? 16 / 9,
+                  )
+                else
+                  NetworkImageBox(
+                    imageUrl: _report.imageUrl!,
+                    height: _report.aspectRatio == null ? 260 : null,
+                    aspectRatio: _report.aspectRatio,
+                    semanticLabel: _report.imageSemanticLabel,
+                  ),
               ] else if (_report.contentTitle != null) ...[
                 const SizedBox(height: 16),
                 OfficialContentBox(

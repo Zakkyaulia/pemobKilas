@@ -4,6 +4,7 @@ import '../theme/app_palette.dart';
 import '../widgets/home/home_bottom_nav.dart';
 import 'home/home_screen.dart';
 import 'map/map_screen.dart';
+import 'report/create_report_screen.dart';
 
 /// Wrapper utama (Shell) yang menangani Bottom Navigation dan menjaga state
 /// halaman menggunakan PageView agar bisa diswipe horizontal.
@@ -57,9 +58,11 @@ class _MainScreenState extends State<MainScreen> {
 
   void _onTabTapped(int index) {
     if (index == 2) {
-      // FAB Tap -> Tangani fungsi buat laporan baru di sini
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Buat Laporan Baru')),
+      // FAB Tap -> Buka halaman Buat Laporan baru
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => const CreateReportScreen(),
+        ),
       );
       return;
     }
