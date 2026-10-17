@@ -95,10 +95,12 @@ class _UpvoteButtonState extends State<UpvoteButton> {
 
   @override
   Widget build(BuildContext context) {
-    final backgroundColor =
-        _isUpvoted ? HomeColors.primaryContainer : HomeColors.surfaceSubtle;
-    final foregroundColor =
-        _isUpvoted ? HomeColors.onPrimary : HomeColors.onSurfaceVariant;
+    final backgroundColor = _isUpvoted
+        ? HomeColors.primaryContainer
+        : HomeColors.surfaceSubtle;
+    final foregroundColor = _isUpvoted
+        ? HomeColors.onPrimary
+        : HomeColors.onSurfaceVariant;
     final shadows = _isUpvoted ? HomeShadows.sm : <BoxShadow>[];
 
     return GestureDetector(
@@ -117,11 +119,7 @@ class _UpvoteButtonState extends State<UpvoteButton> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.arrow_upward,
-              size: _kIconSize,
-              color: foregroundColor,
-            ),
+            Icon(Icons.arrow_upward, size: _kIconSize, color: foregroundColor),
             const SizedBox(width: _kGap),
             Text(
               '$_count',

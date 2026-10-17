@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../theme/app_spacing.dart';
+import '../home/data/report_repository.dart';
+import '../home/models/report_model.dart';
+import '../home/report_detail_screen.dart';
 
 // ─── Design constants ─────────────────────────────────────────────────────────
 
@@ -45,22 +48,28 @@ enum TimeRange { hariIni, tujuhHari, bulanIni, semua }
 /// Preview result item.
 class SearchResultItem {
   const SearchResultItem({
+    required this.id,
     required this.title,
     required this.location,
     required this.age,
     required this.upvoteCount,
+    required this.isUpvoted,
     required this.imageUrl,
     required this.category,
+    this.report,
   });
 
+  final String id;
   final String title;
   final String location;
 
   /// Umur laporan sejak dibuat. Dipakai untuk filter rentang waktu & urutan terbaru.
   final Duration age;
   final int upvoteCount;
+  final bool isUpvoted;
   final String imageUrl;
   final ReportCategory category;
+  final ReportModel? report;
 
   /// Label waktu relatif yang ditampilkan di UI, diturunkan dari [age].
   String get timeAgo {
@@ -102,141 +111,52 @@ class SearchFilterResult {
   final int resultCount;
 }
 
-// ─── Static Mock Data ─────────────────────────────────────────────────────────
+// ─── Live Data from Repository ────────────────────────────────────────────────
 
-const String _kImgLamp =
-    'https://lh3.googleusercontent.com/aida-public/AB6AXuCdbZW47ogPynpDzdG32WMlEctLMsUNyyXLC0m1MCtLoI-r1GqnCyuSjAKUVIWoMfC6KUrDhrCnaOgzgUPpxPdeUsoteiPJaDhupg2E3auy-DaEzK6o-7wfyCwZkYJMSlgbvfXxW7JWbLor94mGeETE7P_OE8WgKHtwu1ZmJhBRERmtIWF25NoYkk_5cz-M08X__4XRlxK56vUisHYjA55usx-gfRKkQNLbQNMBhyR7KSxeK_jnObDL';
-const String _kImgTree =
-    'https://lh3.googleusercontent.com/aida-public/AB6AXuDhulrtRVYTzfPtie0w7FaqMEbrW1xBHiOaigYreoY2A4wWQ8VekDw7g_o7CPzzqkxx5Mr3dQHlF1dgkZKybtJ7NS98Mx58xUj9aAXIamvRatDKvrmn-RblqYuSbnurXCNFeBs2SfpoPKVqH9l3f22oiOfvFyspAVEPGpIX1JFwnS78EwkV93JyB3NNccIbNnwBrOx0mujBMedVk6aT15PwKnhLcmDHjbJmBCaUKmcmWl2Ud8m9uBsV';
-const String _kImgWallet =
-    'https://lh3.googleusercontent.com/aida-public/AB6AXuCdnOTwLApErt0cbY9ePBdGUGMH2jG4BfLKq153ygCGBc_vOEcsmVt3Lk2OJLn7Z9dAG9Qxh-PXQHHmBJuhlCo2jDy785d-P2yFXTYjXC-_b4CcccD2nmdenYc_BcvvGJOJ7ZciQtkHhjC5FwE8GAxFF0oDKTaKiX_qba4rIkDBlkLRC4KJZ7ZZGsEl9GjSnKVlRbrmjW_obdBw6ZPm6ZbGUuoHt97lT3MnrcQCwO56tGe0cneSmRb8';
-const String _kImgAc =
-    'https://lh3.googleusercontent.com/aida-public/AB6AXuCQjRXiN2w4dCPIVQhWlufSduDBSOqq2UCDygQfUyfqSojlTedSVb-jV0eQv01FkURvr7Qgez_9haHqOHRzyrTMm3-zTxvYqLoT_9pOnwvzbpXntLaJrl15dn9w9LqHV6h_Q-VTAArbnGCIPrkLxKjPYJlR_v1VSLY4KUOIjrOZXQlOZdLstSB2MYxJK3RiWV-7pjLLrSMmfoav9T6019ykOx4WMX3P7hAfHAQKUCS_DHnrVSu8_buT';
+/// Mapping dari metaText di [ReportModel] ke [Duration] untuk dipakai di filter
+/// rentang waktu halaman search. Parsing sederhana dari string "Xm lalu",
+/// "X jam lalu", "X hari lalu".
+Duration _parseAge(String metaText) {
+  // metaText format: "Gedung GKB C • 15m lalu" atau "Bundaran PKM UNAND • 1 jam lalu"
+  final parts = metaText.split('•');
+  if (parts.length < 2) return Duration.zero;
+  final timePart = parts.last.trim(); // e.g. "15m lalu", "1 jam lalu", "1 hari lalu"
 
-/// Data dummy sengaja diacak (kategori, umur laporan, upvote) supaya
-/// efek setiap filter — kategori, rentang waktu, dan urutan — terlihat jelas.
-const List<SearchResultItem> _kAllMockResults = [
-  SearchResultItem(
-    title: 'Lampu Koridor GKB Lantai 3 Padam',
-    location: 'Gedung Kuliah Bersama Lt. 3',
-    age: Duration(hours: 2),
-    upvoteCount: 38,
-    imageUrl: _kImgLamp,
-    category: ReportCategory.kondisiKampus,
-  ),
-  SearchResultItem(
-    title: 'Jadwal Wisuda Semester Ganjil',
-    location: 'Auditorium UNAND',
-    age: Duration(days: 12),
-    upvoteCount: 120,
-    imageUrl: _kImgWallet,
-    category: ReportCategory.informasiPenting,
-  ),
-  SearchResultItem(
-    title: 'Ditemukan Dompet Hitam di Selasar',
-    location: 'Selasar GKB Lt. 1',
-    age: Duration(days: 1, hours: 3),
-    upvoteCount: 45,
-    imageUrl: _kImgWallet,
-    category: ReportCategory.informasiPenting,
-  ),
-  SearchResultItem(
-    title: 'AC Ruang Kuliah GKB C 204 Bocor',
-    location: 'Gedung GKB C',
-    age: Duration(minutes: 15),
-    upvoteCount: 42,
-    imageUrl: _kImgAc,
-    category: ReportCategory.kondisiKampus,
-  ),
-  SearchResultItem(
-    title: 'Pengumuman UAS Susulan',
-    location: 'Rektorat UNAND',
-    age: Duration(days: 3),
-    upvoteCount: 88,
-    imageUrl: _kImgTree,
-    category: ReportCategory.informasiPenting,
-  ),
-  SearchResultItem(
-    title: 'Pohon Tumbang di Tangga Sayap Barat',
-    location: 'Tangga Sayap Barat',
-    age: Duration(hours: 5),
-    upvoteCount: 19,
-    imageUrl: _kImgTree,
-    category: ReportCategory.kondisiKampus,
-  ),
-  SearchResultItem(
-    title: 'Jalan Berlubang Depan FE',
-    location: 'Depan Fakultas Ekonomi',
-    age: Duration(days: 20),
-    upvoteCount: 55,
-    imageUrl: _kImgLamp,
-    category: ReportCategory.kondisiKampus,
-  ),
-  SearchResultItem(
-    title: 'Kunci Motor Hilang di Parkiran FT',
-    location: 'Parkiran Fakultas Teknik',
-    age: Duration(minutes: 40),
-    upvoteCount: 7,
-    imageUrl: _kImgWallet,
-    category: ReportCategory.informasiPenting,
-  ),
-  SearchResultItem(
-    title: 'Genangan Air di Bundaran PKM',
-    location: 'Bundaran PKM UNAND',
-    age: Duration(days: 4),
-    upvoteCount: 31,
-    imageUrl: _kImgAc,
-    category: ReportCategory.kondisiKampus,
-  ),
-  SearchResultItem(
-    title: 'Pemadaman Listrik Terjadwal Rektorat',
-    location: 'Gedung Rektorat',
-    age: Duration(hours: 6),
-    upvoteCount: 64,
-    imageUrl: _kImgLamp,
-    category: ReportCategory.informasiPenting,
-  ),
-  SearchResultItem(
-    title: 'Keran Toilet Lantai 2 Rusak',
-    location: 'Gedung GKB A Lt. 2',
-    age: Duration(days: 45),
-    upvoteCount: 15,
-    imageUrl: _kImgTree,
-    category: ReportCategory.kondisiKampus,
-  ),
-  SearchResultItem(
-    title: 'Pendaftaran Beasiswa Prestasi Dibuka',
-    location: 'Biro Kemahasiswaan',
-    age: Duration(days: 18),
-    upvoteCount: 96,
-    imageUrl: _kImgWallet,
-    category: ReportCategory.informasiPenting,
-  ),
-  SearchResultItem(
-    title: 'Projector Rusak di Lab Komputer',
-    location: 'Lab Komputer FT',
-    age: Duration(days: 1, hours: 5),
-    upvoteCount: 22,
-    imageUrl: _kImgAc,
-    category: ReportCategory.kondisiKampus,
-  ),
-  SearchResultItem(
-    title: 'Kursi Patah di Aula FT',
-    location: 'Aula FT Lt. 3',
-    age: Duration(days: 60),
-    upvoteCount: 9,
-    imageUrl: _kImgTree,
-    category: ReportCategory.kondisiKampus,
-  ),
-  SearchResultItem(
-    title: 'Lowongan Asisten Lab Semester Depan',
-    location: 'Lab Dasar FMIPA',
-    age: Duration(days: 35),
-    upvoteCount: 27,
-    imageUrl: _kImgLamp,
-    category: ReportCategory.informasiPenting,
-  ),
-];
+  final mMatch = RegExp(r'(\d+)\s*m\s+lalu').firstMatch(timePart);
+  if (mMatch != null) return Duration(minutes: int.parse(mMatch.group(1)!));
+
+  final hMatch = RegExp(r'(\d+)\s*jam\s+lalu').firstMatch(timePart);
+  if (hMatch != null) return Duration(hours: int.parse(hMatch.group(1)!));
+
+  final dMatch = RegExp(r'(\d+)\s*hari\s+lalu').firstMatch(timePart);
+  if (dMatch != null) return Duration(days: int.parse(dMatch.group(1)!));
+
+  return Duration.zero;
+}
+
+/// Konversi [ReportModel] dari repository ke [SearchResultItem].
+/// Data dibaca live dari [ReportRepository] sehingga upvote count
+/// dan status upvote selalu sinkron dengan halaman Home.
+List<SearchResultItem> _buildLiveResults() {
+  final repo = ReportRepository.instance;
+  return repo.reports.map((r) {
+    final category = r.badgeLabel == 'Info Penting'
+        ? ReportCategory.informasiPenting
+        : ReportCategory.kondisiKampus;
+    final title = r.title ?? (r.contentTitle ?? '');
+    return SearchResultItem(
+      id: r.id,
+      title: title,
+      location: r.locationName ?? '',
+      age: _parseAge(r.metaText),
+      upvoteCount: r.upvoteCount,
+      isUpvoted: r.isUpvoted,
+      imageUrl: r.imageUrl ?? '',
+      category: category,
+      report: r,
+    );
+  }).toList();
+}
 
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
@@ -295,6 +215,8 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
   @override
   void initState() {
     super.initState();
+    // Dengarkan perubahan pada repository agar data sinkron real-time
+    ReportRepository.instance.addListener(_onRepoChanged);
 
     // Pakai data yang dikirim screen pemanggil sebagai draft & applied state awal
     final initial = widget.initialFilter;
@@ -318,15 +240,24 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
 
   @override
   void dispose() {
+    ReportRepository.instance.removeListener(_onRepoChanged);
     _searchController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
 
+  void _onRepoChanged() {
+    if (mounted) {
+      setState(() {
+        _executeAppliedFilter();
+      });
+    }
+  }
+
   /// Menjalankan filter terhadap mock data hanya berdasarkan applied state.
   void _executeAppliedFilter() {
     final query = _appliedQuery.toLowerCase();
-    List<SearchResultItem> results = List.from(_kAllMockResults);
+    List<SearchResultItem> results = _buildLiveResults();
 
     // Filter by category
     if (_appliedCategories.isNotEmpty) {
@@ -741,10 +672,11 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
     );
 
     // Count items per category
-    final kondisiCount = _kAllMockResults
+    final allItems = _buildLiveResults();
+    final kondisiCount = allItems
         .where((item) => item.category == ReportCategory.kondisiKampus)
         .length;
-    final infoCount = _kAllMockResults
+    final infoCount = allItems
         .where((item) => item.category == ReportCategory.informasiPenting)
         .length;
 
@@ -1199,140 +1131,176 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
     final isCondition = item.category == ReportCategory.kondisiKampus;
     final statusColor = isCondition ? _kStatusCondition : _kStatusInfo;
 
-    return Padding(
-      padding: const EdgeInsets.all(12),
-      child: Row(
-        children: [
-          // Thumbnail
-          Stack(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(_kRadiusSm),
-                child: Container(
-                  width: 48,
-                  height: 48,
-                  color: _kBgBlue100,
-                  child: Image.network(
-                    item.imageUrl,
+    return InkWell(
+      onTap: () async {
+        final repo = ReportRepository.instance;
+        final report = item.report ??
+            repo.reports.firstWhere(
+              (r) => r.id == item.id,
+              orElse: () => repo.reports.first,
+            );
+        final updatedReport = await Navigator.push<ReportModel>(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ReportDetailScreen(report: report),
+          ),
+        );
+        if (updatedReport != null && mounted) {
+          repo.updateById(updatedReport.id, updatedReport);
+        }
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            // Thumbnail
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(_kRadiusSm),
+                  child: Container(
                     width: 48,
                     height: 48,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => Container(
+                    color: _kBgBlue100,
+                    child: Image.network(
+                      item.imageUrl,
                       width: 48,
                       height: 48,
-                      color: _kBgBlue100,
-                      child: const Icon(Icons.image, color: _kTextMeta),
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => Container(
+                        width: 48,
+                        height: 48,
+                        color: _kBgBlue100,
+                        child: const Icon(Icons.image, color: _kTextMeta),
+                      ),
                     ),
                   ),
                 ),
-              ),
-              // Status dot
-              Positioned(
-                right: 0,
-                bottom: 0,
-                child: Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: statusColor,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(6),
+                // Status dot
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: statusColor,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(6),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(width: 12),
-          // Text content
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.title,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: _kTextDark,
-                    letterSpacing: 0.14,
+              ],
+            ),
+            const SizedBox(width: 12),
+            // Text content
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.title,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: _kTextDark,
+                      letterSpacing: 0.14,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.location_on, size: 11, color: _kTextMeta),
-                    const SizedBox(width: 2),
-                    Flexible(
-                      child: Text(
-                        item.location,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                          color: _kTextMeta,
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.location_on, size: 11, color: _kTextMeta),
+                      const SizedBox(width: 2),
+                      Flexible(
+                        child: Text(
+                          item.location,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w400,
+                            color: _kTextMeta,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      width: 4,
-                      height: 4,
-                      decoration: const BoxDecoration(
-                        color: _kTextMeta,
-                        shape: BoxShape.circle,
+                      const SizedBox(width: 8),
+                      Container(
+                        width: 4,
+                        height: 4,
+                        decoration: const BoxDecoration(
+                          color: _kTextMeta,
+                          shape: BoxShape.circle,
+                        ),
                       ),
+                      const SizedBox(width: 8),
+                      Text(
+                        item.timeAgo,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: _kTextBody,
+                          letterSpacing: 0.4,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            // Upvote badge
+            GestureDetector(
+              onTap: () {
+                final repo = ReportRepository.instance;
+                final report = item.report ??
+                    repo.reports.firstWhere(
+                      (r) => r.id == item.id,
+                      orElse: () => repo.reports.first,
+                    );
+                final newIsUpvoted = !report.isUpvoted;
+                final newCount = report.upvoteCount + (newIsUpvoted ? 1 : -1);
+                final updated = report.copyWith(
+                  isUpvoted: newIsUpvoted,
+                  upvoteCount: newCount,
+                );
+                repo.updateById(updated.id, updated);
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: item.isUpvoted
+                      ? const Color(0x1A0048D4) // 10% primary
+                      : _kBgBlue100,
+                  borderRadius: BorderRadius.circular(_kRadiusFull),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.arrow_upward,
+                      size: 10,
+                      color: item.isUpvoted ? _kPrimary : _kTextBody,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 4),
                     Text(
-                      item.timeAgo,
+                      '${item.upvoteCount}',
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
-                        color: _kTextBody,
+                        color: item.isUpvoted ? _kPrimary : _kTextBody,
                         letterSpacing: 0.4,
                       ),
                     ),
                   ],
                 ),
-              ],
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
-          // Upvote badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: isCondition
-                  ? const Color(0x1A0048D4) // 10% primary
-                  : _kBgBlue100,
-              borderRadius: BorderRadius.circular(_kRadiusFull),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.arrow_upward,
-                  size: 10,
-                  color: isCondition ? _kPrimary : _kTextBody,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  '${item.upvoteCount}',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: isCondition ? _kPrimary : _kTextBody,
-                    letterSpacing: 0.4,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

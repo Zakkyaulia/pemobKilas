@@ -11,6 +11,7 @@ import '../../widgets/home/report_card_footer.dart';
 import '../../widgets/home/report_card_header.dart';
 import '../../widgets/home/status_badge.dart';
 import '../../widgets/home/user_avatar.dart';
+import 'data/report_repository.dart';
 import 'models/report_model.dart';
 
 /// Screen detail untuk melihat laporan secara penuh tanpa terpotong,
@@ -39,12 +40,14 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
 
   void _handleUpvote(bool isUpvoted, int count) {
     // 2. State: Update status dan jumlah vote setelah lolos validasi cooldown
+    final updated = _report.copyWith(
+      isUpvoted: isUpvoted,
+      upvoteCount: count,
+    );
     setState(() {
-      _report = _report.copyWith(
-        isUpvoted: isUpvoted,
-        upvoteCount: count,
-      );
+      _report = updated;
     });
+    ReportRepository.instance.updateById(updated.id, updated);
 
     // 4. Feedback Sukses: SnackBar konfirmasi vote ditambahkan / ditarik
     ScaffoldMessenger.of(context)
@@ -163,9 +166,11 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
   }
 
   void _handleBookmark(bool isBookmarked) {
+    final updated = _report.copyWith(isBookmarked: isBookmarked);
     setState(() {
-      _report = _report.copyWith(isBookmarked: isBookmarked);
+      _report = updated;
     });
+    ReportRepository.instance.updateById(updated.id, updated);
 
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
