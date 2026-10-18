@@ -114,6 +114,9 @@ class LocationService {
   /// Mengubah koordinat (lat, lng) menjadi nama tempat/gedung yang mudah dipahami.
   /// Menggunakan reverse-geocoding dengan fallback graceful jika offline.
   Future<String?> reverseGeocode(double lat, double lng) async {
+    if (kIsWeb) {
+      return null;
+    }
     try {
       final client = HttpClient();
       client.connectionTimeout = const Duration(seconds: 4);

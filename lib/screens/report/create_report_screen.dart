@@ -837,137 +837,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
     );
   }
 
-  void _handleEditPin() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppPalette.surface(context),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) {
-        return Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Pengaturan Titik GPS Laporan',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppPalette.textPrimary(context),
-                      height: 1.2,
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(ctx),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Anda dapat membaca ulang sensor GPS atau memilih preset lokasi kampus UNAND jika sinyal satelit terhalang gedung:',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 13,
-                  color: AppPalette.textSecondary(context),
-                ),
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                tileColor: _kBgBlue100.withOpacity(0.5),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(_kRadiusMd),
-                  side: const BorderSide(color: _kPrimary, width: 1.2),
-                ),
-                leading: const Icon(Icons.gps_fixed_rounded, color: _kPrimary),
-                title: Text(
-                  'Kunci Ulang Posisi GPS Asli',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontWeight: FontWeight.w700,
-                    color: _kPrimary,
-                  ),
-                ),
-                subtitle: const Text('Membaca ulang satelit GPS & koordinat terkini'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _lockGpsPosition();
-                },
-              ),
-              const SizedBox(height: 14),
-              Text(
-                'Preset Titik Gedung Kampus UNAND:',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppPalette.textSecondary(context),
-                ),
-              ),
-              const SizedBox(height: 6),
-              ListTile(
-                dense: true,
-                leading: const Icon(Icons.location_on, color: _kPrimary),
-                title: const Text('Gedung Seminar E, Kampus Limau Manis'),
-                subtitle: const Text('-0.914200, 100.460800'),
-                onTap: () {
-                  setState(() {
-                    _latitude = -0.914200;
-                    _longitude = 100.460800;
-                    _accuracy = 3.0;
-                    _coordinates = '-0.914200, 100.460800';
-                    _locationName = 'Gedung Seminar E, Kampus Limau Manis';
-                    _gpsStatus = GpsLockStatus.locked;
-                    _isInCampusArea = true;
-                  });
-                  Navigator.pop(ctx);
-                },
-              ),
-              ListTile(
-                dense: true,
-                leading: const Icon(Icons.location_on, color: _kPrimary),
-                title: const Text('Gedung Perkuliahan C (GKB C)'),
-                subtitle: const Text('-0.914203, 100.461021'),
-                onTap: () {
-                  setState(() {
-                    _latitude = -0.914203;
-                    _longitude = 100.461021;
-                    _accuracy = 4.0;
-                    _coordinates = '-0.914203, 100.461021';
-                    _locationName = 'Gedung Perkuliahan C (GKB C)';
-                    _gpsStatus = GpsLockStatus.locked;
-                    _isInCampusArea = true;
-                  });
-                  Navigator.pop(ctx);
-                },
-              ),
-              ListTile(
-                dense: true,
-                leading: const Icon(Icons.location_on, color: _kPrimary),
-                title: const Text('Gedung Perkuliahan B (GKB B)'),
-                subtitle: const Text('-0.915120, 100.459340'),
-                onTap: () {
-                  setState(() {
-                    _latitude = -0.915120;
-                    _longitude = 100.459340;
-                    _accuracy = 4.5;
-                    _coordinates = '-0.915120, 100.459340';
-                    _locationName = 'Gedung Perkuliahan B (GKB B)';
-                    _gpsStatus = GpsLockStatus.locked;
-                    _isInCampusArea = true;
-                  });
-                  Navigator.pop(ctx);
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+
 
   /// Menampilkan dialog konfirmasi sebelum benar-benar mengirim laporan.
   Future<void> _confirmAndSubmitReport() async {
@@ -2270,6 +2140,8 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                               color: AppPalette.textPrimary(context),
                               height: 1.1,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         const SizedBox(width: 4),
@@ -2308,112 +2180,95 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: _isInCampusArea
-                      ? (isDark ? const Color(0xFF063327) : const Color(0xFFDCFCE7))
-                      : (isDark ? const Color(0xFF3B1D1D) : const Color(0xFFFEE2E2)),
-                  borderRadius: BorderRadius.circular(_kRadiusSm),
-                  border: Border.all(
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
                     color: _isInCampusArea
-                        ? const Color(0xFF86EFAC)
-                        : const Color(0xFFFCA5A5),
-                    width: 0.8,
+                        ? (isDark ? const Color(0xFF063327) : const Color(0xFFDCFCE7))
+                        : (isDark ? const Color(0xFF3B1D1D) : const Color(0xFFFEE2E2)),
+                    borderRadius: BorderRadius.circular(_kRadiusSm),
+                    border: Border.all(
+                      color: _isInCampusArea
+                          ? const Color(0xFF86EFAC)
+                          : const Color(0xFFFCA5A5),
+                      width: 0.8,
+                    ),
                   ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: _isInCampusArea
-                            ? const Color(0xFF10B981)
-                            : const Color(0xFFEF4444),
-                        shape: BoxShape.circle,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: _isInCampusArea
+                              ? const Color(0xFF10B981)
+                              : const Color(0xFFEF4444),
+                          shape: BoxShape.circle,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      _isInCampusArea
-                          ? 'Dalam Area Kampus UNAND'
-                          : 'Luar Area Kampus UNAND',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: _isInCampusArea
-                            ? const Color(0xFF059669)
-                            : const Color(0xFFDC2626),
-                        height: 1.1,
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          _isInCampusArea
+                              ? 'Dalam Area Kampus UNAND'
+                              : 'Luar Area Kampus UNAND',
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: _isInCampusArea
+                                ? const Color(0xFF059669)
+                                : const Color(0xFFDC2626),
+                            height: 1.1,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-              Row(
-                children: [
-                  GestureDetector(
-                    onTap: _lockGpsPosition,
-                    behavior: HitTestBehavior.opaque,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.refresh_rounded,
-                            color: _kPrimary,
-                            size: 14,
-                          ),
-                          const SizedBox(width: 3),
-                          Text(
-                            'Kunci Ulang',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: _kPrimary,
-                              height: 1.1,
-                            ),
-                          ),
-                        ],
-                      ),
+              const SizedBox(width: 8),
+              InkWell(
+                onTap: _lockGpsPosition,
+                borderRadius: BorderRadius.circular(_kRadiusSm),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: _kBgBlue100,
+                    borderRadius: BorderRadius.circular(_kRadiusSm),
+                    border: Border.all(
+                      color: _kPrimary.withOpacity(0.35),
+                      width: 0.8,
                     ),
                   ),
-                  const SizedBox(width: 4),
-                  GestureDetector(
-                    onTap: _handleEditPin,
-                    behavior: HitTestBehavior.opaque,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Preset Titik',
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: AppPalette.textSecondary(context),
-                              height: 1.1,
-                            ),
-                          ),
-                          const SizedBox(width: 2),
-                          Icon(
-                            Icons.chevron_right_rounded,
-                            color: AppPalette.textSecondary(context),
-                            size: 14,
-                          ),
-                        ],
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.refresh_rounded,
+                        color: _kPrimary,
+                        size: 13,
                       ),
-                    ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Refresh',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: _kPrimary,
+                          height: 1.1,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ],
           ),
