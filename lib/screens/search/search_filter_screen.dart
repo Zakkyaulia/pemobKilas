@@ -1267,9 +1267,22 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                 ScaffoldMessenger.of(context)
                   ..hideCurrentSnackBar()
                   ..showSnackBar(
-                    const SnackBar(
-                      content: Text('Tunggu sebentar sebelum memberi vote lagi.'),
-                      duration: Duration(seconds: 1),
+                    SnackBar(
+                      content: Text(
+                        'Tunggu sebentar sebelum memberi vote lagi.',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white,
+                        ),
+                      ),
+                      backgroundColor: const Color(0xFF213145),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(_kRadiusFull),
+                      ),
+                      elevation: 20,
+                      margin: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                      duration: const Duration(seconds: 2),
                       behavior: SnackBarBehavior.floating,
                     ),
                   );

@@ -78,6 +78,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
   double? _accuracy;
   String? _gpsErrorMessage;
   bool _isInCampusArea = true;
+  bool _allowPopWithoutPrompt = false;
 
   static const int _maxDescriptionLength = 200;
 
@@ -105,6 +106,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
 
   /// Cek apakah pengguna telah memasukkan perubahan yang belum disimpan.
   bool get _hasUnsavedChanges {
+    if (_allowPopWithoutPrompt) return false;
     return _selectedMediaFile != null ||
         _titleController.text.trim().isNotEmpty ||
         _descriptionController.text.trim().isNotEmpty;
@@ -252,11 +254,16 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
               'Akses media dibatalkan karena izin belum disetujui.',
+              style: GoogleFonts.plusJakartaSans(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
             ),
-            backgroundColor: Color(0xFF475569),
+            backgroundColor: const Color(0xFF334155),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -625,9 +632,17 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Lampiran media berhasil dihapus.'),
-            duration: Duration(seconds: 2),
+          SnackBar(
+            content: Text(
+              'Lampiran media berhasil dihapus.',
+              style: GoogleFonts.plusJakartaSans(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            backgroundColor: const Color(0xFF1E293B),
+            duration: const Duration(seconds: 2),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -639,7 +654,14 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Text(
+          message,
+          style: GoogleFonts.plusJakartaSans(
+            color: Colors.white,
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
         backgroundColor: AppColors.error,
         behavior: SnackBarBehavior.floating,
       ),
@@ -1176,6 +1198,9 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                   alignment: Alignment.center,
                 ),
                 onPressed: () {
+                  setState(() {
+                    _allowPopWithoutPrompt = true;
+                  });
                   Navigator.pop(ctx);
                   Navigator.pop(context);
                 },
@@ -1276,20 +1301,32 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
 
     if (confirmed == true) {
       if (mounted) {
+        setState(() {
+          _allowPopWithoutPrompt = true;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
-              children: const [
-                Icon(Icons.bookmark_added_outlined, color: Colors.white, size: 20),
-                SizedBox(width: 8),
-                Text('Laporan berhasil disimpan ke Draft lokal'),
+              children: [
+                const Icon(Icons.bookmark_added_outlined, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Laporan berhasil disimpan ke Draft lokal',
+                    style: GoogleFonts.plusJakartaSans(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
               ],
             ),
             backgroundColor: const Color(0xFF0F172A),
             behavior: SnackBarBehavior.floating,
           ),
         );
-        Navigator.maybePop(context);
+        Navigator.of(context).pop();
       }
     }
   }
@@ -1404,12 +1441,34 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
     );
 
     if (result == 'discard') {
+      setState(() {
+        _allowPopWithoutPrompt = true;
+      });
       return true; // Keluar tanpa simpan
     } else if (result == 'draft') {
+      setState(() {
+        _allowPopWithoutPrompt = true;
+      });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Laporan berhasil disimpan ke Draft lokal'),
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.bookmark_added_outlined, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Laporan berhasil disimpan ke Draft lokal',
+                    style: GoogleFonts.plusJakartaSans(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFF0F172A),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -1429,6 +1488,9 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
         if (didPop) return;
         final shouldLeave = await _showDiscardConfirmationDialog();
         if (shouldLeave && context.mounted) {
+          setState(() {
+            _allowPopWithoutPrompt = true;
+          });
           Navigator.of(context).pop();
         }
       },
@@ -1492,10 +1554,13 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
           if (_hasUnsavedChanges) {
             final shouldLeave = await _showDiscardConfirmationDialog();
             if (shouldLeave && context.mounted) {
+              setState(() {
+                _allowPopWithoutPrompt = true;
+              });
               Navigator.of(context).pop();
             }
           } else {
-            Navigator.of(context).maybePop();
+            Navigator.of(context).pop();
           }
         },
       ),
@@ -2172,16 +2237,16 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: _kBgBlue100,
+                color: isDark ? const Color(0xFF162544) : _kBgBlue100,
                 borderRadius: BorderRadius.circular(_kRadiusSm),
               ),
-              child: const Center(
+              child: Center(
                 child: SizedBox(
                   width: 20,
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2.2,
-                    color: _kPrimary,
+                    color: isDark ? const Color(0xFF60A5FA) : _kPrimary,
                   ),
                 ),
               ),
@@ -2198,7 +2263,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
-                          color: _kPrimary,
+                          color: isDark ? const Color(0xFF60A5FA) : _kPrimary,
                           height: 1.1,
                         ),
                       ),
@@ -2243,13 +2308,13 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFDCFCE7),
+                  color: isDark ? const Color(0xFF064E3B) : const Color(0xFFDCFCE7),
                   borderRadius: BorderRadius.circular(_kRadiusSm),
                 ),
-                child: const Center(
+                child: Center(
                   child: Icon(
                     Icons.my_location_rounded,
-                    color: Color(0xFF059669),
+                    color: isDark ? const Color(0xFF34D399) : const Color(0xFF059669),
                     size: 20,
                   ),
                 ),
@@ -2273,9 +2338,9 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                           ),
                         ),
                         const SizedBox(width: 4),
-                        const Icon(
+                        Icon(
                           Icons.verified,
-                          color: Color(0xFF059669),
+                          color: isDark ? const Color(0xFF34D399) : const Color(0xFF059669),
                           size: 15,
                         ),
                       ],
@@ -2309,8 +2374,12 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            runAlignment: WrapAlignment.center,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 8,
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -2321,8 +2390,8 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                   borderRadius: BorderRadius.circular(_kRadiusSm),
                   border: Border.all(
                     color: _isInCampusArea
-                        ? const Color(0xFF86EFAC)
-                        : const Color(0xFFFCA5A5),
+                        ? (isDark ? const Color(0xFF059669) : const Color(0xFF86EFAC))
+                        : (isDark ? const Color(0xFFDC2626) : const Color(0xFFFCA5A5)),
                     width: 0.8,
                   ),
                 ),
@@ -2334,7 +2403,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                       height: 6,
                       decoration: BoxDecoration(
                         color: _isInCampusArea
-                            ? const Color(0xFF10B981)
+                            ? (isDark ? const Color(0xFF34D399) : const Color(0xFF10B981))
                             : const Color(0xFFEF4444),
                         shape: BoxShape.circle,
                       ),
@@ -2348,8 +2417,8 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                         color: _isInCampusArea
-                            ? const Color(0xFF059669)
-                            : const Color(0xFFDC2626),
+                            ? (isDark ? const Color(0xFF34D399) : const Color(0xFF059669))
+                            : (isDark ? const Color(0xFFF87171) : const Color(0xFFDC2626)),
                         height: 1.1,
                       ),
                     ),
@@ -2357,6 +2426,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                 ),
               ),
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   GestureDetector(
                     onTap: _lockGpsPosition,
@@ -2366,9 +2436,9 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.refresh_rounded,
-                            color: _kPrimary,
+                            color: isDark ? const Color(0xFF60A5FA) : _kPrimary,
                             size: 14,
                           ),
                           const SizedBox(width: 3),
@@ -2377,7 +2447,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
-                              color: _kPrimary,
+                              color: isDark ? const Color(0xFF60A5FA) : _kPrimary,
                               height: 1.1,
                             ),
                           ),
@@ -2399,14 +2469,14 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
-                              color: AppPalette.textSecondary(context),
+                              color: isDark ? const Color(0xFFCBD5E1) : AppPalette.textSecondary(context),
                               height: 1.1,
                             ),
                           ),
                           const SizedBox(width: 2),
                           Icon(
                             Icons.chevron_right_rounded,
-                            color: AppPalette.textSecondary(context),
+                            color: isDark ? const Color(0xFFCBD5E1) : AppPalette.textSecondary(context),
                             size: 14,
                           ),
                         ],
@@ -2444,7 +2514,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: _kPrimary,
+                color: isDark ? const Color(0xFF60A5FA) : _kPrimary,
                 height: 1.2,
               ),
             ),
@@ -2460,8 +2530,8 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                 title: 'Kondisi Kampus',
                 subtitle: 'Fasilitas & Sarpras',
                 iconData: Icons.apartment_rounded,
-                iconBgColor: _kConditionBg,
-                iconColor: _kConditionBorder,
+                iconBgColor: isDark ? const Color(0xFF332205) : _kConditionBg,
+                iconColor: isDark ? const Color(0xFFFFB95F) : _kConditionBorder,
                 isSelected: _selectedCategory == 'Kondisi Kampus',
                 onTap: () => _onCategorySelected('Kondisi Kampus'),
                 isDark: isDark,
@@ -2475,8 +2545,8 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                 title: 'Informasi Penting',
                 subtitle: 'Akses & Situasi',
                 iconData: Icons.campaign_rounded,
-                iconBgColor: _kBgBlue100,
-                iconColor: _kPrimary,
+                iconBgColor: isDark ? const Color(0xFF162544) : _kBgBlue100,
+                iconColor: isDark ? const Color(0xFF60A5FA) : _kPrimary,
                 isSelected: _selectedCategory == 'Informasi Penting',
                 onTap: () => _onCategorySelected('Informasi Penting'),
                 isDark: isDark,
@@ -2576,7 +2646,9 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
-                color: isSelected && !isDark ? _kPrimaryDeep : AppPalette.textPrimary(context),
+                color: isSelected
+                    ? (isDark ? const Color(0xFF93C5FD) : _kPrimaryDeep)
+                    : AppPalette.textPrimary(context),
                 height: 1.1,
               ),
             ),
@@ -2764,7 +2836,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: _kPrimary,
+                color: isDark ? const Color(0xFF60A5FA) : _kPrimary,
                 height: 1.1,
               ),
             ),

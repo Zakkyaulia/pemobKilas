@@ -36,4 +36,8 @@ abstract final class AppPalette {
   /// Warna frosted-glass untuk AppBar dan BottomNav.
   static Color glassBackground(BuildContext context) =>
       isDark(context) ? const Color(0xD90A1124) : const Color(0xD9FFFFFF);
+
+  /// Warna aksen primer yang kontras untuk teks/link interaktif.
+  static Color primaryAccent(BuildContext context) =>
+      isDark(context) ? const Color(0xFF60A5FA) : const Color(0xFF0048D4);
 }
