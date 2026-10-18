@@ -23,6 +23,8 @@ abstract final class AppTheme {
         onSurface: AppColors.textPrimary,
         error: AppColors.error,
         outline: AppColors.inputBorder,
+        inverseSurface: Color(0xFF0F172A),
+        onInverseSurface: Color(0xFFF8FAFC),
       ),
 
       scaffoldBackgroundColor: AppColors.backgroundPrimary,
@@ -124,6 +126,22 @@ abstract final class AppTheme {
         thickness: 1,
         space: 0,
       ),
+
+      // ── SnackBar ──────────────────────────────────────────────────────
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: const Color(0xFF0F172A),
+        contentTextStyle: GoogleFonts.plusJakartaSans(
+          color: const Color(0xFFF8FAFC),
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+        ),
+        actionTextColor: const Color(0xFF60A5FA),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        elevation: 8,
+      ),
     );
   }
 
@@ -141,6 +159,8 @@ abstract final class AppTheme {
         onSurface: Color(0xFFF1F5F9),
         error: AppColors.error,
         outline: Color(0xFF1E2D4A),
+        inverseSurface: Color(0xFF1E293B),
+        onInverseSurface: Color(0xFFF8FAFC),
       ),
 
       scaffoldBackgroundColor: const Color(0xFF081024),
@@ -236,6 +256,23 @@ abstract final class AppTheme {
         color: Color(0xFF1E2D4A),
         thickness: 1,
         space: 0,
+      ),
+
+      // ── SnackBar ──────────────────────────────────────────────────────
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: const Color(0xFF1E293B),
+        contentTextStyle: GoogleFonts.plusJakartaSans(
+          color: const Color(0xFFF8FAFC),
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+        ),
+        actionTextColor: const Color(0xFF60A5FA),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: Color(0xFF334155), width: 0.8),
+        ),
+        elevation: 8,
       ),
     );
   }
