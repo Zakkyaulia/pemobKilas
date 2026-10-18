@@ -5,12 +5,15 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../services/location_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_palette.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/home_colors.dart';
+import '../../widgets/map/dummy_map_data.dart';
 import '../home/data/report_repository.dart';
 import '../home/models/report_model.dart';
+import 'package:latlong2/latlong.dart';
 
 // ─── Design tokens matching SearchFilterScreen ───────────────────────────────
 const Color _kPrimary = Color(0xFF0048D4);
@@ -66,9 +69,14 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
   /// Kategori yang dipilih: 'Kondisi Kampus' atau 'Informasi Penting'.
   String _selectedCategory = 'Kondisi Kampus';
 
-  /// Koordinat & nama lokasi GPS otomatis.
-  String _locationName = 'Gedung Seminar E, Kampus Limau Manis';
-  String _coordinates = '-0.9142, 100.4';
+  /// Status & data penguncian GPS asli
+  GpsLockStatus _gpsStatus = GpsLockStatus.initial;
+  String _locationName = 'Menghubungkan ke sensor GPS...';
+  String _coordinates = '';
+  double? _latitude;
+  double? _longitude;
+  double? _accuracy;
+  String? _gpsErrorMessage;
   bool _isInCampusArea = true;
 
   static const int _maxDescriptionLength = 200;
@@ -81,6 +89,10 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
     });
     _titleController.addListener(() {
       setState(() {});
+    });
+    // Kunci titik koordinat GPS secara otomatis saat layar laporan dibuka
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _lockGpsPosition();
     });
   }
 
@@ -634,6 +646,197 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
     );
   }
 
+  /// Mengunci titik koordinat GPS pengguna secara nyata via LocationService.
+  Future<void> _lockGpsPosition() async {
+    if (!mounted) return;
+    setState(() {
+      _gpsStatus = GpsLockStatus.locating;
+      _locationName = 'Mengunci sinyal satelit GPS...';
+      _gpsErrorMessage = null;
+    });
+
+    try {
+      final position = await LocationService.instance.lockCurrentPosition();
+      if (!mounted) return;
+
+      final lat = position.latitude;
+      final lng = position.longitude;
+      final acc = position.accuracy;
+      final formattedCoords = '${lat.toStringAsFixed(6)}, ${lng.toStringAsFixed(6)}';
+
+      setState(() {
+        _gpsStatus = GpsLockStatus.locked;
+        _latitude = lat;
+        _longitude = lng;
+        _accuracy = acc;
+        _coordinates = formattedCoords;
+        _locationName = 'Mencari detail lokasi...';
+        _gpsErrorMessage = null;
+        // Bounding box perkiraan kampus Unand Limau Manis
+        _isInCampusArea = (lat <= -0.9000 && lat >= -0.9350 && lng >= 100.4400 && lng <= 100.4800);
+      });
+
+      // Lakukan reverse geocoding untuk nama gedung/jalan yang ramah pengguna
+      final resolvedName = await LocationService.instance.reverseGeocode(lat, lng);
+      if (!mounted) return;
+
+      setState(() {
+        if (resolvedName != null && resolvedName.isNotEmpty) {
+          _locationName = resolvedName;
+        } else {
+          _locationName = 'Titik GPS Akurat (Lat: ${lat.toStringAsFixed(5)}, Lng: ${lng.toStringAsFixed(5)})';
+        }
+      });
+    } on GpsServiceDisabledException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _gpsStatus = GpsLockStatus.serviceDisabled;
+        _gpsErrorMessage = e.message;
+        _locationName = 'GPS Perangkat Tidak Aktif';
+      });
+    } on GpsPermissionDeniedException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _gpsStatus = GpsLockStatus.permissionDenied;
+        _gpsErrorMessage = e.message;
+        _locationName = 'Izin Akses Lokasi Ditolak';
+      });
+    } on GpsPermissionPermanentlyDeniedException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _gpsStatus = GpsLockStatus.permissionDeniedForever;
+        _gpsErrorMessage = e.message;
+        _locationName = 'Izin Lokasi Ditolak Permanen';
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _gpsStatus = GpsLockStatus.error;
+        _gpsErrorMessage = 'Gagal mengunci posisi GPS: $e';
+        _locationName = 'Gagal Membaca Koordinat';
+      });
+    }
+  }
+
+  /// Membuka pengaturan lokasi atau aplikasi saat izin/layanan bermasalah.
+  Future<void> _handleGpsAction() async {
+    if (_gpsStatus == GpsLockStatus.serviceDisabled) {
+      await LocationService.instance.openLocationSettings();
+      // Tunggu sebentar dan coba kunci kembali
+      Future.delayed(const Duration(seconds: 1), _lockGpsPosition);
+    } else if (_gpsStatus == GpsLockStatus.permissionDeniedForever) {
+      await LocationService.instance.openAppSettings();
+    } else {
+      _lockGpsPosition();
+    }
+  }
+
+  /// Menampilkan dialog peringatan bahwa GPS wajib dikunci sebelum laporan dikirim.
+  void _showGpsRequiredDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppPalette.surface(context),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(_kRadiusLg),
+        ),
+        titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+        title: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: const Color(0xFFFEE2E2),
+                borderRadius: BorderRadius.circular(_kRadiusSm),
+              ),
+              child: const Icon(
+                Icons.location_off_rounded,
+                color: Color(0xFFDC2626),
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Wajib Mengunci GPS',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppPalette.textPrimary(context),
+                  height: 1.2,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Untuk memastikan keaslian laporan, sistem KILAS mewajibkan titik koordinat GPS asli Anda terkunci terlebih dahulu.\n\nPastikan GPS perangkat Anda sudah AKTIF dan beri izin lokasi untuk aplikasi.',
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 13,
+            color: AppPalette.textSecondary(context),
+            height: 1.4,
+          ),
+        ),
+        actions: [
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: AppPalette.divider(context)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(_kRadiusMd),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  onPressed: () => Navigator.pop(ctx),
+                  child: Text(
+                    'Periksa Lagi',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppPalette.textSecondary(context),
+                      height: 1.1,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _kPrimary,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(_kRadiusMd),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    _handleGpsAction();
+                  },
+                  child: Text(
+                    'Aktifkan GPS',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                      height: 1.1,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   void _handleEditPin() {
     showModalBottomSheet(
       context: context,
@@ -652,7 +855,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Ubah Titik Lokasi GPS',
+                    'Pengaturan Titik GPS Laporan',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
@@ -668,7 +871,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Pilih gedung atau lokasi di lingkungan Universitas Andalas:',
+                'Anda dapat membaca ulang sensor GPS atau memilih preset lokasi kampus UNAND jika sinyal satelit terhalang gedung:',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 13,
                   color: AppPalette.textSecondary(context),
@@ -676,39 +879,84 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
               ),
               const SizedBox(height: 16),
               ListTile(
+                tileColor: _kBgBlue100.withOpacity(0.5),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(_kRadiusMd),
+                  side: const BorderSide(color: _kPrimary, width: 1.2),
+                ),
+                leading: const Icon(Icons.gps_fixed_rounded, color: _kPrimary),
+                title: Text(
+                  'Kunci Ulang Posisi GPS Asli',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontWeight: FontWeight.w700,
+                    color: _kPrimary,
+                  ),
+                ),
+                subtitle: const Text('Membaca ulang satelit GPS & koordinat terkini'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _lockGpsPosition();
+                },
+              ),
+              const SizedBox(height: 14),
+              Text(
+                'Preset Titik Gedung Kampus UNAND:',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppPalette.textSecondary(context),
+                ),
+              ),
+              const SizedBox(height: 6),
+              ListTile(
+                dense: true,
                 leading: const Icon(Icons.location_on, color: _kPrimary),
-                title: const Text('Gedung Seminar E (Default)'),
-                subtitle: const Text('-0.9142, 100.4'),
+                title: const Text('Gedung Seminar E, Kampus Limau Manis'),
+                subtitle: const Text('-0.914200, 100.460800'),
                 onTap: () {
                   setState(() {
+                    _latitude = -0.914200;
+                    _longitude = 100.460800;
+                    _accuracy = 3.0;
+                    _coordinates = '-0.914200, 100.460800';
                     _locationName = 'Gedung Seminar E, Kampus Limau Manis';
-                    _coordinates = '-0.9142, 100.4';
+                    _gpsStatus = GpsLockStatus.locked;
                     _isInCampusArea = true;
                   });
                   Navigator.pop(ctx);
                 },
               ),
               ListTile(
+                dense: true,
                 leading: const Icon(Icons.location_on, color: _kPrimary),
                 title: const Text('Gedung Perkuliahan C (GKB C)'),
                 subtitle: const Text('-0.914203, 100.461021'),
                 onTap: () {
                   setState(() {
-                    _locationName = 'Gedung Perkuliahan C (GKB C)';
+                    _latitude = -0.914203;
+                    _longitude = 100.461021;
+                    _accuracy = 4.0;
                     _coordinates = '-0.914203, 100.461021';
+                    _locationName = 'Gedung Perkuliahan C (GKB C)';
+                    _gpsStatus = GpsLockStatus.locked;
                     _isInCampusArea = true;
                   });
                   Navigator.pop(ctx);
                 },
               ),
               ListTile(
+                dense: true,
                 leading: const Icon(Icons.location_on, color: _kPrimary),
                 title: const Text('Gedung Perkuliahan B (GKB B)'),
                 subtitle: const Text('-0.915120, 100.459340'),
                 onTap: () {
                   setState(() {
-                    _locationName = 'Gedung Perkuliahan B (GKB B)';
+                    _latitude = -0.915120;
+                    _longitude = 100.459340;
+                    _accuracy = 4.5;
                     _coordinates = '-0.915120, 100.459340';
+                    _locationName = 'Gedung Perkuliahan B (GKB B)';
+                    _gpsStatus = GpsLockStatus.locked;
                     _isInCampusArea = true;
                   });
                   Navigator.pop(ctx);
@@ -733,6 +981,12 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
 
     if (description.isEmpty) {
       _showErrorSnackBar('Mohon masukkan keterangan laporan.');
+      return;
+    }
+
+    // ── Validasi Wajib: Titik Koordinat GPS Harus Terkunci Terlebih Dahulu ──
+    if (_gpsStatus != GpsLockStatus.locked || _latitude == null || _longitude == null) {
+      _showGpsRequiredDialog();
       return;
     }
 
@@ -850,6 +1104,19 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
     );
 
     ReportRepository.instance.addReport(newReport);
+
+    // Rekam dan pasang juga pin koordinat nyata ke peta laporan (Map Screen)
+    final reportLat = _latitude ?? -0.9142;
+    final reportLng = _longitude ?? 100.4608;
+    DummyMapData.basicReports.insert(
+      0,
+      ReportGeoData(
+        id: newReport.id,
+        title: title,
+        category: newReport.badgeLabel,
+        position: LatLng(reportLat, reportLng),
+      ),
+    );
 
     showDialog(
       context: context,
@@ -1657,15 +1924,314 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
   }
 
   /// Card pencatatan lokasi GPS otomatis dengan border rapi.
+  /// Card pencatatan lokasi GPS nyata dengan status dinamis & interaktif.
   Widget _buildGpsCard(BuildContext context, bool isDark) {
+    // ── 1. Tampilan ketika GPS Mati (Service Disabled) ───────────────────────
+    if (_gpsStatus == GpsLockStatus.serviceDisabled) {
+      return Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF2A1515) : const Color(0xFFFEF2F2),
+          borderRadius: BorderRadius.circular(_kRadiusLg),
+          border: Border.all(
+            color: const Color(0xFFF87171),
+            width: 1.2,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEE2E2),
+                    borderRadius: BorderRadius.circular(_kRadiusSm),
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.location_off_rounded,
+                      color: Color(0xFFDC2626),
+                      size: 22,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'GPS Perangkat Belum Aktif',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFFDC2626),
+                          height: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Aplikasi mewajibkan GPS aktif untuk mengunci titik koordinat asli saat membuat laporan.',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12,
+                          color: AppPalette.textSecondary(context),
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFDC2626),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(_kRadiusSm),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                    onPressed: _handleGpsAction,
+                    icon: const Icon(Icons.settings, size: 16),
+                    label: Text(
+                      'Nyalakan GPS',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppPalette.textPrimary(context),
+                    side: BorderSide(color: AppPalette.divider(context)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(_kRadiusSm),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  ),
+                  onPressed: _lockGpsPosition,
+                  icon: const Icon(Icons.refresh_rounded, size: 16),
+                  label: Text(
+                    'Cek Lagi',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
+    // ── 2. Tampilan Izin Ditolak (Permission Denied) ──────────────────────────
+    if (_gpsStatus == GpsLockStatus.permissionDenied ||
+        _gpsStatus == GpsLockStatus.permissionDeniedForever) {
+      return Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF2C2214) : const Color(0xFFFFFBEB),
+          borderRadius: BorderRadius.circular(_kRadiusLg),
+          border: Border.all(
+            color: const Color(0xFFFBBF24),
+            width: 1.2,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF3C7),
+                    borderRadius: BorderRadius.circular(_kRadiusSm),
+                  ),
+                  child: const Center(
+                    child: Icon(
+                      Icons.security_update_warning_rounded,
+                      color: Color(0xFFD97706),
+                      size: 22,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Izin Lokasi Dibutuhkan',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFFB45309),
+                          height: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _gpsErrorMessage ??
+                            'Beri izin akses lokasi agar aplikasi dapat merekam koordinat akurat laporan Anda.',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 12,
+                          color: AppPalette.textSecondary(context),
+                          height: 1.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFD97706),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(_kRadiusSm),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                    onPressed: _handleGpsAction,
+                    icon: const Icon(Icons.lock_open_rounded, size: 16),
+                    label: Text(
+                      'Beri Izin Lokasi',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppPalette.textPrimary(context),
+                    side: BorderSide(color: AppPalette.divider(context)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(_kRadiusSm),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  ),
+                  onPressed: _lockGpsPosition,
+                  icon: const Icon(Icons.refresh_rounded, size: 16),
+                  label: Text(
+                    'Coba Lagi',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+
+    // ── 3. Tampilan Sedang Mengunci Lokasi (Locating / Loading) ──────────────
+    if (_gpsStatus == GpsLockStatus.locating || _gpsStatus == GpsLockStatus.initial) {
+      return Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: AppPalette.surface(context),
+          borderRadius: BorderRadius.circular(_kRadiusLg),
+          border: Border.all(
+            color: _kPrimary.withOpacity(0.5),
+            width: 1.2,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: _kBgBlue100,
+                borderRadius: BorderRadius.circular(_kRadiusSm),
+              ),
+              child: const Center(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.2,
+                    color: _kPrimary,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        'Mengunci Posisi GPS...',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: _kPrimary,
+                          height: 1.1,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    _locationName,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      color: AppPalette.textSecondary(context),
+                      height: 1.2,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // ── 4. Tampilan Berhasil Terkunci (Locked) / Default ──────────────────────
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: AppPalette.surface(context),
         borderRadius: BorderRadius.circular(_kRadiusLg),
         border: Border.all(
-          color: AppPalette.divider(context),
-          width: 1.2,
+          color: const Color(0xFF10B981).withOpacity(0.7),
+          width: 1.4,
         ),
       ),
       child: Column(
@@ -1677,14 +2243,14 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: _kBgBlue100,
+                  color: const Color(0xFFDCFCE7),
                   borderRadius: BorderRadius.circular(_kRadiusSm),
                 ),
                 child: const Center(
                   child: Icon(
                     Icons.my_location_rounded,
-                    color: _kPrimary,
-                    size: 18,
+                    color: Color(0xFF059669),
+                    size: 20,
                   ),
                 ),
               ),
@@ -1697,7 +2263,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                       children: [
                         Flexible(
                           child: Text(
-                            'Koordinat GPS Terkunci Otomatis',
+                            'Koordinat GPS Terkunci (Asli)',
                             style: GoogleFonts.plusJakartaSans(
                               fontSize: 13,
                               fontWeight: FontWeight.w700,
@@ -1709,22 +2275,34 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                         const SizedBox(width: 4),
                         const Icon(
                           Icons.verified,
-                          color: _kPrimary,
+                          color: Color(0xFF059669),
                           size: 15,
                         ),
                       ],
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      '$_locationName ($_coordinates)',
+                      _locationName,
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 12,
-                        color: AppPalette.textSecondary(context),
+                        fontWeight: FontWeight.w600,
+                        color: AppPalette.textPrimary(context),
                         height: 1.2,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    if (_coordinates.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        '$_coordinates${_accuracy != null ? " • ±${_accuracy!.toStringAsFixed(1)}m" : ""}',
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 11,
+                          color: AppPalette.textSecondary(context),
+                          height: 1.1,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -1778,32 +2356,64 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                   ],
                 ),
               ),
-              GestureDetector(
-                onTap: _handleEditPin,
-                behavior: HitTestBehavior.opaque,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Ubah Pin',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: _kPrimary,
-                          height: 1.1,
-                        ),
+              Row(
+                children: [
+                  GestureDetector(
+                    onTap: _lockGpsPosition,
+                    behavior: HitTestBehavior.opaque,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.refresh_rounded,
+                            color: _kPrimary,
+                            size: 14,
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            'Kunci Ulang',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: _kPrimary,
+                              height: 1.1,
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 2),
-                      const Icon(
-                        Icons.chevron_right_rounded,
-                        color: _kPrimary,
-                        size: 16,
-                      ),
-                    ],
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 4),
+                  GestureDetector(
+                    onTap: _handleEditPin,
+                    behavior: HitTestBehavior.opaque,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Preset Titik',
+                            style: GoogleFonts.plusJakartaSans(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: AppPalette.textSecondary(context),
+                              height: 1.1,
+                            ),
+                          ),
+                          const SizedBox(width: 2),
+                          Icon(
+                            Icons.chevron_right_rounded,
+                            color: AppPalette.textSecondary(context),
+                            size: 14,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
