@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
@@ -45,7 +46,14 @@ class LoginScreen extends StatelessWidget {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Login sukses: $method — $identifier'),
+        content: Text(
+          'Login sukses: $method — $identifier',
+          style: GoogleFonts.plusJakartaSans(
+            color: Colors.white,
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         backgroundColor: AppColors.primaryBlue,
@@ -63,9 +71,15 @@ class LoginScreen extends StatelessWidget {
     // This is a placeholder per Figma UI.
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text(
+        content: Text(
           'Fitur sidik jari tersedia untuk keamanan halaman profil.',
+          style: GoogleFonts.plusJakartaSans(
+            color: Colors.white,
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+          ),
         ),
+        backgroundColor: const Color(0xFF1E293B),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),

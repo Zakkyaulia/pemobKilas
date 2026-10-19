@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../theme/app_colors.dart';
 import '../../theme/app_spacing.dart';
@@ -13,7 +14,14 @@ class RegisterScreen extends StatelessWidget {
   void _handleRegister(BuildContext context, Map<String, String> data) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Registrasi sukses: ${data['username']}'),
+        content: Text(
+          'Registrasi sukses: ${data['username']}',
+          style: GoogleFonts.plusJakartaSans(
+            color: Colors.white,
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         backgroundColor: AppColors.primaryBlue,
