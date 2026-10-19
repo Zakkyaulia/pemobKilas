@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../theme/app_colors.dart';
+import '../../theme/app_palette.dart';
 import '../../theme/app_text_styles.dart';
 import '../../theme/app_spacing.dart';
 
@@ -67,7 +67,7 @@ class _AuthTextFieldState extends State<AuthTextField> {
       mainAxisSize: MainAxisSize.min,
       children: [
         // ── Label ───────────────────────────────────────────────────────
-        Text(widget.label, style: AppTextStyles.label),
+        Text(widget.label, style: AppTextStyles.label.copyWith(color: AppPalette.textPrimary(context))),
         const SizedBox(height: AppSpacing.sm),
 
         // ── Input field ─────────────────────────────────────────────────
@@ -77,13 +77,13 @@ class _AuthTextFieldState extends State<AuthTextField> {
           keyboardType: widget.keyboardType,
           textInputAction: widget.textInputAction,
           enabled: widget.enabled,
-          style: AppTextStyles.input,
+          style: AppTextStyles.input.copyWith(color: AppPalette.textPrimary(context)),
           validator: widget.validator,
           decoration: InputDecoration(
             hintText: widget.hintText,
-            hintStyle: AppTextStyles.inputHint,
+            hintStyle: AppTextStyles.inputHint.copyWith(color: AppPalette.textSecondary(context)),
             prefixIcon: widget.prefixIcon != null
-                ? Icon(widget.prefixIcon, size: 20, color: AppColors.textMuted)
+                ? Icon(widget.prefixIcon, size: 20, color: AppPalette.textSecondary(context))
                 : null,
             suffixIcon: widget.isPassword
                 ? IconButton(
@@ -92,7 +92,7 @@ class _AuthTextFieldState extends State<AuthTextField> {
                           ? Icons.visibility_off_outlined
                           : Icons.visibility_outlined,
                       size: 20,
-                      color: AppColors.textMuted,
+                      color: AppPalette.textSecondary(context),
                     ),
                     onPressed: () {
                       setState(() => _obscured = !_obscured);

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
+import '../../theme/app_palette.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 import 'auth_text_field.dart';
@@ -84,7 +85,7 @@ class _RegisterFormState extends State<RegisterForm> {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.xxl),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppPalette.surface(context),
         borderRadius: AppRadius.largeAll,
         boxShadow: [
           BoxShadow(

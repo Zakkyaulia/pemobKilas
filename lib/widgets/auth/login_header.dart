@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
+import '../../theme/app_palette.dart';
 import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
@@ -52,7 +53,7 @@ class LoginHeader extends StatelessWidget {
         Text(
           'KILAS',
           style: AppTextStyles.heading.copyWith(
-            color: AppColors.textPrimary,
+            color: AppPalette.textPrimary(context),
           ),
         ),
         const SizedBox(height: AppSpacing.sm),
@@ -64,7 +65,7 @@ class LoginHeader extends StatelessWidget {
             vertical: AppSpacing.xs,
           ),
           decoration: BoxDecoration(
-            color: AppColors.surfaceLightBlue,
+            color: AppPalette.isDark(context) ? const Color(0xFF162544) : AppColors.surfaceLightBlue,
             borderRadius: AppRadius.fullAll,
           ),
           child: Row(
@@ -73,17 +74,17 @@ class LoginHeader extends StatelessWidget {
               Text(
                 'Kabar Lintas Andalas',
                 style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.primaryBlue,
+                  color: AppPalette.primaryAccent(context),
                   fontWeight: FontWeight.w700,
                 ),
               ),
               const SizedBox(width: AppSpacing.xs),
-              const Text('•', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+              Text('•', style: TextStyle(color: AppPalette.textSecondary(context), fontSize: 12)),
               const SizedBox(width: AppSpacing.xs),
               Text(
                 'Limau Manis',
                 style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.accentBrownGold,
+                  color: AppPalette.isDark(context) ? const Color(0xFFE2B76B) : AppColors.accentBrownGold,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -98,7 +99,7 @@ class LoginHeader extends StatelessWidget {
           child: Text(
             'Sistem Terpadu Pelaporan Insiden & Titik\nHotspot Kampus UNAND',
             style: AppTextStyles.body.copyWith(
-              color: AppColors.textSecondary,
+              color: AppPalette.textSecondary(context),
               height: 1.4,
             ),
             textAlign: TextAlign.center,
