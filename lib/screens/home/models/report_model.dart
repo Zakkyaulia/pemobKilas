@@ -32,6 +32,7 @@ class ReportModel {
     this.authorUsername,
     this.authorInitials,
     this.authorIcon,
+    this.authorAvatarUrl,
     required this.avatarBgColor,
     required this.avatarFgColor,
     this.isVerified = false,
@@ -74,6 +75,7 @@ class ReportModel {
   final String? authorUsername;
   final String? authorInitials;
   final IconData? authorIcon;
+  final String? authorAvatarUrl;
   final Color avatarBgColor;
   final Color avatarFgColor;
   final bool isVerified;
@@ -120,6 +122,7 @@ class ReportModel {
     String? authorUsername,
     String? authorInitials,
     IconData? authorIcon,
+    String? authorAvatarUrl,
     Color? avatarBgColor,
     Color? avatarFgColor,
     bool? isVerified,
@@ -155,6 +158,7 @@ class ReportModel {
       authorUsername: authorUsername ?? this.authorUsername,
       authorInitials: authorInitials ?? this.authorInitials,
       authorIcon: authorIcon ?? this.authorIcon,
+      authorAvatarUrl: authorAvatarUrl ?? this.authorAvatarUrl,
       avatarBgColor: avatarBgColor ?? this.avatarBgColor,
       avatarFgColor: avatarFgColor ?? this.avatarFgColor,
       isVerified: isVerified ?? this.isVerified,

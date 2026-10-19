@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import '../../screens/profile/data/user_profile_repository.dart';
 import '../../theme/app_palette.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/home_colors.dart';
@@ -40,9 +42,6 @@ const double _kLabelTopMargin = 2;
 /// Backdrop blur sigma (Tailwind `backdrop-blur-xl` = 24px).
 const double _kBlurSigma = 24;
 
-/// Profile image URL from the HTML reference.
-const String _kProfileUrl =
-    'https://lh3.googleusercontent.com/aida/AEtjO1V92EVQ4KN0Kz3oky3ZOjOFB36uMErkEeLAHNV9VFiNR4xHvqrU9y0IB6mb3iqoNJ7swFKmS8DJgKYBhUgFghvxzqoDcWA-tD8zi4vI_JKMI7HK8V7NKtPZM80iTjo6MyY1UFw6KP_73ds3DU6H-yxPWgQ4EA9QnC5J6vKVOODwssgoJO6s-U4JOiunlGU-RGUKB_8Mh_9roo5zd4SLPhhNl7Ky0TQaHz58_z9QyCB75uw1XHJR0hI7plY';
 
 /// Fixed frosted-glass bottom navigation bar for the home screen.
 ///
@@ -273,7 +272,7 @@ class _FabCenter extends StatelessWidget {
   }
 }
 
-/// Profile picture navigation item.
+/// Profile picture navigation item that dynamically follows the current user's profile photo.
 class _ProfileNavItem extends StatelessWidget {
   const _ProfileNavItem({
     required this.label,
@@ -285,6 +284,53 @@ class _ProfileNavItem extends StatelessWidget {
   final bool isActive;
   final VoidCallback? onTap;
 
+  Widget _buildAvatarImage(String? url, String userName) {
+    Widget fallback() => Container(
+          width: _kProfileSize,
+          height: _kProfileSize,
+          color: HomeColors.surfaceSubtle,
+          alignment: Alignment.center,
+          child: Text(
+            userName.isNotEmpty ? userName[0].toUpperCase() : 'U',
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: HomeColors.primaryContainer,
+            ),
+          ),
+        );
+
+    if (url == null || url.isEmpty) {
+      return fallback();
+    }
+
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return Image.network(
+        url,
+        width: _kProfileSize,
+        height: _kProfileSize,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => fallback(),
+      );
+    }
+    if (url.startsWith('assets/')) {
+      return Image.asset(
+        url,
+        width: _kProfileSize,
+        height: _kProfileSize,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => fallback(),
+      );
+    }
+    return Image.file(
+      File(url),
+      width: _kProfileSize,
+      height: _kProfileSize,
+      fit: BoxFit.cover,
+      errorBuilder: (_, _, _) => fallback(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final labelColor =
@@ -294,36 +340,42 @@ class _ProfileNavItem extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            ClipOval(
-              child: Image.network(
-                _kProfileUrl,
-                width: _kProfileSize,
-                height: _kProfileSize,
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => Container(
-                  width: _kProfileSize,
-                  height: _kProfileSize,
-                  color: HomeColors.surfaceSubtle,
-                  child: const Icon(
-                    Icons.person,
-                    size: 16,
-                    color: HomeColors.onSurfaceVariant,
+        child: ListenableBuilder(
+          listenable: UserProfileRepository.instance,
+          builder: (context, _) {
+            final user = UserProfileRepository.instance.currentUser;
+            final photo = user.fotoProfil;
+
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: _kProfileSize + 2,
+                  height: _kProfileSize + 2,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isActive
+                          ? HomeColors.primaryContainer
+                          : Colors.transparent,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: ClipOval(
+                    child: _buildAvatarImage(photo, user.nama),
                   ),
                 ),
-              ),
-            ),
-            const SizedBox(height: _kLabelTopMargin),
-            Text(
-              label,
-              style: HomeTextStyles.labelSm.copyWith(
-                color: labelColor,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
+                const SizedBox(height: _kLabelTopMargin),
+                Text(
+                  label,
+                  style: HomeTextStyles.labelSm.copyWith(
+                    color: labelColor,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );

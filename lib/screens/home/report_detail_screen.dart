@@ -12,6 +12,8 @@ import '../../widgets/home/report_card_header.dart';
 import '../../widgets/home/status_badge.dart';
 import '../../widgets/home/user_avatar.dart';
 import '../../widgets/home/video_player_box.dart';
+import '../profile/data/user_profile_repository.dart';
+import '../profile/models/user_profile_model.dart';
 import 'data/report_repository.dart';
 import 'models/report_model.dart';
 
@@ -49,6 +51,15 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
       _report = updated;
     });
     ReportRepository.instance.updateById(updated.id, updated);
+
+    if (isUpvoted) {
+      UserProfileRepository.instance.addActivity(
+        actionType: ActivityActionType.upvote,
+        title: 'Memberikan Dukungan',
+        description: 'Upvote pada laporan "${updated.title ?? "Laporan Kampus"}"',
+        reportId: updated.id,
+      );
+    }
 
     // 4. Feedback Sukses: SnackBar konfirmasi vote ditambahkan / ditarik
     ScaffoldMessenger.of(context)
@@ -172,6 +183,15 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
       _report = updated;
     });
     ReportRepository.instance.updateById(updated.id, updated);
+
+    UserProfileRepository.instance.addActivity(
+      actionType: ActivityActionType.bookmark,
+      title: isBookmarked ? 'Menyimpan ke Bookmark' : 'Menghapus Bookmark',
+      description: isBookmarked
+          ? 'Menyimpan laporan "${updated.title ?? "Laporan Kampus"}"'
+          : 'Menghapus laporan "${updated.title ?? "Laporan Kampus"}" dari koleksi',
+      reportId: updated.id,
+    );
 
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -327,17 +347,18 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
 
   /// Header detail: menampilkan nama pengirim dan hanya jam/waktu di bawah nama agar bersih.
   ReportCardHeader _buildHeader() {
-    final Widget avatar = _report.authorInitials != null
-        ? UserAvatar(
-            initials: _report.authorInitials,
-            backgroundColor: _report.avatarBgColor,
-            foregroundColor: _report.avatarFgColor,
-          )
-        : UserAvatar(
-            icon: _report.authorIcon,
-            backgroundColor: _report.avatarBgColor,
-            foregroundColor: _report.avatarFgColor,
-          );
+    final currentUser = UserProfileRepository.instance.currentUser;
+    final isCurrentUser = _report.authorName == currentUser.nama ||
+        _report.authorUsername == currentUser.username;
+    final effectiveAvatar = isCurrentUser ? currentUser.fotoProfil : _report.authorAvatarUrl;
+
+    final Widget avatar = UserAvatar(
+      avatarUrl: effectiveAvatar,
+      initials: _report.authorInitials,
+      icon: _report.authorIcon,
+      backgroundColor: _report.avatarBgColor,
+      foregroundColor: _report.avatarFgColor,
+    );
 
     final Widget badge = _report.badgeVariant == BadgeVariant.dot
         ? StatusBadge.dot(

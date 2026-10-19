@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 
 import '../../theme/app_palette.dart';
 import '../../theme/app_spacing.dart';
-import '../../theme/app_theme_controller.dart';
 import '../../theme/home_colors.dart';
 import '../../theme/home_shadows.dart';
 import '../../theme/home_text_styles.dart';
@@ -72,8 +71,6 @@ class HomeAppBar extends StatelessWidget {
               child: Row(
                 children: [
                   Expanded(child: _LogoBrand()),
-                  const _ThemeToggleButton(),
-                  const SizedBox(width: 4),
                   _SearchButton(onPressed: onSearchPressed),
                 ],
               ),
@@ -173,44 +170,6 @@ class _UnandBadge extends StatelessWidget {
         style: HomeTextStyles.labelSm.copyWith(
           color: HomeColors.primaryContainer,
           fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-  }
-}
-
-/// Circular theme mode toggle button (Matahari / Bulan).
-class _ThemeToggleButton extends StatelessWidget {
-  const _ThemeToggleButton();
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = AppPalette.isDark(context);
-    return Tooltip(
-      message: isDark ? 'Beralih ke Mode Terang' : 'Beralih ke Mode Gelap',
-      child: GestureDetector(
-        onTap: AppThemeController.toggle,
-        behavior: HitTestBehavior.opaque,
-        child: SizedBox(
-          width: _kSearchButtonSize,
-          height: _kSearchButtonSize,
-          child: Center(
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              transitionBuilder: (child, animation) {
-                return RotationTransition(
-                  turns: animation,
-                  child: FadeTransition(opacity: animation, child: child),
-                );
-              },
-              child: Icon(
-                isDark ? Icons.light_mode_rounded : Icons.dark_mode_outlined,
-                key: ValueKey<bool>(isDark),
-                size: 22,
-                color: isDark ? const Color(0xFFFACC15) : AppPalette.textPrimary(context),
-              ),
-            ),
-          ),
         ),
       ),
     );

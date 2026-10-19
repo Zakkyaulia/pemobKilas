@@ -49,6 +49,15 @@ class ReportRepository extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Hapus laporan secara permanen berdasarkan [id] dan beritahu seluruh listener.
+  void deleteById(String id) {
+    final index = _reports.indexWhere((r) => r.id == id);
+    if (index != -1) {
+      _reports.removeAt(index);
+      notifyListeners();
+    }
+  }
+
   /// Find the index of a report by its [id]. Returns -1 if not found.
   int indexById(String id) => _reports.indexWhere((r) => r.id == id);
 }

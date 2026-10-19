@@ -11,6 +11,8 @@ import '../../widgets/home/report_card.dart';
 import '../../widgets/home/report_card_header.dart';
 import '../../widgets/home/status_badge.dart';
 import '../../widgets/home/user_avatar.dart';
+import '../profile/data/user_profile_repository.dart';
+import '../profile/models/user_profile_model.dart';
 import '../search/search_filter_screen.dart';
 import 'data/report_repository.dart';
 import 'models/report_model.dart';
@@ -143,10 +145,20 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _handleFeedUpvote(int index, bool isUpvoted, int count) {
-    _repo.updateAt(index, _repo[index].copyWith(
+    final report = _repo[index];
+    _repo.updateAt(index, report.copyWith(
       isUpvoted: isUpvoted,
       upvoteCount: count,
     ));
+
+    if (isUpvoted) {
+      UserProfileRepository.instance.addActivity(
+        actionType: ActivityActionType.upvote,
+        title: 'Memberikan Dukungan',
+        description: 'Upvote pada laporan "${report.title ?? "Laporan Kampus"}"',
+        reportId: report.id,
+      );
+    }
 
     // 4. Feedback: SnackBar
     ScaffoldMessenger.of(context)
@@ -241,9 +253,19 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _handleFeedBookmark(int index, bool isBookmarked) {
-    _repo.updateAt(index, _repo[index].copyWith(
+    final report = _repo[index];
+    _repo.updateAt(index, report.copyWith(
       isBookmarked: isBookmarked,
     ));
+
+    UserProfileRepository.instance.addActivity(
+      actionType: ActivityActionType.bookmark,
+      title: isBookmarked ? 'Menyimpan ke Bookmark' : 'Menghapus Bookmark',
+      description: isBookmarked
+          ? 'Menyimpan laporan "${report.title ?? "Laporan Kampus"}"'
+          : 'Menghapus laporan "${report.title ?? "Laporan Kampus"}" dari koleksi',
+      reportId: report.id,
+    );
 
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -467,17 +489,18 @@ class _FeedItem extends StatelessWidget {
   }
 
   ReportCardHeader _buildHeader() {
-    final Widget avatar = report.authorInitials != null
-        ? UserAvatar(
-            initials: report.authorInitials,
-            backgroundColor: report.avatarBgColor,
-            foregroundColor: report.avatarFgColor,
-          )
-        : UserAvatar(
-            icon: report.authorIcon,
-            backgroundColor: report.avatarBgColor,
-            foregroundColor: report.avatarFgColor,
-          );
+    final currentUser = UserProfileRepository.instance.currentUser;
+    final isCurrentUser = report.authorName == currentUser.nama ||
+        report.authorUsername == currentUser.username;
+    final effectiveAvatar = isCurrentUser ? currentUser.fotoProfil : report.authorAvatarUrl;
+
+    final Widget avatar = UserAvatar(
+      avatarUrl: effectiveAvatar,
+      initials: report.authorInitials,
+      icon: report.authorIcon,
+      backgroundColor: report.avatarBgColor,
+      foregroundColor: report.avatarFgColor,
+    );
 
     final Widget badge = report.badgeVariant == BadgeVariant.dot
         ? StatusBadge.dot(

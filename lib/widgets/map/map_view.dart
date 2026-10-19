@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../theme/app_palette.dart';
 import '../../theme/home_colors.dart';
 import '../../theme/home_text_styles.dart';
 import 'dummy_map_data.dart';
@@ -102,6 +103,8 @@ class _MapViewState extends State<MapView> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppPalette.isDark(context);
+
     return Stack(
       children: [
         FlutterMap(
@@ -120,7 +123,7 @@ class _MapViewState extends State<MapView> {
             interactionOptions: const InteractionOptions(
               flags: InteractiveFlag.all,
             ),
-            onTap: (_, __) {
+            onTap: (_, _) {
               if (_selectedReport != null) {
                 setState(() {
                   _selectedReport = null;
@@ -133,6 +136,25 @@ class _MapViewState extends State<MapView> {
             TileLayer(
               urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
               userAgentPackageName: 'com.example.pemob_kilas',
+              tileBuilder: isDark
+                  ? (context, tileWidget, tile) {
+                      return ColorFiltered(
+                        colorFilter: const ColorFilter.matrix(<double>[
+                          -0.75, 0, 0, 0, 220,
+                          0, -0.75, 0, 0, 220,
+                          0, 0, -0.75, 0, 220,
+                          0, 0, 0, 1, 0,
+                        ]),
+                        child: ColorFiltered(
+                          colorFilter: const ColorFilter.mode(
+                            Color(0xFF0F1A30),
+                            BlendMode.hardLight,
+                          ),
+                          child: tileWidget,
+                        ),
+                      );
+                    }
+                  : null,
               errorTileCallback: (tile, error, stackTrace) {
                 debugPrint('Gagal memuat tile: $error');
               },
@@ -175,11 +197,14 @@ class _MapViewState extends State<MapView> {
     final hasCluster = _cluster.length > 1;
 
     return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      color: HomeColors.surfacePure,
+      elevation: 6,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(color: AppPalette.divider(context), width: 1),
+      ),
+      color: AppPalette.surface(context),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -192,7 +217,7 @@ class _MapViewState extends State<MapView> {
                   width: 32,
                   height: 32,
                   decoration: BoxDecoration(
-                    color: _categoryColor(report.category).withOpacity(0.12),
+                    color: _categoryColor(report.category).withValues(alpha: 0.12),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -209,7 +234,7 @@ class _MapViewState extends State<MapView> {
                       Text(
                         report.title,
                         style: HomeTextStyles.labelLg
-                            .copyWith(color: HomeColors.onSurface),
+                            .copyWith(color: AppPalette.textPrimary(context)),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -220,7 +245,7 @@ class _MapViewState extends State<MapView> {
                             horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
                           color: _categoryColor(report.category)
-                              .withOpacity(0.10),
+                              .withValues(alpha: 0.10),
                           borderRadius: BorderRadius.circular(99),
                         ),
                         child: Text(
@@ -244,11 +269,11 @@ class _MapViewState extends State<MapView> {
                     width: 24,
                     height: 24,
                     decoration: BoxDecoration(
-                      color: HomeColors.surfaceContainer,
+                      color: AppPalette.surfaceSubtle(context),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.close,
-                        size: 14, color: HomeColors.onSurfaceVariant),
+                    child: Icon(Icons.close,
+                        size: 14, color: AppPalette.textSecondary(context)),
                   ),
                 ),
               ],
@@ -324,23 +349,35 @@ class _MapViewState extends State<MapView> {
 
   Widget _buildLegend() {
     return Container(
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: HomeColors.surfacePure.withOpacity(0.9),
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
+        color: AppPalette.surface(context).withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppPalette.divider(context)),
+        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6)],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('Kepadatan', style: HomeTextStyles.labelSm),
+          Text(
+            'Kepadatan Hotspot',
+            style: HomeTextStyles.labelSm.copyWith(
+              color: AppPalette.textPrimary(context),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(height: 4),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Sedikit',
-                  style: HomeTextStyles.bodySm.copyWith(fontSize: 10)),
+              Text(
+                'Sedikit',
+                style: HomeTextStyles.bodySm.copyWith(
+                  fontSize: 10,
+                  color: AppPalette.textSecondary(context),
+                ),
+              ),
               const SizedBox(width: 4),
               Container(
                 width: 60,
@@ -358,8 +395,13 @@ class _MapViewState extends State<MapView> {
                 ),
               ),
               const SizedBox(width: 4),
-              Text('Banyak',
-                  style: HomeTextStyles.bodySm.copyWith(fontSize: 10)),
+              Text(
+                'Banyak',
+                style: HomeTextStyles.bodySm.copyWith(
+                  fontSize: 10,
+                  color: AppPalette.textSecondary(context),
+                ),
+              ),
             ],
           ),
         ],
@@ -461,10 +503,10 @@ class _MapLayers extends StatelessWidget {
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      const Color(0xFF8B0000).withOpacity(heatOpacity),
-                      Colors.red.withOpacity(heatOpacity * 0.7),
-                      Colors.orange.withOpacity(heatOpacity * 0.4),
-                      Colors.yellow.withOpacity(heatOpacity * 0.1),
+                      const Color(0xFF8B0000).withValues(alpha: heatOpacity),
+                      Colors.red.withValues(alpha: heatOpacity * 0.7),
+                      Colors.orange.withValues(alpha: heatOpacity * 0.4),
+                      Colors.yellow.withValues(alpha: heatOpacity * 0.1),
                       Colors.transparent,
                     ],
                     stops: const [0.0, 0.2, 0.5, 0.8, 1.0],
@@ -505,7 +547,7 @@ class _MapLayers extends StatelessWidget {
                       boxShadow: isSelected
                           ? [
                               BoxShadow(
-                                color: HomeColors.primary.withOpacity(0.4),
+                                color: HomeColors.primary.withValues(alpha: 0.4),
                                 blurRadius: 8,
                                 spreadRadius: 2,
                               ),

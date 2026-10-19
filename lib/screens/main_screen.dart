@@ -1,15 +1,23 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_palette.dart';
+import '../theme/home_text_styles.dart';
 import '../widgets/home/home_bottom_nav.dart';
 import 'home/home_screen.dart';
 import 'map/map_screen.dart';
+import 'profile/profile_screen.dart';
 import 'report/create_report_screen.dart';
 
 /// Wrapper utama (Shell) yang menangani Bottom Navigation dan menjaga state
 /// halaman menggunakan PageView agar bisa diswipe horizontal.
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
+
+  /// Beralih ke tab bottom nav tertentu (0: Beranda, 1: Peta, 3: Notifikasi, 4: Profil).
+  static void switchToTab(BuildContext context, int navIndex) {
+    final state = context.findAncestorStateOfType<_MainScreenState>();
+    state?._onTabTapped(navIndex);
+  }
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -27,7 +35,7 @@ class _MainScreenState extends State<MainScreen> {
     HomeScreen(),
     MapScreen(),
     _PlaceholderPage(title: 'Notifikasi', icon: Icons.notifications_outlined),
-    _PlaceholderPage(title: 'Akun', icon: Icons.person_outline),
+    ProfileScreen(),
   ];
 
   @override
@@ -137,17 +145,14 @@ class _PlaceholderPage extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               title,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
+              style: HomeTextStyles.headlineMd.copyWith(
                 color: AppPalette.textPrimary(context),
               ),
             ),
             const SizedBox(height: 8),
             Text(
               'Dalam Pengembangan',
-              style: TextStyle(
-                fontSize: 14,
+              style: HomeTextStyles.bodyMd.copyWith(
                 color: AppPalette.textSecondary(context),
               ),
             ),
