@@ -13,6 +13,7 @@ import '../../theme/home_colors.dart';
 import '../../widgets/map/dummy_map_data.dart';
 import '../home/data/report_repository.dart';
 import '../home/models/report_model.dart';
+import '../profile/data/user_profile_repository.dart';
 import 'package:latlong2/latlong.dart';
 
 // ─── Design tokens matching SearchFilterScreen ───────────────────────────────
@@ -966,12 +967,22 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
 
   void _executeSubmitReport(String title, String description) {
     final isCondition = _selectedCategory == 'Kondisi Kampus';
+    final currentUser = UserProfileRepository.instance.currentUser;
+    final initials = currentUser.nama.isNotEmpty
+        ? currentUser.nama
+            .trim()
+            .split(' ')
+            .map((w) => w.isNotEmpty ? w[0] : '')
+            .take(2)
+            .join()
+        : 'U';
     final newReport = ReportModel(
       id: 'post-${DateTime.now().millisecondsSinceEpoch}',
       cardType: CardType.report,
-      authorName: 'Ghezy Pramudinata .B',
-      authorUsername: '@ghezz',
-      authorInitials: 'Gh',
+      authorName: currentUser.nama,
+      authorUsername: currentUser.username,
+      authorInitials: initials,
+      authorAvatarUrl: currentUser.fotoProfil,
       avatarBgColor: HomeColors.surfaceVariant,
       avatarFgColor: HomeColors.primary,
       metaIcon: Icons.location_on,
@@ -1448,35 +1459,72 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
         Padding(
           padding: const EdgeInsets.only(right: AppSpacing.lg),
           child: Center(
-            child: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-                  width: 1.5,
-                ),
-              ),
-              child: ClipOval(
-                child: Image.network(
-                  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop',
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => Container(
-                    color: HomeColors.primaryContainer,
-                    alignment: Alignment.center,
-                    child: Text(
-                      'Gh',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
-                        color: Colors.white,
-                        height: 1.0,
+            child: ListenableBuilder(
+              listenable: UserProfileRepository.instance,
+              builder: (context, _) {
+                final user = UserProfileRepository.instance.currentUser;
+                final photo = user.fotoProfil;
+                final initials = user.nama.isNotEmpty
+                    ? user.nama
+                        .trim()
+                        .split(' ')
+                        .map((w) => w.isNotEmpty ? w[0] : '')
+                        .take(2)
+                        .join()
+                    : 'U';
+
+                Widget fallback() => Container(
+                      color: HomeColors.primaryContainer,
+                      alignment: Alignment.center,
+                      child: Text(
+                        initials,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                          color: Colors.white,
+                          height: 1.0,
+                        ),
                       ),
+                    );
+
+                Widget buildAvatar() {
+                  if (photo == null || photo.isEmpty) return fallback();
+                  if (photo.startsWith('http://') || photo.startsWith('https://')) {
+                    return Image.network(
+                      photo,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => fallback(),
+                    );
+                  }
+                  if (photo.startsWith('assets/')) {
+                    return Image.asset(
+                      photo,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => fallback(),
+                    );
+                  }
+                  return Image.file(
+                    File(photo),
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => fallback(),
+                  );
+                }
+
+                return Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                      width: 1.5,
                     ),
                   ),
-                ),
-              ),
+                  child: ClipOval(
+                    child: buildAvatar(),
+                  ),
+                );
+              },
             ),
           ),
         ),
@@ -2097,7 +2145,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
           color: AppPalette.surface(context),
           borderRadius: BorderRadius.circular(_kRadiusLg),
           border: Border.all(
-            color: _kPrimary.withOpacity(0.5),
+            color: _kPrimary.withValues(alpha: 0.5),
             width: 1.2,
           ),
         ),
@@ -2165,7 +2213,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
         color: AppPalette.surface(context),
         borderRadius: BorderRadius.circular(_kRadiusLg),
         border: Border.all(
-          color: const Color(0xFF10B981).withOpacity(0.7),
+          color: const Color(0xFF10B981).withValues(alpha: 0.7),
           width: 1.4,
         ),
       ),
@@ -2309,7 +2357,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                     color: isDark ? const Color(0xFF162544) : _kBgBlue100,
                     borderRadius: BorderRadius.circular(_kRadiusSm),
                     border: Border.all(
-                      color: (isDark ? const Color(0xFF60A5FA) : _kPrimary).withOpacity(0.35),
+                      color: (isDark ? const Color(0xFF60A5FA) : _kPrimary).withValues(alpha: 0.35),
                       width: 0.8,
                     ),
                   ),

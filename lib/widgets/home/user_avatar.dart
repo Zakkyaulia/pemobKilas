@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 
 import '../../theme/home_colors.dart';
@@ -9,20 +10,23 @@ const double _kDefaultSize = 40;
 /// Icon size inside the avatar (HTML `text-[20px]`).
 const double _kIconSize = 20;
 
-/// Circular avatar displaying either [initials] text or an [icon].
+/// Circular avatar displaying an [avatarUrl], [initials] text, or an [icon].
 ///
-/// Used in report card headers for user avatars (initials) and
-/// official accounts (verified icon).
+/// Used in report card headers for user avatars and official accounts.
 class UserAvatar extends StatelessWidget {
   const UserAvatar({
     super.key,
+    this.avatarUrl,
     this.initials,
     this.icon,
     required this.backgroundColor,
     this.foregroundColor = HomeColors.primary,
     this.size = _kDefaultSize,
-  }) : assert(initials != null || icon != null,
-            'Either initials or icon must be provided');
+  }) : assert(avatarUrl != null || initials != null || icon != null,
+            'Either avatarUrl, initials, or icon must be provided');
+
+  /// URL, file path, or asset path to the user's avatar image.
+  final String? avatarUrl;
 
   /// Two-letter initials (e.g. "ZA", "AH").
   final String? initials;
@@ -39,6 +43,46 @@ class UserAvatar extends StatelessWidget {
   /// Diameter of the circle.
   final double size;
 
+  Widget _buildFallback() {
+    return icon != null
+        ? Icon(icon, size: _kIconSize, color: foregroundColor)
+        : Text(
+            initials ?? 'U',
+            style: HomeTextStyles.labelMd.copyWith(
+              fontWeight: FontWeight.w700,
+              color: foregroundColor,
+            ),
+          );
+  }
+
+  Widget _buildImage(String url) {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return Image.network(
+        url,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => _buildFallback(),
+      );
+    }
+    if (url.startsWith('assets/')) {
+      return Image.asset(
+        url,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => _buildFallback(),
+      );
+    }
+    return Image.file(
+      File(url),
+      width: size,
+      height: size,
+      fit: BoxFit.cover,
+      errorBuilder: (_, _, _) => _buildFallback(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -49,15 +93,11 @@ class UserAvatar extends StatelessWidget {
         shape: BoxShape.circle,
       ),
       alignment: Alignment.center,
-      child: icon != null
-          ? Icon(icon, size: _kIconSize, color: foregroundColor)
-          : Text(
-              initials!,
-              style: HomeTextStyles.labelMd.copyWith(
-                fontWeight: FontWeight.w700,
-                color: foregroundColor,
-              ),
-            ),
+      child: ClipOval(
+        child: (avatarUrl != null && avatarUrl!.isNotEmpty)
+            ? _buildImage(avatarUrl!)
+            : _buildFallback(),
+      ),
     );
   }
 }
