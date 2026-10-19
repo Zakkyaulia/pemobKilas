@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+import '../../theme/app_palette.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
 
@@ -22,7 +23,7 @@ class StudentGuideLink extends StatelessWidget {
         textAlign: TextAlign.center,
         text: TextSpan(
           children: [
-            TextSpan(text: 'Mahasiswa baru? ', style: AppTextStyles.body),
+            TextSpan(text: 'Mahasiswa baru? ', style: AppTextStyles.body.copyWith(color: AppPalette.textSecondary(context))),
             TextSpan(
               text: 'Lihat panduan',
               style: AppTextStyles.link,

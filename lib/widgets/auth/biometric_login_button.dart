@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/app_colors.dart';
+import '../../theme/app_palette.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
 
@@ -31,7 +32,7 @@ class BiometricLoginButton extends StatelessWidget {
             const Expanded(child: Divider()),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-              child: Text('atau masuk dengan', style: AppTextStyles.caption),
+              child: Text('atau masuk dengan', style: AppTextStyles.caption.copyWith(color: AppPalette.textSecondary(context))),
             ),
             const Expanded(child: Divider()),
           ],
@@ -47,21 +48,21 @@ class BiometricLoginButton extends StatelessWidget {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceLightBlue,
+                  color: AppPalette.isDark(context) ? const Color(0xFF162544) : AppColors.surfaceLightBlue,
                   shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.inputBorder, width: 1),
+                  border: Border.all(color: AppPalette.divider(context), width: 1),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.fingerprint_rounded,
                   size: 28,
-                  color: AppColors.primaryBlue,
+                  color: AppPalette.primaryAccent(context),
                 ),
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
                 'Sidik Jari',
                 style: AppTextStyles.caption.copyWith(
-                  color: AppColors.textSecondary,
+                  color: AppPalette.textSecondary(context),
                 ),
               ),
             ],

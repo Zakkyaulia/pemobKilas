@@ -103,8 +103,6 @@ class _MapViewState extends State<MapView> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = AppPalette.isDark(context);
-
     return Stack(
       children: [
         FlutterMap(
@@ -136,25 +134,6 @@ class _MapViewState extends State<MapView> {
             TileLayer(
               urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
               userAgentPackageName: 'com.example.pemob_kilas',
-              tileBuilder: isDark
-                  ? (context, tileWidget, tile) {
-                      return ColorFiltered(
-                        colorFilter: const ColorFilter.matrix(<double>[
-                          -0.75, 0, 0, 0, 220,
-                          0, -0.75, 0, 0, 220,
-                          0, 0, -0.75, 0, 220,
-                          0, 0, 0, 1, 0,
-                        ]),
-                        child: ColorFiltered(
-                          colorFilter: const ColorFilter.mode(
-                            Color(0xFF0F1A30),
-                            BlendMode.hardLight,
-                          ),
-                          child: tileWidget,
-                        ),
-                      );
-                    }
-                  : null,
               errorTileCallback: (tile, error, stackTrace) {
                 debugPrint('Gagal memuat tile: $error');
               },
@@ -165,11 +144,19 @@ class _MapViewState extends State<MapView> {
               selectedReportId: _selectedReport?.id,
               onReportTap: _onPinTap,
             ),
-            const RichAttributionWidget(
-              alignment: AttributionAlignment.bottomLeft,
-              attributions: [
-                TextSourceAttribution('© OpenStreetMap contributors'),
-              ],
+            // Attribution teks sederhana tanpa box
+            Align(
+              alignment: Alignment.bottomLeft,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 4, bottom: 2),
+                child: Text(
+                  '© OpenStreetMap',
+                  style: TextStyle(
+                    fontSize: 9,
+                    color: Colors.black54,
+                  ),
+                ),
+              ),
             ),
           ],
         ),

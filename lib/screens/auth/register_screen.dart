@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../theme/app_colors.dart';
+import '../../theme/app_palette.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
 import '../../widgets/auth/login_header.dart';
@@ -40,7 +41,7 @@ class RegisterScreen extends StatelessWidget {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundPrimary,
+      backgroundColor: AppPalette.canvas(context),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.only(bottom: viewInsets.bottom),
@@ -85,7 +86,7 @@ class RegisterScreen extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text('Sudah punya akun? ', style: AppTextStyles.body),
+        Text('Sudah punya akun? ', style: AppTextStyles.body.copyWith(color: AppPalette.textSecondary(context))),
         GestureDetector(
           onTap: () {
             Navigator.of(context).pushReplacement(
