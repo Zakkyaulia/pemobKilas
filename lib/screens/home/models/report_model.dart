@@ -188,4 +188,24 @@ class ReportModel {
       isBookmarked: isBookmarked ?? this.isBookmarked,
     );
   }
+
+  /// Mengambil bagian nama lokasi saja (tanpa embel-embel waktu).
+  String get locationDisplay {
+    final parts = metaText.split('•');
+    return parts.first.trim();
+  }
+
+  /// Mengambil bagian waktu/timeline upload saja (misal "20 menit yang lalu", "15m lalu", "Baru saja").
+  /// Menghilangkan logika jam spesifik (WIB) agar ringan dan konsisten.
+  String get timeAgoDisplay {
+    final parts = metaText.split('•');
+    if (parts.length >= 2) {
+      return parts.last.trim();
+    }
+    if (timestamp != null && timestamp!.isNotEmpty) {
+      final tParts = timestamp!.split('•');
+      return tParts.first.trim();
+    }
+    return 'Baru saja';
+  }
 }

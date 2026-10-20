@@ -332,6 +332,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                 upvoteCount: _report.upvoteCount,
                 isUpvoted: _report.isUpvoted,
                 isBookmarked: _report.isBookmarked,
+                timestamp: _report.timeAgoDisplay,
                 onUpvoteChanged: _handleUpvote,
                 onUpvoteCooldown: _handleUpvoteCooldown,
                 onBookmarkChanged: _handleBookmark,
@@ -377,11 +378,11 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
     return ReportCardHeader(
       avatar: avatar,
       displayName: _report.authorName,
-      username: _report.authorUsername,
+      username: null,
       isVerified: _report.isVerified,
-      metaIcon: Icons.schedule,
-      metaIconColor: HomeColors.onSurfaceVariant,
-      metaText: _report.timestamp ?? _report.metaText,
+      metaIcon: _report.metaIcon,
+      metaIconColor: _report.metaIconColor,
+      metaText: _report.locationDisplay,
       badge: badge,
     );
   }

@@ -318,7 +318,7 @@ class _AllReportsScreenState extends State<AllReportsScreen> {
                           ),
                           const Spacer(),
                           Text(
-                            item.timestamp ?? '',
+                            item.timeAgoDisplay,
                             style: HomeTextStyles.labelSm.copyWith(
                               color: AppPalette.textSecondary(context),
                               fontSize: 11,

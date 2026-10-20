@@ -399,7 +399,7 @@ class ProfileReportsTab extends StatelessWidget {
                           ),
                           const Spacer(),
                           Text(
-                            item.timestamp?.split('•').first.trim() ?? 'Baru saja',
+                            item.timeAgoDisplay,
                             style: HomeTextStyles.labelSm.copyWith(
                               fontSize: 10,
                               color: AppPalette.textSecondary(context),

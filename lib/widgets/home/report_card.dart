@@ -35,8 +35,16 @@ class ReportCard extends StatelessWidget {
     this.onUpvoteCooldown,
     this.onBookmarkChanged,
     this.onSharePressed,
+    this.timestamp,
+    this.timestampAlignment = CrossAxisAlignment.start,
     this.onTap,
   });
+
+  /// Upload timestamp / time ago text (e.g. "15m lalu").
+  final String? timestamp;
+
+  /// Alignment of timestamp in the footer.
+  final CrossAxisAlignment timestampAlignment;
 
   /// Pre-built [ReportCardHeader] widget.
   final Widget header;
@@ -120,6 +128,8 @@ class ReportCard extends StatelessWidget {
               onUpvoteCooldown: onUpvoteCooldown,
               onBookmarkChanged: onBookmarkChanged,
               onSharePressed: onSharePressed,
+              timestamp: timestamp,
+              timestampAlignment: timestampAlignment,
             ),
           ],
         ),

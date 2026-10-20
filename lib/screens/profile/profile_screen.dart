@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 
 import '../../theme/app_palette.dart';
-import '../main_screen.dart';
 import '../home/data/report_repository.dart';
 import '../home/models/report_model.dart';
 import 'data/user_profile_repository.dart';
+import 'settings_screen.dart';
 import 'widgets/profile_activity_tab.dart';
 import 'widgets/profile_app_bar.dart';
 import 'widgets/profile_bookmarks_tab.dart';
 import 'widgets/profile_header.dart';
-import 'widgets/profile_quick_settings.dart';
 import 'widgets/profile_reports_tab.dart';
 import 'widgets/profile_stats_row.dart';
 import 'widgets/profile_tab_bar.dart';
@@ -34,8 +33,10 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   int _selectedTab = 0;
 
-  void _navigateToNotificationTab() {
-    MainScreen.switchToTab(context, 3);
+  void _navigateToSettings() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const SettingsScreen()),
+    );
   }
 
   @override
@@ -85,9 +86,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               // Laporan bulan ini (FR-B6)
               final reportsThisMonth = myReports.length;
 
-              final isBookmarkUnlocked =
-                  UserProfileRepository.instance.isBookmarkUnlocked;
-
               return SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
                 padding: EdgeInsets.only(
@@ -111,14 +109,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                     const SizedBox(height: 12),
 
-                    // 3. Tab Bar (Laporan, Bookmark 🔒, Riwayat)
+                    // 3. Tab Bar (Laporan, Bookmark, Riwayat)
                     ProfileTabBar(
                       selectedIndex: _selectedTab,
                       onTabChanged: (index) {
                         setState(() => _selectedTab = index);
                       },
                       reportCount: myReports.length,
-                      isBookmarkUnlocked: isBookmarkUnlocked,
                     ),
 
                     const SizedBox(height: 12),
@@ -133,10 +130,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: 20),
-
-                    // 5. Pengaturan & Fitur Cepat (Pengingat FR-18, Goyang HP FR-23, Tema, Logout FR-02)
-                    const ProfileQuickSettings(),
+                    const SizedBox(height: 32),
                   ],
                 ),
               );
@@ -149,7 +143,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             left: 0,
             right: 0,
             child: ProfileAppBar(
-              onNotificationPressed: _navigateToNotificationTab,
+              onSettingsPressed: _navigateToSettings,
             ),
           ),
         ],

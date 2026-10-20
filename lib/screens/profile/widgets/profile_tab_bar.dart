@@ -15,13 +15,11 @@ class ProfileTabBar extends StatelessWidget {
     required this.selectedIndex,
     required this.onTabChanged,
     required this.reportCount,
-    required this.isBookmarkUnlocked,
   });
 
   final int selectedIndex;
   final ValueChanged<int> onTabChanged;
   final int reportCount;
-  final bool isBookmarkUnlocked;
 
   @override
   Widget build(BuildContext context) {
@@ -51,9 +49,7 @@ class ProfileTabBar extends StatelessWidget {
             context: context,
             index: 1,
             label: 'Bookmark',
-            icon: isBookmarkUnlocked
-                ? Icons.bookmark_added_rounded
-                : Icons.lock_outline_rounded,
+            icon: Icons.bookmark_border_rounded,
           ),
           _buildTabItem(
             context: context,

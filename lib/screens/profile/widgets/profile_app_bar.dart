@@ -40,10 +40,10 @@ const double _kBlurSigma = 24;
 class ProfileAppBar extends StatelessWidget {
   const ProfileAppBar({
     super.key,
-    this.onNotificationPressed,
+    this.onSettingsPressed,
   });
 
-  final VoidCallback? onNotificationPressed;
+  final VoidCallback? onSettingsPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +67,7 @@ class ProfileAppBar extends StatelessWidget {
               child: Row(
                 children: [
                   const Expanded(child: _ProfileLogoBrand()),
-                  _NotificationButton(onPressed: onNotificationPressed),
+                  _SettingsButton(onPressed: onSettingsPressed),
                 ],
               ),
             ),
@@ -130,7 +130,7 @@ class _ProfileLogoBrand extends StatelessWidget {
               ),
               const SizedBox(height: _kTaglineTopMargin),
               Text(
-                'Profil & Pengaturan Akun',
+                'Profil Akun Mahasiswa',
                 style: HomeTextStyles.labelSm.copyWith(
                   color: AppPalette.textSecondary(context),
                   height: 1.0,
@@ -174,43 +174,26 @@ class _UnandBadge extends StatelessWidget {
   }
 }
 
-/// Notification action button with subtle red unread indicator dot.
-class _NotificationButton extends StatelessWidget {
-  const _NotificationButton({this.onPressed});
+/// Settings gear action button.
+class _SettingsButton extends StatelessWidget {
+  const _SettingsButton({this.onPressed});
 
   final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
     return Tooltip(
-      message: 'Pusat Notifikasi',
+      message: 'Pengaturan',
       child: GestureDetector(
         onTap: onPressed,
         behavior: HitTestBehavior.opaque,
         child: SizedBox(
           width: _kButtonSize,
           height: _kButtonSize,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Icon(
-                Icons.notifications_none_rounded,
-                size: 24,
-                color: AppPalette.textPrimary(context),
-              ),
-              Positioned(
-                top: 8,
-                right: 8,
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFEF4444),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-            ],
+          child: Icon(
+            Icons.settings_outlined,
+            size: 24,
+            color: AppPalette.textPrimary(context),
           ),
         ),
       ),

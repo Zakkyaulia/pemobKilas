@@ -461,6 +461,7 @@ class _FeedItem extends StatelessWidget {
         upvoteCount: report.upvoteCount,
         isUpvoted: report.isUpvoted,
         isBookmarked: report.isBookmarked,
+        timestamp: report.timeAgoDisplay,
         onTap: onTap,
         onUpvoteChanged: onUpvoteChanged,
         onUpvoteCooldown: onUpvoteCooldown,
@@ -480,6 +481,7 @@ class _FeedItem extends StatelessWidget {
       upvoteCount: report.upvoteCount,
       isUpvoted: report.isUpvoted,
       isBookmarked: report.isBookmarked,
+      timestamp: report.timeAgoDisplay,
       onTap: onTap,
       onUpvoteChanged: onUpvoteChanged,
       onUpvoteCooldown: onUpvoteCooldown,
@@ -519,11 +521,13 @@ class _FeedItem extends StatelessWidget {
     return ReportCardHeader(
       avatar: avatar,
       displayName: report.authorName,
-      username: report.authorUsername,
+      // Jangan tampilkan email/handle di feed agar header lapang dan tidak menumpuk
+      username: null,
       isVerified: report.isVerified,
       metaIcon: report.metaIcon,
       metaIconColor: report.metaIconColor,
-      metaText: report.metaText,
+      // Hanya lokasi (waktu upload dipindah ke footer di bawah button upvote)
+      metaText: report.locationDisplay,
       badge: badge,
     );
   }
