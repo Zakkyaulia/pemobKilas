@@ -36,12 +36,16 @@ class ReportCard extends StatelessWidget {
     this.onBookmarkChanged,
     this.onSharePressed,
     this.timestamp,
+    this.isEdited = false,
     this.timestampAlignment = CrossAxisAlignment.start,
     this.onTap,
   });
 
   /// Upload timestamp / time ago text (e.g. "15m lalu").
   final String? timestamp;
+
+  /// Whether this report has been edited.
+  final bool isEdited;
 
   /// Alignment of timestamp in the footer.
   final CrossAxisAlignment timestampAlignment;
@@ -129,6 +133,7 @@ class ReportCard extends StatelessWidget {
               onBookmarkChanged: onBookmarkChanged,
               onSharePressed: onSharePressed,
               timestamp: timestamp,
+              isEdited: isEdited,
               timestampAlignment: timestampAlignment,
             ),
           ],

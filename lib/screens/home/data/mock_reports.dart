@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import '../../../theme/home_colors.dart';
 import '../models/report_model.dart';
 
-/// Dummy feed data with 18 realistic campus reports, strictly using 2 categories:
+/// Dummy feed data with 19 realistic campus reports, strictly using 2 categories:
 /// 1. "Kondisi Kampus" (dot badge)
 /// 2. "Info Penting" (icon badge)
 /// All location icons consistently use [HomeColors.primary] (blue).
-const List<ReportModel> mockReports = [
+final List<ReportModel> mockReports = [
   // ── Card 1: Ghezy — AC Ruang Kuliah (16:9) ──────────────────────────────
   ReportModel(
     id: 'post-1',
@@ -23,6 +23,7 @@ const List<ReportModel> mockReports = [
     locationName: 'Gedung GKB C UNAND',
     locationDetail: '-0.914203, 100.461021',
     timestamp: '15 menit yang lalu',
+    createdAt: DateTime.now().subtract(const Duration(minutes: 15)),
     badgeLabel: 'Kondisi Kampus',
     badgeVariant: BadgeVariant.dot,
     badgeDotColor: HomeColors.statusCondition,
@@ -58,6 +59,7 @@ const List<ReportModel> mockReports = [
     locationName: 'Bundaran PKM UNAND',
     locationDetail: '-0.913540, 100.458920',
     timestamp: '1 jam yang lalu',
+    createdAt: DateTime.now().subtract(const Duration(hours: 1)),
     badgeLabel: 'Kondisi Kampus',
     badgeVariant: BadgeVariant.dot,
     badgeDotColor: HomeColors.statusCondition,
@@ -93,6 +95,7 @@ const List<ReportModel> mockReports = [
     locationName: 'Gedung Rektorat Sayap Kanan',
     locationDetail: '-0.914820, 100.460115',
     timestamp: '2 jam yang lalu',
+    createdAt: DateTime.now().subtract(const Duration(hours: 2)),
     badgeLabel: 'Info Penting',
     badgeVariant: BadgeVariant.icon,
     badgeIcon: Icons.campaign,
@@ -126,6 +129,7 @@ const List<ReportModel> mockReports = [
     locationName: 'Depan Gedung Dekanat FTI',
     locationDetail: '-0.915512, 100.457890',
     timestamp: '3 jam yang lalu',
+    createdAt: DateTime.now().subtract(const Duration(hours: 3)),
     badgeLabel: 'Kondisi Kampus',
     badgeVariant: BadgeVariant.dot,
     badgeDotColor: HomeColors.statusCondition,
@@ -159,6 +163,7 @@ const List<ReportModel> mockReports = [
     locationName: 'Ruang Seminar Gedung E 102',
     locationDetail: '-0.914102, 100.459340',
     timestamp: '4 jam yang lalu',
+    createdAt: DateTime.now().subtract(const Duration(hours: 4)),
     badgeLabel: 'Kondisi Kampus',
     badgeVariant: BadgeVariant.dot,
     badgeDotColor: HomeColors.statusCondition,
@@ -192,6 +197,7 @@ const List<ReportModel> mockReports = [
     locationName: 'Kantin Belakang Gedung I',
     locationDetail: '-0.916210, 100.462150',
     timestamp: '5 jam yang lalu',
+    createdAt: DateTime.now().subtract(const Duration(hours: 5)),
     badgeLabel: 'Kondisi Kampus',
     badgeVariant: BadgeVariant.dot,
     badgeDotColor: HomeColors.statusCondition,
@@ -225,6 +231,7 @@ const List<ReportModel> mockReports = [
     locationName: 'Halte Bus Kampus Limau Manis',
     locationDetail: '-0.912450, 100.456780',
     timestamp: '6 jam yang lalu',
+    createdAt: DateTime.now().subtract(const Duration(hours: 6)),
     badgeLabel: 'Info Penting',
     badgeVariant: BadgeVariant.icon,
     badgeIcon: Icons.campaign,
@@ -259,6 +266,7 @@ const List<ReportModel> mockReports = [
     locationName: 'Toilet Pria Lantai 2 Perpustakaan',
     locationDetail: '-0.913980, 100.460890',
     timestamp: '7 jam yang lalu',
+    createdAt: DateTime.now().subtract(const Duration(hours: 7)),
     badgeLabel: 'Kondisi Kampus',
     badgeVariant: BadgeVariant.dot,
     badgeDotColor: HomeColors.statusCondition,
@@ -292,6 +300,7 @@ const List<ReportModel> mockReports = [
     locationName: 'Jalan Menuju Asrama Maninjau',
     locationDetail: '-0.917120, 100.458210',
     timestamp: '8 jam yang lalu',
+    createdAt: DateTime.now().subtract(const Duration(hours: 8)),
     badgeLabel: 'Kondisi Kampus',
     badgeVariant: BadgeVariant.dot,
     badgeDotColor: HomeColors.statusCondition,
@@ -324,6 +333,7 @@ const List<ReportModel> mockReports = [
     locationName: 'Layanan Sirkulasi Lantai 1',
     locationDetail: '-0.913890, 100.460750',
     timestamp: '9 jam yang lalu',
+    createdAt: DateTime.now().subtract(const Duration(hours: 9)),
     badgeLabel: 'Info Penting',
     badgeVariant: BadgeVariant.icon,
     badgeIcon: Icons.campaign,
@@ -357,6 +367,7 @@ const List<ReportModel> mockReports = [
     locationName: 'Laboratorium Rekayasa Perangkat Lunak',
     locationDetail: '-0.914990, 100.457630',
     timestamp: '10 jam yang lalu',
+    createdAt: DateTime.now().subtract(const Duration(hours: 10)),
     badgeLabel: 'Kondisi Kampus',
     badgeVariant: BadgeVariant.dot,
     badgeDotColor: HomeColors.statusCondition,
@@ -389,6 +400,7 @@ const List<ReportModel> mockReports = [
     locationName: 'Gedung Perkuliahan Pancasila Lt. 2',
     locationDetail: '-0.913210, 100.459800',
     timestamp: '11 jam yang lalu',
+    createdAt: DateTime.now().subtract(const Duration(hours: 11)),
     badgeLabel: 'Kondisi Kampus',
     badgeVariant: BadgeVariant.dot,
     badgeDotColor: HomeColors.statusCondition,
@@ -421,6 +433,7 @@ const List<ReportModel> mockReports = [
     locationName: 'Hall Gedung PKM Kampus Limau Manis',
     locationDetail: '-0.913480, 100.458850',
     timestamp: '12 jam yang lalu',
+    createdAt: DateTime.now().subtract(const Duration(hours: 12)),
     badgeLabel: 'Info Penting',
     badgeVariant: BadgeVariant.icon,
     badgeIcon: Icons.campaign,
@@ -455,6 +468,7 @@ const List<ReportModel> mockReports = [
     locationName: 'Area Lapangan Olahraga Kampus',
     locationDetail: '-0.916800, 100.459990',
     timestamp: '14 jam yang lalu',
+    createdAt: DateTime.now().subtract(const Duration(hours: 14)),
     badgeLabel: 'Kondisi Kampus',
     badgeVariant: BadgeVariant.dot,
     badgeDotColor: HomeColors.statusCondition,
@@ -487,6 +501,7 @@ const List<ReportModel> mockReports = [
     locationName: 'Tempat Wudhu Gedung Kuliah H',
     locationDetail: '-0.914560, 100.461900',
     timestamp: '16 jam yang lalu',
+    createdAt: DateTime.now().subtract(const Duration(hours: 16)),
     badgeLabel: 'Kondisi Kampus',
     badgeVariant: BadgeVariant.dot,
     badgeDotColor: HomeColors.statusCondition,
@@ -519,6 +534,7 @@ const List<ReportModel> mockReports = [
     locationName: 'Kantor LPPM Gedung Rektorat',
     locationDetail: '-0.914750, 100.460200',
     timestamp: '18 jam yang lalu',
+    createdAt: DateTime.now().subtract(const Duration(hours: 18)),
     badgeLabel: 'Info Penting',
     badgeVariant: BadgeVariant.icon,
     badgeIcon: Icons.campaign,
@@ -552,6 +568,7 @@ const List<ReportModel> mockReports = [
     locationName: 'Gazebo Plaza Belajar Mahasiswa',
     locationDetail: '-0.913700, 100.459500',
     timestamp: '20 jam yang lalu',
+    createdAt: DateTime.now().subtract(const Duration(hours: 20)),
     badgeLabel: 'Kondisi Kampus',
     badgeVariant: BadgeVariant.dot,
     badgeDotColor: HomeColors.statusCondition,
@@ -584,6 +601,7 @@ const List<ReportModel> mockReports = [
     locationName: 'Gedung LPTIK Kampus Limau Manis',
     locationDetail: '-0.915200, 100.458600',
     timestamp: '1 hari yang lalu',
+    createdAt: DateTime.now().subtract(const Duration(days: 1, hours: 4)),
     badgeLabel: 'Info Penting',
     badgeVariant: BadgeVariant.icon,
     badgeIcon: Icons.campaign,
@@ -601,5 +619,38 @@ const List<ReportModel> mockReports = [
     upvoteCount: 95,
     isUpvoted: false,
     isBookmarked: true,
+  ),
+
+  // ── Card 19: Ghezy — Laporan Lama (Expired 24 Jam) ──────────────────────
+  ReportModel(
+    id: 'post-19',
+    cardType: CardType.report,
+    authorName: 'Ghezy Pramudinata .B',
+    authorUsername: '@ghezz',
+    authorInitials: 'Gh',
+    avatarBgColor: HomeColors.surfaceVariant,
+    avatarFgColor: HomeColors.primary,
+    metaIcon: Icons.location_on,
+    metaIconColor: HomeColors.primary,
+    metaText: 'Gedung Perkuliahan C • 2 hari lalu',
+    locationName: 'Gedung Kuliah C Lantai 1',
+    locationDetail: '-0.914300, 100.461100',
+    timestamp: '2 hari yang lalu',
+    createdAt: DateTime.now().subtract(const Duration(days: 2)),
+    badgeLabel: 'Kondisi Kampus',
+    badgeVariant: BadgeVariant.dot,
+    badgeDotColor: HomeColors.statusCondition,
+    badgeBgColor: HomeColors.tertiaryFixed,
+    badgeTextColor: HomeColors.onTertiaryFixedVariant,
+    title: 'Pipa Air Toilet Bocor di Lantai 1 Gedung C',
+    description:
+        'Pipa saluran air bersih di bawah wastafel toilet pria lantai 1 mengalami kebocoran '
+        'cukup deras sehingga air menggenangi lorong depan kelas.',
+    imageUrl:
+        'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=800&auto=format&fit=crop',
+    aspectRatio: 16 / 9,
+    imageSemanticLabel: 'Pipa Bocor Gedung C',
+    upvoteCount: 18,
+    isUpvoted: false,
   ),
 ];

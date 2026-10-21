@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../utils/time_utils.dart';
 
 /// Type of card in the home feed.
 enum CardType {
@@ -43,6 +44,8 @@ class ReportModel {
     this.locationName,
     this.locationDetail,
     this.timestamp,
+    this.createdAt,
+    this.editedAt,
     // ── Badge ───────────────────────────────────────────────
     required this.badgeLabel,
     required this.badgeVariant,
@@ -80,13 +83,15 @@ class ReportModel {
   final Color avatarFgColor;
   final bool isVerified;
 
-  // Meta row
+  // Meta row & Timestamp (FR-A2)
   final IconData metaIcon;
   final Color metaIconColor;
   final String metaText;
   final String? locationName;
   final String? locationDetail;
   final String? timestamp;
+  final DateTime? createdAt;
+  final DateTime? editedAt;
 
   // Badge
   final String badgeLabel;
@@ -114,6 +119,21 @@ class ReportModel {
   final bool isUpvoted;
   final bool isBookmarked;
 
+  /// Apakah laporan ini pernah diedit (FR-A2 penanda "diedit").
+  bool get isEdited => editedAt != null;
+
+  /// Apakah laporan masih dalam batas 24 jam untuk diedit (FR-A2 batas 24 jam).
+  bool get canEdit => TimeUtils.canEdit(createdAt);
+
+  /// Sisa waktu sebelum jendela 24 jam edit berakhir.
+  Duration get remainingEditDuration => createdAt != null
+      ? TimeUtils.remainingEditDuration(createdAt!)
+      : const Duration(hours: 24);
+
+  /// String teks sisa waktu edit yang ramah pengguna.
+  String get remainingEditText =>
+      createdAt != null ? TimeUtils.formatRemainingTime(createdAt!) : '';
+
   /// Creates a copy of this [ReportModel] with the given fields replaced with new values.
   ReportModel copyWith({
     String? id,
@@ -132,6 +152,8 @@ class ReportModel {
     String? locationName,
     String? locationDetail,
     String? timestamp,
+    DateTime? createdAt,
+    DateTime? editedAt,
     String? badgeLabel,
     BadgeVariant? badgeVariant,
     Color? badgeDotColor,
@@ -168,6 +190,8 @@ class ReportModel {
       locationName: locationName ?? this.locationName,
       locationDetail: locationDetail ?? this.locationDetail,
       timestamp: timestamp ?? this.timestamp,
+      createdAt: createdAt ?? this.createdAt,
+      editedAt: editedAt ?? this.editedAt,
       badgeLabel: badgeLabel ?? this.badgeLabel,
       badgeVariant: badgeVariant ?? this.badgeVariant,
       badgeDotColor: badgeDotColor ?? this.badgeDotColor,
@@ -191,13 +215,18 @@ class ReportModel {
 
   /// Mengambil bagian nama lokasi saja (tanpa embel-embel waktu).
   String get locationDisplay {
+    if (locationName != null && locationName!.isNotEmpty) {
+      return locationName!;
+    }
     final parts = metaText.split('•');
     return parts.first.trim();
   }
 
-  /// Mengambil bagian waktu/timeline upload saja (misal "20 menit yang lalu", "15m lalu", "Baru saja").
-  /// Menghilangkan logika jam spesifik (WIB) agar ringan dan konsisten.
-  String get timeAgoDisplay {
+  /// Waktu relatif murni tanpa penanda '(diedit)'.
+  String get rawTimeAgo {
+    if (createdAt != null) {
+      return TimeUtils.formatTimeAgo(createdAt, isShort: true);
+    }
     final parts = metaText.split('•');
     if (parts.length >= 2) {
       return parts.last.trim();
@@ -208,4 +237,34 @@ class ReportModel {
     }
     return 'Baru saja';
   }
+
+  /// Mengambil bagian waktu/timeline upload dinamis dengan penanda '(diedit)' jika berlaku.
+  String get timeAgoDisplay {
+    if (createdAt != null) {
+      final formatted = TimeUtils.formatTimeAgo(createdAt, isShort: true);
+      return isEdited ? '$formatted • (diedit)' : formatted;
+    }
+    final parts = metaText.split('•');
+    String base;
+    if (parts.length >= 2) {
+      base = parts.last.trim();
+    } else if (timestamp != null && timestamp!.isNotEmpty) {
+      final tParts = timestamp!.split('•');
+      base = tParts.first.trim();
+    } else {
+      base = 'Baru saja';
+    }
+    return isEdited && !base.contains('(diedit)') ? '$base • (diedit)' : base;
+  }
+
+  /// Mengambil waktu relatif versi lengkap (misal "15 menit yang lalu").
+  String get fullTimeAgoDisplay {
+    if (createdAt != null) {
+      final formatted = TimeUtils.formatTimeAgo(createdAt, isShort: false);
+      return isEdited ? '$formatted • (diedit)' : formatted;
+    }
+    final base = timestamp ?? 'Baru saja';
+    return isEdited && !base.contains('(diedit)') ? '$base • (diedit)' : base;
+  }
 }
+

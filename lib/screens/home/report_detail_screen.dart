@@ -14,6 +14,7 @@ import '../../widgets/home/user_avatar.dart';
 import '../../widgets/home/video_player_box.dart';
 import '../profile/data/user_profile_repository.dart';
 import '../profile/models/user_profile_model.dart';
+import '../report/edit_report_screen.dart';
 import 'data/report_repository.dart';
 import 'models/report_model.dart';
 
@@ -226,6 +227,50 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
       );
   }
 
+  Future<void> _handleEditReport() async {
+    if (!_report.canEdit) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.lock_clock_rounded, color: Colors.white, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Batas waktu edit (24 jam) untuk laporan ini telah berakhir.',
+                    style: HomeTextStyles.bodySm.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFFEF4444),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(AppSpacing.lg),
+          ),
+        );
+      return;
+    }
+
+    final updated = await Navigator.push<ReportModel>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditReportScreen(report: _report),
+      ),
+    );
+
+    if (updated != null && mounted) {
+      setState(() {
+        _report = updated;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -257,6 +302,29 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
             ),
           ),
           centerTitle: true,
+          actions: [
+            Builder(
+              builder: (context) {
+                final currentUser = UserProfileRepository.instance.currentUser;
+                final isCurrentUser = _report.authorName == currentUser.nama ||
+                    _report.authorUsername == currentUser.username;
+                if (!isCurrentUser) return const SizedBox.shrink();
+
+                return IconButton(
+                  icon: Icon(
+                    Icons.edit_note_rounded,
+                    size: 24,
+                    color: _report.canEdit
+                        ? HomeColors.primary
+                        : AppPalette.textSecondary(context).withValues(alpha: 0.35),
+                  ),
+                  tooltip: _report.canEdit ? 'Edit Laporan' : 'Batas edit (24 jam) habis',
+                  onPressed: _handleEditReport,
+                );
+              },
+            ),
+            const SizedBox(width: 6),
+          ],
         ),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(AppSpacing.lg),
@@ -333,6 +401,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                 isUpvoted: _report.isUpvoted,
                 isBookmarked: _report.isBookmarked,
                 timestamp: _report.timeAgoDisplay,
+                isEdited: _report.isEdited,
                 onUpvoteChanged: _handleUpvote,
                 onUpvoteCooldown: _handleUpvoteCooldown,
                 onBookmarkChanged: _handleBookmark,

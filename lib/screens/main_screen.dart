@@ -5,6 +5,7 @@ import '../theme/home_text_styles.dart';
 import '../widgets/home/home_bottom_nav.dart';
 import 'home/home_screen.dart';
 import 'map/map_screen.dart';
+import 'notification/notification_screen.dart';
 import 'profile/profile_screen.dart';
 import 'report/create_report_screen.dart';
 
@@ -34,7 +35,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _pages = const [
     HomeScreen(),
     MapScreen(),
-    _PlaceholderPage(title: 'Notifikasi', icon: Icons.notifications_outlined),
+    NotificationScreen(),
     ProfileScreen(),
   ];
 
@@ -122,44 +123,4 @@ class _MainScreenState extends State<MainScreen> {
   }
 }
 
-/// Halaman placeholder untuk tab yang masih dalam pengembangan.
-class _PlaceholderPage extends StatelessWidget {
-  const _PlaceholderPage({required this.title, required this.icon});
-
-  final String title;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppPalette.canvas(context),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 56,
-              color: AppPalette.textSecondary(context),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: HomeTextStyles.headlineMd.copyWith(
-                color: AppPalette.textPrimary(context),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Dalam Pengembangan',
-              style: HomeTextStyles.bodyMd.copyWith(
-                color: AppPalette.textSecondary(context),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 

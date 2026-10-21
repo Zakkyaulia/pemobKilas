@@ -23,6 +23,7 @@ class ReportCardFooter extends StatelessWidget {
     this.onBookmarkChanged,
     this.onSharePressed,
     this.timestamp,
+    this.isEdited = false,
     this.timestampAlignment = CrossAxisAlignment.start,
   });
 
@@ -50,11 +51,17 @@ class ReportCardFooter extends StatelessWidget {
   /// Upload timestamp / relative time (e.g. "15m lalu" or "15 menit yang lalu").
   final String? timestamp;
 
+  /// Whether this report has been edited (FR-A2 marker).
+  final bool isEdited;
+
   /// Alignment of the timestamp below the actions (default: start / below upvote).
   final CrossAxisAlignment timestampAlignment;
 
   @override
   Widget build(BuildContext context) {
+    final cleanTimestamp = timestamp?.replaceAll(RegExp(r'\s*•?\s*\(diedit\)'), '').trim();
+    final hasEditedMarker = isEdited || (timestamp != null && timestamp!.contains('(diedit)'));
+
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.xs),
       child: Column(
@@ -83,7 +90,7 @@ class ReportCardFooter extends StatelessWidget {
               ),
             ],
           ),
-          if (timestamp != null && timestamp!.isNotEmpty) ...[
+          if (cleanTimestamp != null && cleanTimestamp.isNotEmpty) ...[
             const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.only(left: 2, right: 2),
@@ -97,13 +104,46 @@ class ReportCardFooter extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    timestamp!,
+                    cleanTimestamp,
                     style: HomeTextStyles.labelSm.copyWith(
                       color: AppPalette.textSecondary(context),
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
+                  if (hasEditedMarker) ...[
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                      decoration: BoxDecoration(
+                        color: AppPalette.surfaceSubtle(context),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(
+                          color: AppPalette.divider(context),
+                          width: 0.8,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.edit_outlined,
+                            size: 10,
+                            color: AppPalette.textSecondary(context),
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            'diedit',
+                            style: HomeTextStyles.labelSm.copyWith(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w600,
+                              color: AppPalette.textSecondary(context),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

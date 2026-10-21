@@ -11,10 +11,11 @@ import '../../home/report_detail_screen.dart';
 import '../all_reports_screen.dart';
 import '../data/user_profile_repository.dart';
 import '../models/user_profile_model.dart';
+import '../../report/edit_report_screen.dart';
 
 /// Tab tampilan daftar laporan milik pengguna sendiri (FR-05 & FR-06).
 ///
-/// Pengguna dapat mengedit laporan (caption & kategori dengan penanda "diedit")
+/// Pengguna dapat mengedit laporan (caption, kategori, dan media dengan penanda "diedit")
 /// serta menghapus laporan miliknya setelah konfirmasi dialog.
 class ProfileReportsTab extends StatelessWidget {
   const ProfileReportsTab({
@@ -25,187 +26,40 @@ class ProfileReportsTab extends StatelessWidget {
   final List<ReportModel> reports;
 
   void _showEditReportDialog(BuildContext context, ReportModel report) {
-    final titleController = TextEditingController(text: report.title ?? '');
-    final descController = TextEditingController(text: report.description ?? '');
-    String selectedCategory = report.badgeLabel;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (ctx, setSheetState) {
-            final bottomInset = MediaQuery.of(ctx).viewInsets.bottom;
-            return Container(
-              decoration: BoxDecoration(
-                color: AppPalette.surface(ctx),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-              ),
-              padding: EdgeInsets.fromLTRB(
-                AppSpacing.lg,
-                AppSpacing.lg,
-                AppSpacing.lg,
-                AppSpacing.xl + bottomInset,
-              ),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFCBD5E1),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
+    if (!report.canEdit) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.lock_clock_rounded, color: Colors.white, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Batas waktu edit (24 jam) untuk laporan ini telah berakhir.',
+                    style: HomeTextStyles.bodySm.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
                     ),
-                    const SizedBox(height: AppSpacing.lg),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Edit Laporan Saya',
-                          style: HomeTextStyles.headlineSm.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: AppPalette.textPrimary(ctx),
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close_rounded),
-                          onPressed: () => Navigator.pop(ctx),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Text(
-                      'Kategori Laporan',
-                      style: HomeTextStyles.labelMd.copyWith(
-                        color: AppPalette.textPrimary(ctx),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ChoiceChip(
-                            label: const Text('Kondisi Kampus'),
-                            selected: selectedCategory == 'Kondisi Kampus',
-                            onSelected: (val) {
-                              if (val) {
-                                setSheetState(() => selectedCategory = 'Kondisi Kampus');
-                              }
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: ChoiceChip(
-                            label: const Text('Info Penting'),
-                            selected: selectedCategory == 'Info Penting',
-                            onSelected: (val) {
-                              if (val) {
-                                setSheetState(() => selectedCategory = 'Info Penting');
-                              }
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Text(
-                      'Judul Laporan',
-                      style: HomeTextStyles.labelMd.copyWith(
-                        color: AppPalette.textPrimary(ctx),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    TextField(
-                      controller: titleController,
-                      style: HomeTextStyles.bodyMd.copyWith(
-                        color: AppPalette.textPrimary(ctx),
-                      ),
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: AppPalette.canvas(ctx),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Text(
-                      'Keterangan / Caption',
-                      style: HomeTextStyles.labelMd.copyWith(
-                        color: AppPalette.textPrimary(ctx),
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    TextField(
-                      controller: descController,
-                      maxLines: 3,
-                      style: HomeTextStyles.bodyMd.copyWith(
-                        color: AppPalette.textPrimary(ctx),
-                      ),
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: AppPalette.canvas(ctx),
-                        contentPadding: const EdgeInsets.all(12),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 46,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: HomeColors.primaryContainer,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        onPressed: () {
-                          final updated = report.copyWith(
-                            title: titleController.text.trim(),
-                            description: descController.text.trim(),
-                            badgeLabel: selectedCategory,
-                            timestamp: '${report.timestamp ?? "Baru saja"} (diedit)',
-                          );
-                          ReportRepository.instance.updateById(report.id, updated);
-                          UserProfileRepository.instance.addActivity(
-                            actionType: ActivityActionType.ubahLaporan,
-                            title: 'Mengubah Laporan',
-                            description: updated.title ?? 'Laporan diedit',
-                            reportId: report.id,
-                          );
-                          Navigator.pop(ctx);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'Laporan berhasil diperbarui dengan penanda "diedit".',
-                                style: HomeTextStyles.labelMd.copyWith(color: Colors.white),
-                              ),
-                              backgroundColor: const Color(0xFF10B981),
-                            ),
-                          );
-                        },
-                        child: Text(
-                          'Simpan Perubahan',
-                          style: HomeTextStyles.labelMd.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            );
-          },
+              ],
+            ),
+            backgroundColor: const Color(0xFFEF4444),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(AppSpacing.lg),
+          ),
         );
-      },
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => EditReportScreen(report: report),
+      ),
     );
   }
 
@@ -450,12 +304,19 @@ class ProfileReportsTab extends StatelessWidget {
                           // Tombol Edit
                           GestureDetector(
                             onTap: () => _showEditReportDialog(context, item),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4),
-                              child: Icon(
-                                Icons.edit_note_rounded,
-                                size: 18,
-                                color: AppPalette.textSecondary(context),
+                            child: Tooltip(
+                              message: item.canEdit
+                                  ? 'Edit Laporan (Sisa ${item.remainingEditText})'
+                                  : 'Batas edit 24 jam telah habis',
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 4),
+                                child: Icon(
+                                  Icons.edit_note_rounded,
+                                  size: 19,
+                                  color: item.canEdit
+                                      ? HomeColors.primaryContainer
+                                      : AppPalette.textSecondary(context).withValues(alpha: 0.35),
+                                ),
                               ),
                             ),
                           ),

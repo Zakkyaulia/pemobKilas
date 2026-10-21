@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import '../../screens/notification/data/notification_repository.dart';
 import '../../screens/profile/data/user_profile_repository.dart';
 import '../../theme/app_palette.dart';
 import '../../theme/app_spacing.dart';
@@ -117,12 +118,19 @@ class HomeBottomNav extends StatelessWidget {
                           ),
                           // Empty slot reserved for the FAB.
                           const Expanded(child: SizedBox()),
-                          _NavItem(
-                            icon: Icons.notifications_none,
-                            label: 'Notifikasi',
-                            isActive: currentIndex == 3,
-                            showBadge: true,
-                            onTap: () => onTap?.call(3),
+                          ListenableBuilder(
+                            listenable: NotificationRepository.instance,
+                            builder: (context, _) {
+                              return _NavItem(
+                                icon: currentIndex == 3
+                                    ? Icons.notifications_rounded
+                                    : Icons.notifications_none,
+                                label: 'Notifikasi',
+                                isActive: currentIndex == 3,
+                                showBadge: NotificationRepository.instance.hasUnread,
+                                onTap: () => onTap?.call(3),
+                              );
+                            },
                           ),
                           _ProfileNavItem(
                             label: 'Akun',

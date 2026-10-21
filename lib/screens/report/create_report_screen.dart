@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -81,7 +82,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
   bool _isInCampusArea = true;
   bool _allowPopWithoutPrompt = false;
 
-  static const int _maxDescriptionLength = 200;
+  static const int _maxDescriptionLength = 1500;
 
   @override
   void initState() {
@@ -877,6 +878,12 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
       return;
     }
 
+    if (description.length > _maxDescriptionLength) {
+      _showErrorSnackBar(
+          'Keterangan laporan tidak boleh melebihi $_maxDescriptionLength karakter.');
+      return;
+    }
+
     // ── Validasi Wajib: Titik Koordinat GPS Harus Terkunci Terlebih Dahulu ──
     if (_gpsStatus != GpsLockStatus.locked || _latitude == null || _longitude == null) {
       _showGpsRequiredDialog();
@@ -991,6 +998,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
       locationName: _locationName,
       locationDetail: _coordinates,
       timestamp: 'Baru saja',
+      createdAt: DateTime.now(),
       badgeLabel: isCondition ? 'Kondisi Kampus' : 'Info Penting',
       badgeVariant: isCondition ? BadgeVariant.dot : BadgeVariant.icon,
       badgeDotColor: isCondition ? HomeColors.statusCondition : null,
@@ -2652,8 +2660,9 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
         const SizedBox(height: 8),
         TextField(
           controller: _descriptionController,
-          maxLines: 4,
+          maxLines: 5,
           maxLength: _maxDescriptionLength,
+          maxLengthEnforcement: MaxLengthEnforcement.enforced,
           buildCounter: (_, {required currentLength, required isFocused, maxLength}) => null,
           style: GoogleFonts.plusJakartaSans(
             fontSize: 14,
