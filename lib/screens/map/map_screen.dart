@@ -30,8 +30,8 @@ class MapScreen extends StatelessWidget {
       body: Stack(
         children: [
           // ── Komponen peta responsif ──────────────────────────────
-          const Positioned.fill(
-            child: MapView(),
+          Positioned.fill(
+            child: MapView(topInset: topPadding + _kBarHeight),
           ),
 
           // ── Fixed frosted-glass header bar ───────────────────────

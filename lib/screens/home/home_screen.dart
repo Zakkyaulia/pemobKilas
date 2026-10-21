@@ -482,6 +482,7 @@ class _FeedItem extends StatelessWidget {
       isUpvoted: report.isUpvoted,
       isBookmarked: report.isBookmarked,
       timestamp: report.timeAgoDisplay,
+      isEdited: report.isEdited,
       onTap: onTap,
       onUpvoteChanged: onUpvoteChanged,
       onUpvoteCooldown: onUpvoteCooldown,

@@ -33,7 +33,10 @@ List<ReportGeoData> _findCluster(
 
 /// Komponen peta yang menampilkan heatmap kepadatan laporan.
 class MapView extends StatefulWidget {
-  const MapView({super.key});
+  /// Jarak dari atas yang harus dihindari tooltip (tinggi header bar).
+  final double topInset;
+
+  const MapView({super.key, this.topInset = 0});
 
   @override
   State<MapView> createState() => _MapViewState();
@@ -164,18 +167,11 @@ class _MapViewState extends State<MapView> {
         // Tooltip laporan yang dipilih
         if (_selectedReport != null)
           Positioned(
-            top: 16,
+            top: widget.topInset + 12,
             left: 16,
             right: 16,
             child: _buildTooltip(_selectedReport!),
           ),
-
-        // Legenda Kepadatan
-        Positioned(
-          bottom: 24,
-          right: 16,
-          child: _buildLegend(),
-        ),
       ],
     );
   }
@@ -330,68 +326,6 @@ class _MapViewState extends State<MapView> {
             ],
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildLegend() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: AppPalette.surface(context).withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppPalette.divider(context)),
-        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 6)],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'Kepadatan Hotspot',
-            style: HomeTextStyles.labelSm.copyWith(
-              color: AppPalette.textPrimary(context),
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Sedikit',
-                style: HomeTextStyles.bodySm.copyWith(
-                  fontSize: 10,
-                  color: AppPalette.textSecondary(context),
-                ),
-              ),
-              const SizedBox(width: 4),
-              Container(
-                width: 60,
-                height: 8,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [
-                      Colors.yellow,
-                      Colors.orange,
-                      Colors.red,
-                      Color(0xFF8B0000)
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                'Banyak',
-                style: HomeTextStyles.bodySm.copyWith(
-                  fontSize: 10,
-                  color: AppPalette.textSecondary(context),
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }
