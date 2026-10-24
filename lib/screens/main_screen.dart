@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../theme/app_palette.dart';
-import '../theme/home_text_styles.dart';
 import '../widgets/home/home_bottom_nav.dart';
 import 'home/home_screen.dart';
 import 'map/map_screen.dart';
