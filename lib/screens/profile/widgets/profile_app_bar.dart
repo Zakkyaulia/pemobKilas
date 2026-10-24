@@ -7,6 +7,7 @@ import '../../../theme/app_spacing.dart';
 import '../../../theme/home_colors.dart';
 import '../../../theme/home_shadows.dart';
 import '../../../theme/home_text_styles.dart';
+import '../../report/data/draft_repository.dart';
 
 /// Header bar height matching HomeScreen (64px).
 const double _kBarHeight = 64;
@@ -41,9 +42,11 @@ class ProfileAppBar extends StatelessWidget {
   const ProfileAppBar({
     super.key,
     this.onSettingsPressed,
+    this.onDraftPressed,
   });
 
   final VoidCallback? onSettingsPressed;
+  final VoidCallback? onDraftPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -67,6 +70,8 @@ class ProfileAppBar extends StatelessWidget {
               child: Row(
                 children: [
                   const Expanded(child: _ProfileLogoBrand()),
+                  _DraftButton(onPressed: onDraftPressed),
+                  const SizedBox(width: AppSpacing.xs),
                   _SettingsButton(onPressed: onSettingsPressed),
                 ],
               ),
@@ -194,6 +199,53 @@ class _SettingsButton extends StatelessWidget {
             Icons.settings_outlined,
             size: 24,
             color: AppPalette.textPrimary(context),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Draft action button with dynamic draft count badge.
+class _DraftButton extends StatelessWidget {
+  const _DraftButton({this.onPressed});
+
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: 'Draft Laporan',
+      child: GestureDetector(
+        onTap: onPressed,
+        behavior: HitTestBehavior.opaque,
+        child: SizedBox(
+          width: _kButtonSize,
+          height: _kButtonSize,
+          child: Center(
+            child: ListenableBuilder(
+              listenable: DraftRepository.instance,
+              builder: (context, _) {
+                final count = DraftRepository.instance.draftCount;
+                return Badge(
+                  isLabelVisible: count > 0,
+                  backgroundColor: HomeColors.primaryContainer,
+                  label: Text(
+                    '$count',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  child: Icon(
+                    Icons.drafts_outlined,
+                    size: 24,
+                    color: AppPalette.textPrimary(context),
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ),
