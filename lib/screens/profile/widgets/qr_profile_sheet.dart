@@ -7,6 +7,7 @@ import '../../../theme/app_spacing.dart';
 import '../../../theme/home_colors.dart';
 import '../../../theme/home_text_styles.dart';
 import '../data/user_profile_repository.dart';
+import '../public_profile_screen.dart';
 
 /// Modal sheet untuk menampilkan QR Profil sendiri ("QR Saya") dan memindai
 /// QR pengguna lain ("Pindai QR") untuk membuka Profil Publik (FR-16 & FR-B5).
@@ -628,13 +629,18 @@ class _QrProfileSheetState extends State<QrProfileSheet>
                 onPressed: () {
                   Navigator.pop(ctx);
                   Navigator.pop(context); // tutup sheet QR
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Membuka profil publik Ahmad Fauzan .S',
-                        style: HomeTextStyles.labelMd.copyWith(color: Colors.white),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const PublicProfileScreen(
+                        name: 'Ahmad Fauzan .S',
+                        username: '@ahmadfauzan',
+                        nim: '2211521008',
+                        jurusan: 'Sistem Informasi',
+                        fakultas: 'Fakultas Teknologi Informasi',
+                        bio: 'Aktif berkontribusi melaporkan fasilitas di UNAND.',
+                        initials: 'AF',
                       ),
-                      backgroundColor: const Color(0xFF1E293B),
                     ),
                   );
                 },

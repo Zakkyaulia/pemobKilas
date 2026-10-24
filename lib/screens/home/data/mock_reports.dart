@@ -653,4 +653,37 @@ final List<ReportModel> mockReports = [
     upvoteCount: 18,
     isUpvoted: false,
   ),
+
+  // ── Card 20: Ahmad Fauzan .S — Proyektor Seminar E ─────────────────────
+  ReportModel(
+    id: 'post-20',
+    cardType: CardType.report,
+    authorName: 'Ahmad Fauzan .S',
+    authorUsername: '@ahmadfauzan',
+    authorInitials: 'AF',
+    avatarBgColor: const Color(0xFF1E3A8A),
+    avatarFgColor: Colors.white,
+    metaIcon: Icons.location_on,
+    metaIconColor: HomeColors.primary,
+    metaText: 'Gedung Seminar E • 3 jam lalu',
+    locationName: 'Ruang Seminar E FTI UNAND',
+    locationDetail: '-0.914450, 100.461320',
+    timestamp: '3 jam yang lalu',
+    createdAt: DateTime.now().subtract(const Duration(hours: 3)),
+    badgeLabel: 'Kondisi Kampus',
+    badgeVariant: BadgeVariant.dot,
+    badgeDotColor: HomeColors.statusCondition,
+    badgeBgColor: HomeColors.tertiaryFixed,
+    badgeTextColor: HomeColors.onTertiaryFixedVariant,
+    title: 'Proyektor Ruang Seminar E kabel HDMI rusak & tidak mau display',
+    description:
+        'Kabel HDMI sambungan proyektor ke meja pembicara longgar dan patah pin di dalamnya, '
+        'sehingga tampilan presentasi berkedip merah dan sering mati mendadak saat sesi kuliah tamu berlangsung.',
+    imageUrl:
+        'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=800&auto=format&fit=crop',
+    aspectRatio: 16 / 9,
+    imageSemanticLabel: 'Proyektor Seminar E Rusak',
+    upvoteCount: 34,
+    isUpvoted: false,
+  ),
 ];

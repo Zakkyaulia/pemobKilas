@@ -44,6 +44,7 @@ class ReportCardHeader extends StatelessWidget {
     this.metaIconColor = HomeColors.primary,
     required this.metaText,
     required this.badge,
+    this.onAuthorTap,
   });
 
   /// Leading avatar widget ([UserAvatar]).
@@ -70,21 +71,34 @@ class ReportCardHeader extends StatelessWidget {
   /// Trailing status badge widget ([StatusBadge]).
   final Widget badge;
 
+  /// Optional callback when user taps author identity (avatar or name).
+  final VoidCallback? onAuthorTap;
+
   @override
   Widget build(BuildContext context) {
+    Widget authorIdentity = Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        avatar,
+        const SizedBox(width: _kAvatarGap),
+        Expanded(child: _NameMetaColumn(header: this)),
+      ],
+    );
+
+    if (onAuthorTap != null) {
+      authorIdentity = InkWell(
+        onTap: onAuthorTap,
+        borderRadius: BorderRadius.circular(8),
+        splashColor: HomeColors.primary.withValues(alpha: 0.08),
+        highlightColor: HomeColors.primary.withValues(alpha: 0.04),
+        child: authorIdentity,
+      );
+    }
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              avatar,
-              const SizedBox(width: _kAvatarGap),
-              Expanded(child: _NameMetaColumn(header: this)),
-            ],
-          ),
-        ),
+        Expanded(child: authorIdentity),
         const SizedBox(width: _kOuterGap),
         badge,
       ],

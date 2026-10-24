@@ -17,6 +17,7 @@ import '../search/search_filter_screen.dart';
 import 'data/report_repository.dart';
 import 'models/report_model.dart';
 import 'report_detail_screen.dart';
+import '../profile/public_profile_screen.dart';
 
 /// Toast icon size (HTML `text-[18px]`).
 const double _kToastIconSize = 18;
@@ -362,6 +363,14 @@ class _HomeScreenState extends State<HomeScreen> {
       );
   }
 
+  void _navigateToPublicProfile(ReportModel report) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PublicProfileScreen.fromReport(report),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
@@ -400,6 +409,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         _FeedItem(
                           report: _repo[i],
                           onTap: () => _navigateToDetail(_repo[i]),
+                          onAuthorTap: () => _navigateToPublicProfile(_repo[i]),
                           onUpvoteChanged: (isUpvoted, count) =>
                               _handleFeedUpvote(i, isUpvoted, count),
                           onUpvoteCooldown: _handleFeedUpvoteCooldown,
@@ -435,6 +445,7 @@ class _FeedItem extends StatelessWidget {
   const _FeedItem({
     required this.report,
     this.onTap,
+    this.onAuthorTap,
     this.onUpvoteChanged,
     this.onUpvoteCooldown,
     this.onBookmarkChanged,
@@ -443,6 +454,7 @@ class _FeedItem extends StatelessWidget {
 
   final ReportModel report;
   final VoidCallback? onTap;
+  final VoidCallback? onAuthorTap;
   final void Function(bool isUpvoted, int count)? onUpvoteChanged;
   final VoidCallback? onUpvoteCooldown;
   final void Function(bool isBookmarked)? onBookmarkChanged;
@@ -530,6 +542,7 @@ class _FeedItem extends StatelessWidget {
       // Hanya lokasi (waktu upload dipindah ke footer di bawah button upvote)
       metaText: report.locationDisplay,
       badge: badge,
+      onAuthorTap: onAuthorTap,
     );
   }
 }
