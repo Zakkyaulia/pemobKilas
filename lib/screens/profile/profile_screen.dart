@@ -5,6 +5,7 @@ import '../home/data/report_repository.dart';
 import '../home/models/report_model.dart';
 import 'data/user_profile_repository.dart';
 import 'settings_screen.dart';
+import '../report/draft_screen.dart';
 import 'widgets/profile_activity_tab.dart';
 import 'widgets/profile_app_bar.dart';
 import 'widgets/profile_bookmarks_tab.dart';
@@ -36,6 +37,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _navigateToSettings() {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const SettingsScreen()),
+    );
+  }
+
+  void _navigateToDrafts() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const DraftScreen()),
     );
   }
 
@@ -144,6 +151,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             right: 0,
             child: ProfileAppBar(
               onSettingsPressed: _navigateToSettings,
+              onDraftPressed: _navigateToDrafts,
             ),
           ),
         ],

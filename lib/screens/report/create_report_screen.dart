@@ -16,6 +16,9 @@ import '../home/data/report_repository.dart';
 import '../home/models/report_model.dart';
 import '../profile/data/user_profile_repository.dart';
 import 'package:latlong2/latlong.dart';
+import 'data/draft_repository.dart';
+import 'draft_screen.dart';
+import 'models/draft_model.dart';
 
 // ─── Design tokens matching SearchFilterScreen ───────────────────────────────
 const Color _kPrimary = Color(0xFF0048D4);
@@ -44,7 +47,13 @@ const Duration _kMaxVideoDuration = Duration(seconds: 15);
 /// - Intersepsi navigasi Back (PopScope) dengan konfirmasi jika ada draf/media belum disimpan
 /// - Teks tombol rapi dan vertikal presisi tanpa kepotong
 class CreateReportScreen extends StatefulWidget {
-  const CreateReportScreen({super.key});
+  const CreateReportScreen({
+    super.key,
+    this.initialDraft,
+  });
+
+  /// Draft yang ingin dilanjutkan penulisannya (null bila membuat laporan baru dari awal).
+  final DraftModel? initialDraft;
 
   @override
   State<CreateReportScreen> createState() => _CreateReportScreenState();
@@ -87,16 +96,59 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
   @override
   void initState() {
     super.initState();
+    _restoreFromDraftIfAny();
     _descriptionController.addListener(() {
       setState(() {});
     });
     _titleController.addListener(() {
       setState(() {});
     });
-    // Kunci titik koordinat GPS secara otomatis saat layar laporan dibuka
+    // Kunci titik koordinat GPS secara otomatis jika belum ada dari draft
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _lockGpsPosition();
+      if (widget.initialDraft == null || _latitude == null) {
+        _lockGpsPosition();
+      }
     });
+  }
+
+  /// Memulihkan data dari draft yang dipilih jika ada
+  void _restoreFromDraftIfAny() {
+    final draft = widget.initialDraft;
+    if (draft == null) return;
+
+    if (draft.title != null && draft.title!.isNotEmpty) {
+      _titleController.text = draft.title!;
+    }
+    if (draft.description != null && draft.description!.isNotEmpty) {
+      _descriptionController.text = draft.description!;
+    }
+    _selectedCategory = draft.selectedCategory;
+    if (draft.mediaFilePath != null && draft.mediaFilePath!.isNotEmpty) {
+      if (kIsWeb) {
+        _selectedMediaFile = XFile(draft.mediaFilePath!);
+        _isVideo = draft.isVideo;
+        _selectedFileSize = 0;
+      } else {
+        try {
+          final f = File(draft.mediaFilePath!);
+          if (f.existsSync()) {
+            _selectedMediaFile = XFile(draft.mediaFilePath!);
+            _selectedFileSize = f.lengthSync();
+            _isVideo = draft.isVideo;
+          }
+        } catch (_) {
+          _selectedMediaFile = XFile(draft.mediaFilePath!);
+          _isVideo = draft.isVideo;
+        }
+      }
+    }
+    if (draft.locationName != null && draft.locationName!.isNotEmpty) {
+      _locationName = draft.locationName!;
+      _coordinates = draft.coordinates ?? '';
+      _latitude = draft.latitude;
+      _longitude = draft.longitude;
+      _gpsStatus = GpsLockStatus.locked;
+    }
   }
 
   @override
@@ -1016,6 +1068,11 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
 
     ReportRepository.instance.addReport(newReport);
 
+    // Jika laporan berasal dari draft, hapus draft dari repository lokal
+    if (widget.initialDraft != null) {
+      DraftRepository.instance.deleteDraft(widget.initialDraft!.id);
+    }
+
     // Rekam dan pasang juga pin koordinat nyata ke peta laporan (Map Screen)
     final reportLat = _latitude ?? -0.9142;
     final reportLng = _longitude ?? 100.4608;
@@ -1189,6 +1246,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
     );
 
     if (confirmed == true) {
+      _saveCurrentAsDraft();
       if (mounted) {
         setState(() {
           _allowPopWithoutPrompt = true;
@@ -1218,6 +1276,26 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
         Navigator.of(context).pop();
       }
     }
+  }
+
+  /// Menyimpan status inputan saat ini ke [DraftRepository].
+  void _saveCurrentAsDraft() {
+    final draftId = widget.initialDraft?.id ?? 'draft-${DateTime.now().millisecondsSinceEpoch}';
+    final draft = DraftModel(
+      id: draftId,
+      title: _titleController.text.trim(),
+      description: _descriptionController.text.trim(),
+      selectedCategory: _selectedCategory,
+      mediaFilePath: _selectedMediaFile?.path,
+      isVideo: _isVideo,
+      locationName: _locationName,
+      coordinates: _coordinates,
+      latitude: _latitude,
+      longitude: _longitude,
+      createdAt: widget.initialDraft?.createdAt ?? DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+    DraftRepository.instance.saveDraft(draft);
   }
 
   /// Menampilkan dialog konfirmasi saat tombol Back ditekan dan ada draf/media belum disimpan.
@@ -1335,6 +1413,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
       });
       return true; // Keluar tanpa simpan
     } else if (result == 'draft') {
+      _saveCurrentAsDraft();
       setState(() {
         _allowPopWithoutPrompt = true;
       });
@@ -1464,6 +1543,38 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
         ),
       ),
       actions: [
+        ListenableBuilder(
+          listenable: DraftRepository.instance,
+          builder: (context, _) {
+            final draftCount = DraftRepository.instance.draftCount;
+            return IconButton(
+              tooltip: 'Buka Draft',
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const DraftScreen()),
+                );
+              },
+              icon: Badge(
+                isLabelVisible: draftCount > 0,
+                backgroundColor: _kPrimary,
+                label: Text(
+                  '$draftCount',
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                child: Icon(
+                  Icons.drafts_outlined,
+                  color: AppPalette.textPrimary(context),
+                  size: 22,
+                ),
+              ),
+            );
+          },
+        ),
+        const SizedBox(width: 4),
         Padding(
           padding: const EdgeInsets.only(right: AppSpacing.lg),
           child: Center(
@@ -1511,6 +1622,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                       errorBuilder: (_, _, _) => fallback(),
                     );
                   }
+                  if (kIsWeb) return fallback();
                   return Image.file(
                     File(photo),
                     fit: BoxFit.cover,
