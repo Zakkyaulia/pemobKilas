@@ -14,6 +14,7 @@ import '../../widgets/home/user_avatar.dart';
 import '../../widgets/home/video_player_box.dart';
 import '../profile/data/user_profile_repository.dart';
 import '../profile/models/user_profile_model.dart';
+import '../profile/public_profile_screen.dart';
 import '../report/edit_report_screen.dart';
 import 'data/report_repository.dart';
 import 'models/report_model.dart';
@@ -271,6 +272,14 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
     }
   }
 
+  void _navigateToPublicProfile() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PublicProfileScreen.fromReport(_report),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -453,6 +462,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
       metaIconColor: _report.metaIconColor,
       metaText: _report.locationDisplay,
       badge: badge,
+      onAuthorTap: _navigateToPublicProfile,
     );
   }
 }
