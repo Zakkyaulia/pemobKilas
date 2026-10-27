@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../../theme/app_palette.dart';
 import '../../../theme/app_spacing.dart';
+import '../../../theme/home_colors.dart';
 import '../../../theme/home_text_styles.dart';
+import '../personal_stats_dashboard_screen.dart';
 
 /// Baris kartu metrik statistik pribadi pengguna (FR-17 & FR-B6).
 ///
@@ -24,6 +26,14 @@ class ProfileStatsRow extends StatelessWidget {
   final int totalReports;
   final int totalUpvotes;
   final int reportsThisMonth;
+
+  void _navigateToDashboard(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const PersonalStatsDashboardScreen(),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,24 +57,26 @@ class ProfileStatsRow extends StatelessWidget {
                   color: AppPalette.textSecondary(context),
                 ),
               ),
-              Row(
-                children: [
-                  Container(
-                    width: 7,
-                    height: 7,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF10B981),
-                      shape: BoxShape.circle,
+              GestureDetector(
+                onTap: () => _navigateToDashboard(context),
+                behavior: HitTestBehavior.opaque,
+                child: Row(
+                  children: [
+                    Text(
+                      'Dashboard Lengkap',
+                      style: HomeTextStyles.labelSm.copyWith(
+                        color: HomeColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 5),
-                  Text(
-                    'Live Sync',
-                    style: HomeTextStyles.labelSm.copyWith(
-                      color: const Color(0xFF10B981),
+                    const SizedBox(width: 2),
+                    const Icon(
+                      Icons.chevron_right_rounded,
+                      size: 16,
+                      color: HomeColors.primary,
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
@@ -122,9 +134,12 @@ class ProfileStatsRow extends StatelessWidget {
     required String label,
     required bool isDark,
   }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-      decoration: BoxDecoration(
+    return GestureDetector(
+      onTap: () => _navigateToDashboard(context),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+        decoration: BoxDecoration(
         color: AppPalette.surface(context),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
@@ -176,6 +191,7 @@ class ProfileStatsRow extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 }
