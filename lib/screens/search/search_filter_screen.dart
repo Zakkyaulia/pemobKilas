@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../theme/app_palette.dart';
 import '../../theme/app_spacing.dart';
+import '../../theme/home_colors.dart';
 import '../../widgets/home/upvote_button.dart';
 import '../../widgets/home/video_player_box.dart';
 import '../home/data/report_repository.dart';
@@ -16,18 +17,18 @@ import '../profile/public_profile_screen.dart';
 
 // ─── Design constants ─────────────────────────────────────────────────────────
 
-/// Colors from the Figma CSS export.
-const Color _kBgWhite = Color(0xFFFFFFFF);
-const Color _kBgBlue100 = Color(0xFFE5EEFF);
-const Color _kPrimary = Color(0xFF0048D4);
-const Color _kPrimaryDeep = Color(0xFF0B3A9C);
-const Color _kBorderPrimary = Color(0xFF0048D4);
-const Color _kConditionBg = Color(0xFFFEF3DC);
-const Color _kConditionText = Color(0xFF653E00);
-const Color _kConditionBorder = Color(0xFF9C6200);
-const Color _kStatusCondition = Color(0xFFF59E0B);
-const Color _kStatusInfo = Color(0xFF0048D4);
-const Color _kBorderOutline = Color(0xFFC3CADB);
+/// Colors mapped to centralized HomeColors tokens.
+const Color _kBgWhite = HomeColors.onPrimary;
+const Color _kBgBlue100 = HomeColors.bgBlue100;
+const Color _kPrimary = HomeColors.primary;
+const Color _kPrimaryDeep = HomeColors.primaryDeep;
+const Color _kBorderPrimary = HomeColors.primary;
+const Color _kConditionBg = HomeColors.conditionBg;
+const Color _kConditionText = HomeColors.conditionText;
+const Color _kConditionBorder = HomeColors.conditionBorder;
+const Color _kStatusCondition = HomeColors.statusCondition;
+const Color _kStatusInfo = HomeColors.primary;
+const Color _kBorderOutline = HomeColors.outlineVariant;
 
 /// Radius tokens.
 const double _kRadiusFull = 9999;
@@ -893,19 +894,7 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
       onTap: () {
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (_) => PublicProfileScreen(
-              name: user.name,
-              username: user.username,
-              nim: user.nim,
-              avatarUrl: user.avatarUrl,
-              initials: user.initials,
-              jurusan: user.jurusan,
-              fakultas: user.fakultas,
-              bio: user.bio,
-              isVerified: user.isVerified,
-              avatarBgColor: user.avatarBgColor,
-              avatarFgColor: user.avatarFgColor,
-            ),
+            builder: (_) => PublicProfileScreen.fromCampusUser(user),
           ),
         );
       },

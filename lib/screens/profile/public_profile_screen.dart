@@ -13,6 +13,10 @@ import '../home/data/report_repository.dart';
 import '../home/models/report_model.dart';
 import '../home/report_detail_screen.dart';
 
+import 'data/campus_users_data.dart';
+import '../../utils/app_snackbar.dart';
+import '../../widgets/profile/stat_metric_card.dart';
+
 /// Halaman Profil Publik Mahasiswa (FR-16 & FR-B5).
 ///
 /// Ditampilkan saat:
@@ -65,6 +69,23 @@ class PublicProfileScreen extends StatelessWidget {
     );
   }
 
+  /// Factory untuk membuat [PublicProfileScreen] dari sebuah [CampusUserItem].
+  factory PublicProfileScreen.fromCampusUser(CampusUserItem user) {
+    return PublicProfileScreen(
+      name: user.name,
+      username: user.username,
+      nim: user.nim,
+      avatarUrl: user.avatarUrl,
+      initials: user.initials,
+      jurusan: user.jurusan,
+      fakultas: user.fakultas,
+      bio: user.bio,
+      isVerified: user.isVerified,
+      avatarBgColor: user.avatarBgColor,
+      avatarFgColor: user.avatarFgColor,
+    );
+  }
+
   final String name;
   final String username;
   final String? nim;
@@ -95,31 +116,10 @@ class PublicProfileScreen extends StatelessWidget {
     final link = 'https://kilas.app/u/${username.replaceAll('@', '')}';
     Clipboard.setData(ClipboardData(text: link));
 
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'Tautan profil $username berhasil disalin!',
-                  style: HomeTextStyles.labelMd.copyWith(color: Colors.white),
-                ),
-              ),
-            ],
-          ),
-          backgroundColor: HomeColors.inverseSurface,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          margin: const EdgeInsets.all(AppSpacing.lg),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+    AppSnackbar.showSuccess(
+      context,
+      'Tautan profil $username berhasil disalin!',
+    );
   }
 
   void _showQrDialog(BuildContext context) {
@@ -646,109 +646,44 @@ class PublicProfileScreen extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: _buildMetricCard(
-            context: context,
+          child: StatMetricCard(
             icon: Icons.campaign_outlined,
             iconBg: const Color(0xFFE0E7FF),
             iconColor: const Color(0xFF4338CA),
             value: '$totalReports',
             label: 'Laporan Publik',
             isDark: isDark,
+            valueFontSize: 18,
+            labelFontSize: 11,
           ),
         ),
         const SizedBox(width: 8),
         Expanded(
-          child: _buildMetricCard(
-            context: context,
+          child: StatMetricCard(
             icon: Icons.arrow_upward_rounded,
             iconBg: const Color(0xFFDBEAFE),
             iconColor: const Color(0xFF1D4ED8),
             value: '$totalUpvotes',
             label: 'Upvote Didapat',
             isDark: isDark,
+            valueFontSize: 18,
+            labelFontSize: 11,
           ),
         ),
         const SizedBox(width: 8),
         Expanded(
-          child: _buildMetricCard(
-            context: context,
+          child: StatMetricCard(
             icon: Icons.verified_user_outlined,
             iconBg: const Color(0xFFD1FAE5),
             iconColor: const Color(0xFF059669),
             value: isVerified ? 'Resmi' : 'Aktif',
             label: 'Status Akun',
             isDark: isDark,
+            valueFontSize: 18,
+            labelFontSize: 11,
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildMetricCard({
-    required BuildContext context,
-    required IconData icon,
-    required Color iconBg,
-    required Color iconColor,
-    required String value,
-    required String label,
-    required bool isDark,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-      decoration: BoxDecoration(
-        color: AppPalette.surface(context),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: AppPalette.divider(context),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: isDark ? iconColor.withValues(alpha: 0.2) : iconBg,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              icon,
-              size: 16,
-              color: isDark ? const Color(0xFF93C5FD) : iconColor,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: HomeTextStyles.headlineMd.copyWith(
-              color: AppPalette.textPrimary(context),
-              height: 1.1,
-              fontSize: 18,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: HomeTextStyles.labelSm.copyWith(
-              color: AppPalette.textSecondary(context),
-              fontWeight: FontWeight.w600,
-              fontSize: 11,
-              height: 1.2,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
     );
   }
 

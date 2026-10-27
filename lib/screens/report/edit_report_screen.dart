@@ -15,12 +15,12 @@ import '../home/models/report_model.dart';
 import '../profile/data/user_profile_repository.dart';
 import '../profile/models/user_profile_model.dart';
 
-// ─── Design tokens matching CreateReportScreen & SearchFilterScreen ─────────
-const Color _kPrimary = Color(0xFF0048D4);
-const Color _kConditionBg = Color(0xFFFEF3DC);
-const Color _kConditionBorder = Color(0xFF9C6200);
-const Color _kBgBlue100 = Color(0xFFE5EEFF);
-const Color _kPrimaryDeep = Color(0xFF0B3A9C);
+// ─── Design tokens mapped to centralized HomeColors ──────────────────────────
+const Color _kPrimary = HomeColors.primary;
+const Color _kConditionBg = HomeColors.conditionBg;
+const Color _kConditionBorder = HomeColors.conditionBorder;
+const Color _kBgBlue100 = HomeColors.bgBlue100;
+const Color _kPrimaryDeep = HomeColors.primaryDeep;
 
 const double _kRadiusLg = 16.0;
 const double _kRadiusMd = 12.0;
@@ -78,11 +78,10 @@ class _EditReportScreenState extends State<EditReportScreen> {
         TextEditingController(text: widget.report.description ?? '');
 
     // Standarisasi label kategori agar cocok dengan 'Kondisi Kampus' dan 'Informasi Penting'
-    if (widget.report.badgeLabel == 'Info Penting' ||
-        widget.report.badgeLabel == 'Informasi Penting') {
+    if (ReportCategories.isImportantInfo(widget.report.badgeLabel)) {
       _selectedCategory = 'Informasi Penting';
     } else {
-      _selectedCategory = 'Kondisi Kampus';
+      _selectedCategory = ReportCategories.kondisiKampus;
     }
 
     _mediaPath = widget.report.imageUrl;

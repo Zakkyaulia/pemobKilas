@@ -124,4 +124,43 @@ class NotificationItem {
       reportId: reportId ?? this.reportId,
     );
   }
+
+  /// Membuat [NotificationItem] dari Map / SQLite / JSON.
+  factory NotificationItem.fromMap(Map<String, dynamic> map) {
+    NotifType parseType(String? typeStr) {
+      return NotifType.values.firstWhere(
+        (e) => e.name == typeStr,
+        orElse: () => NotifType.infoResmi,
+      );
+    }
+
+    return NotificationItem(
+      id: (map['id'] ?? '').toString(),
+      type: parseType(map['type']),
+      title: (map['title'] ?? '').toString(),
+      body: (map['body'] ?? '').toString(),
+      timestamp: DateTime.tryParse(map['timestamp']?.toString() ?? '') ?? DateTime.now(),
+      isRead: map['is_read'] ?? map['isRead'] ?? false,
+      reportId: map['report_id'] ?? map['reportId'],
+    );
+  }
+
+  /// Alias [fromMap] untuk JSON.
+  factory NotificationItem.fromJson(Map<String, dynamic> json) => NotificationItem.fromMap(json);
+
+  /// Mengonversi [NotificationItem] ke Map (SQLite).
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'type': type.name,
+      'title': title,
+      'body': body,
+      'timestamp': timestamp.toIso8601String(),
+      'is_read': isRead,
+      'report_id': reportId,
+    };
+  }
+
+  /// Mengonversi [NotificationItem] ke JSON (alias [toMap]).
+  Map<String, dynamic> toJson() => toMap();
 }

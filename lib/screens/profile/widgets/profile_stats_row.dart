@@ -4,6 +4,7 @@ import '../../../theme/app_palette.dart';
 import '../../../theme/app_spacing.dart';
 import '../../../theme/home_colors.dart';
 import '../../../theme/home_text_styles.dart';
+import '../../../widgets/profile/stat_metric_card.dart';
 import '../personal_stats_dashboard_screen.dart';
 
 /// Baris kartu metrik statistik pribadi pengguna (FR-17 & FR-B6).
@@ -84,114 +85,44 @@ class ProfileStatsRow extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: _buildStatCard(
-                  context: context,
+                child: StatMetricCard(
                   icon: Icons.campaign_outlined,
                   iconBg: const Color(0xFFE0E7FF),
                   iconColor: const Color(0xFF4338CA),
                   value: '$totalReports',
                   label: 'Laporan Dibuat',
                   isDark: isDark,
+                  onTap: () => _navigateToDashboard(context),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: _buildStatCard(
-                  context: context,
+                child: StatMetricCard(
                   icon: Icons.arrow_upward_rounded,
                   iconBg: const Color(0xFFDBEAFE),
                   iconColor: const Color(0xFF1D4ED8),
                   value: '$totalUpvotes',
                   label: 'Upvote Didapat',
                   isDark: isDark,
+                  onTap: () => _navigateToDashboard(context),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
-                child: _buildStatCard(
-                  context: context,
+                child: StatMetricCard(
                   icon: Icons.calendar_today_rounded,
                   iconBg: const Color(0xFFFEF3C7),
                   iconColor: const Color(0xFFB45309),
                   value: '$reportsThisMonth',
                   label: 'Bulan Ini',
                   isDark: isDark,
+                  onTap: () => _navigateToDashboard(context),
                 ),
               ),
             ],
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildStatCard({
-    required BuildContext context,
-    required IconData icon,
-    required Color iconBg,
-    required Color iconColor,
-    required String value,
-    required String label,
-    required bool isDark,
-  }) {
-    return GestureDetector(
-      onTap: () => _navigateToDashboard(context),
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-        decoration: BoxDecoration(
-        color: AppPalette.surface(context),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: AppPalette.divider(context),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              color: isDark ? iconColor.withValues(alpha: 0.2) : iconBg,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(
-              icon,
-              size: 16,
-              color: isDark ? const Color(0xFF93C5FD) : iconColor,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: HomeTextStyles.headlineMd.copyWith(
-              color: AppPalette.textPrimary(context),
-              height: 1.1,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: HomeTextStyles.labelSm.copyWith(
-              color: AppPalette.textSecondary(context),
-              fontWeight: FontWeight.w600,
-              height: 1.2,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    ),
     );
   }
 }

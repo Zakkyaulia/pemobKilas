@@ -20,12 +20,12 @@ import 'data/draft_repository.dart';
 import 'draft_screen.dart';
 import 'models/draft_model.dart';
 
-// ─── Design tokens matching SearchFilterScreen ───────────────────────────────
-const Color _kPrimary = Color(0xFF0048D4);
-const Color _kConditionBg = Color(0xFFFEF3DC);
-const Color _kConditionBorder = Color(0xFF9C6200);
-const Color _kBgBlue100 = Color(0xFFE5EEFF);
-const Color _kPrimaryDeep = Color(0xFF0B3A9C);
+// ─── Design tokens mapped to centralized HomeColors ──────────────────────────
+const Color _kPrimary = HomeColors.primary;
+const Color _kConditionBg = HomeColors.conditionBg;
+const Color _kConditionBorder = HomeColors.conditionBorder;
+const Color _kBgBlue100 = HomeColors.bgBlue100;
+const Color _kPrimaryDeep = HomeColors.primaryDeep;
 
 const double _kRadiusLg = 16.0;
 const double _kRadiusMd = 12.0;
