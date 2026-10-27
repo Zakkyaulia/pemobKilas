@@ -11,6 +11,8 @@ import '../../widgets/home/video_player_box.dart';
 import '../home/data/report_repository.dart';
 import '../home/models/report_model.dart';
 import '../home/report_detail_screen.dart';
+import '../profile/data/campus_users_data.dart';
+import '../profile/public_profile_screen.dart';
 
 // ─── Design constants ─────────────────────────────────────────────────────────
 
@@ -43,6 +45,9 @@ enum SortMode { terbaru, upvoteTerbanyak }
 
 /// Enum for time range.
 enum TimeRange { hariIni, tujuhHari, bulanIni, semua }
+
+/// Cakupan pencarian: mencari laporan atau mencari akun mahasiswa (FR-15 & FR-B4).
+enum SearchScope { laporan, pengguna }
 
 /// Preview result item.
 class SearchResultItem {
@@ -182,6 +187,9 @@ class SearchFilterScreen extends StatefulWidget {
 class _SearchFilterScreenState extends State<SearchFilterScreen> {
   // ── 2. State ────────────────────────────────────────────────────────────
 
+  /// Cakupan pencarian aktif (Laporan atau Pengguna / Mahasiswa).
+  SearchScope _selectedScope = SearchScope.laporan;
+
   // ── Draft State (Menyimpan pilihan user yang sedang diubah di UI) ────────
   final TextEditingController _searchController = TextEditingController();
 
@@ -216,6 +224,7 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
     super.initState();
     // Dengarkan perubahan pada repository agar data sinkron real-time
     ReportRepository.instance.addListener(_onRepoChanged);
+    _searchController.addListener(_onSearchQueryChanged);
 
     // Pakai data yang dikirim screen pemanggil sebagai draft & applied state awal
     final initial = widget.initialFilter;
@@ -240,9 +249,26 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
   @override
   void dispose() {
     ReportRepository.instance.removeListener(_onRepoChanged);
+    _searchController.removeListener(_onSearchQueryChanged);
     _searchController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _onSearchQueryChanged() {
+    final text = _searchController.text.trim();
+    if (_selectedScope == SearchScope.pengguna) {
+      if (mounted) setState(() {});
+    } else {
+      // Deteksi otomatis jika user mengetik @username
+      if (text.startsWith('@') && text.length > 1) {
+        if (mounted) {
+          setState(() {
+            _selectedScope = SearchScope.pengguna;
+          });
+        }
+      }
+    }
   }
 
   void _onRepoChanged() {
@@ -487,21 +513,28 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                   children: [
                     const SizedBox(height: AppSpacing.lg),
                     _buildSearchBar(),
-                    const SizedBox(height: 24),
-                    _buildKategoriSection(),
-                    const SizedBox(height: 24),
-                    _buildUrutkanSection(),
-                    const SizedBox(height: 24),
-                    _buildRentangWaktuSection(),
-                    const SizedBox(height: 24),
-                    _buildPratinjauHasil(),
+                    const SizedBox(height: 14),
+                    _buildScopeSelector(),
+                    const SizedBox(height: 20),
+                    if (_selectedScope == SearchScope.laporan) ...[
+                      _buildKategoriSection(),
+                      const SizedBox(height: 24),
+                      _buildUrutkanSection(),
+                      const SizedBox(height: 24),
+                      _buildRentangWaktuSection(),
+                      const SizedBox(height: 24),
+                      _buildPratinjauHasil(),
+                    ] else ...[
+                      _buildPenggunaSection(),
+                    ],
                   ],
                 ),
               ),
             ),
 
             // ── Footer ─────────────────────────────────────────────────
-            _buildFooter(bottomPadding),
+            if (_selectedScope == SearchScope.laporan)
+              _buildFooter(bottomPadding),
           ],
         ),
       ),
@@ -600,14 +633,20 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                 controller: _searchController,
                 textAlignVertical: TextAlignVertical.center,
                 textInputAction: TextInputAction.search,
-                onSubmitted: (_) => _applyFilter(),
+                onSubmitted: (_) {
+                  if (_selectedScope == SearchScope.laporan) {
+                    _applyFilter();
+                  }
+                },
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 14,
                   fontWeight: FontWeight.w400,
                   color: AppPalette.textPrimary(context),
                 ),
                 decoration: InputDecoration(
-                  hintText: 'Cari laporan kampus...',
+                  hintText: _selectedScope == SearchScope.pengguna
+                      ? 'Cari @username atau nama mahasiswa...'
+                      : 'Cari laporan kampus...',
                   hintStyle: GoogleFonts.plusJakartaSans(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
@@ -662,6 +701,425 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // ── Scope Selector & Student Search (FR-15 & FR-B4) ────────────────────
+
+  Widget _buildScopeSelector() {
+    final isDark = AppPalette.isDark(context);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: isDark
+              ? AppPalette.surfaceSubtle(context)
+              : const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(_kRadiusFull),
+          border: Border.all(color: AppPalette.divider(context)),
+        ),
+        child: Row(
+          children: [
+            _buildScopeButton(
+              title: 'Laporan Kampus',
+              icon: Icons.newspaper_rounded,
+              scope: SearchScope.laporan,
+              isDark: isDark,
+            ),
+            _buildScopeButton(
+              title: 'Mahasiswa / Akun',
+              icon: Icons.person_search_rounded,
+              scope: SearchScope.pengguna,
+              isDark: isDark,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScopeButton({
+    required String title,
+    required IconData icon,
+    required SearchScope scope,
+    required bool isDark,
+  }) {
+    final isSelected = _selectedScope == scope;
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _selectedScope = scope;
+          });
+        },
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: isSelected
+                ? (isDark ? const Color(0xFF1D4ED8) : _kPrimary)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(_kRadiusFull),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: _kPrimary.withValues(alpha: 0.25),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 15,
+                color: isSelected
+                    ? Colors.white
+                    : AppPalette.textSecondary(context),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                title,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  color: isSelected
+                      ? Colors.white
+                      : AppPalette.textSecondary(context),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPenggunaSection() {
+    final isDark = AppPalette.isDark(context);
+    final query = _searchController.text.trim();
+    final cleanQuery = query.startsWith('@')
+        ? query.substring(1).toLowerCase()
+        : query.toLowerCase();
+
+    final allUsers = CampusUsersData.getCampusUsers(
+      reports: ReportRepository.instance.reports,
+    );
+
+    final filteredUsers = allUsers.where((u) {
+      if (cleanQuery.isEmpty) return true;
+      final matchName = u.name.toLowerCase().contains(cleanQuery);
+      final matchUsername =
+          u.username.toLowerCase().replaceAll('@', '').contains(cleanQuery);
+      final matchNim = u.nim != null && u.nim!.contains(cleanQuery);
+      final matchJurusan = u.jurusan.toLowerCase().contains(cleanQuery);
+      return matchName || matchUsername || matchNim || matchJurusan;
+    }).toList();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                query.isEmpty
+                    ? 'MAHASISWA & KONTRIBUTOR KAMPUS'
+                    : 'HASIL PENCARIAN MAHASISWA',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.8,
+                  color: AppPalette.textSecondary(context),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? const Color(0xFF1E293B)
+                      : const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  '${filteredUsers.length} Mahasiswa',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: isDark
+                        ? const Color(0xFF94A3B8)
+                        : const Color(0xFF475569),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (filteredUsers.isEmpty)
+            _buildEmptyUserResult(isDark)
+          else
+            ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: filteredUsers.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 10),
+              itemBuilder: (context, index) {
+                final user = filteredUsers[index];
+                return _buildUserCard(context, isDark, user);
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUserCard(
+    BuildContext context,
+    bool isDark,
+    CampusUserItem user,
+  ) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => PublicProfileScreen(
+              name: user.name,
+              username: user.username,
+              nim: user.nim,
+              avatarUrl: user.avatarUrl,
+              initials: user.initials,
+              jurusan: user.jurusan,
+              fakultas: user.fakultas,
+              bio: user.bio,
+              isVerified: user.isVerified,
+              avatarBgColor: user.avatarBgColor,
+              avatarFgColor: user.avatarFgColor,
+            ),
+          ),
+        );
+      },
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppPalette.surface(context),
+          borderRadius: BorderRadius.circular(_kRadiusLg),
+          border: Border.all(color: AppPalette.divider(context), width: 1),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Avatar
+            if (user.avatarUrl != null)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: Image.network(
+                  user.avatarUrl!,
+                  width: 50,
+                  height: 50,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) =>
+                      _buildUserAvatarFallback(user),
+                ),
+              )
+            else
+              _buildUserAvatarFallback(user),
+            const SizedBox(width: 12),
+            // User Info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          user.name,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: AppPalette.textPrimary(context),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (user.isVerified) ...[
+                        const SizedBox(width: 4),
+                        const Icon(
+                          Icons.verified_rounded,
+                          size: 15,
+                          color: Color(0xFF3B82F6),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    user.username,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: _kPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    '${user.jurusan} • ${user.fakultas}',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w400,
+                      color: AppPalette.textSecondary(context),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      _buildUserStatChip(
+                        icon: Icons.campaign_outlined,
+                        label: '${user.reportCount} Laporan',
+                        isDark: isDark,
+                      ),
+                      const SizedBox(width: 6),
+                      _buildUserStatChip(
+                        icon: Icons.thumb_up_alt_outlined,
+                        label: '${user.totalUpvotes} Upvote',
+                        isDark: isDark,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: AppPalette.textSecondary(context),
+              size: 20,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUserAvatarFallback(CampusUserItem user) {
+    return Container(
+      width: 50,
+      height: 50,
+      decoration: BoxDecoration(
+        color: user.avatarBgColor,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        user.initials,
+        style: GoogleFonts.plusJakartaSans(
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          color: user.avatarFgColor,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUserStatChip({
+    required IconData icon,
+    required String label,
+    required bool isDark,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 11,
+            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+          ),
+          const SizedBox(width: 3),
+          Text(
+            label,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyUserResult(bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+      decoration: BoxDecoration(
+        color: AppPalette.surface(context),
+        borderRadius: BorderRadius.circular(_kRadiusLg),
+        border: Border.all(color: AppPalette.divider(context)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : const Color(0xFFEFF6FF),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.person_search_rounded,
+              color: _kPrimary,
+              size: 28,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'Mahasiswa Tidak Ditemukan',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: AppPalette.textPrimary(context),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Tidak ada mahasiswa dengan username atau nama "${_searchController.text.trim()}". Periksa kembali ejaan nama atau @username.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 13,
+              fontWeight: FontWeight.w400,
+              color: AppPalette.textSecondary(context),
+              height: 1.4,
+            ),
+          ),
+        ],
       ),
     );
   }
