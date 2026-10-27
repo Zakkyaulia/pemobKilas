@@ -41,7 +41,7 @@ class LoginHeader extends StatelessWidget {
           ),
           child: ClipOval(
             child: Image.asset(
-              'assets/icons/app_logo.png',
+              'assets/icons/app_logo_rev1.png',
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) => const Icon(Icons.school, color: AppColors.primaryBlue, size: 40),
             ),

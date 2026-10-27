@@ -12,23 +12,13 @@ import '../../report/data/draft_repository.dart';
 /// Header bar height matching HomeScreen (64px).
 const double _kBarHeight = 64;
 
-/// Logo height (32px).
-const double _kLogoHeight = 32;
+/// Logo height matching text block height (~42px).
+const double _kLogoHeight = 50;
 
 /// Gap between logo and text block (10px).
 const double _kLogoTextGap = 10;
 
-/// UNAND badge horizontal padding (6px).
-const double _kBadgeHPadding = 6;
 
-/// UNAND badge vertical padding (2px).
-const double _kBadgeVPadding = 2;
-
-/// Gap between KILAS text and UNAND badge (4px).
-const double _kTitleBadgeGap = 4;
-
-/// Tagline top margin (2px).
-const double _kTaglineTopMargin = 2;
 
 /// Action button size (40px).
 const double _kButtonSize = 40;
@@ -94,7 +84,7 @@ class _ProfileLogoBrand extends StatelessWidget {
         SizedBox(
           height: _kLogoHeight,
           child: Image.asset(
-            'assets/icons/app_logo.png',
+            'assets/icons/app_logo_rev1.png',
             height: _kLogoHeight,
             fit: BoxFit.contain,
             errorBuilder: (_, _, _) => Container(
@@ -114,36 +104,12 @@ class _ProfileLogoBrand extends StatelessWidget {
           ),
         ),
         const SizedBox(width: _kLogoTextGap),
-        Expanded(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Text(
-                    'KILAS',
-                    style: HomeTextStyles.headlineSm.copyWith(
-                      color: AppPalette.textPrimary(context),
-                      height: 1.0,
-                      letterSpacing: -0.45,
-                    ),
-                  ),
-                  const SizedBox(width: _kTitleBadgeGap),
-                  const _UnandBadge(),
-                ],
-              ),
-              const SizedBox(height: _kTaglineTopMargin),
-              Text(
-                'Profil Akun Mahasiswa',
-                style: HomeTextStyles.labelSm.copyWith(
-                  color: AppPalette.textSecondary(context),
-                  height: 1.0,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
+        Text(
+          'Profil',
+          style: HomeTextStyles.headlineSm.copyWith(
+            color: AppPalette.textPrimary(context),
+            height: 1.0,
+            letterSpacing: -0.45,
           ),
         ),
       ],
@@ -151,33 +117,6 @@ class _ProfileLogoBrand extends StatelessWidget {
   }
 }
 
-/// Small "UNAND" pill chip next to the KILAS title.
-class _UnandBadge extends StatelessWidget {
-  const _UnandBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: _kBadgeHPadding,
-        vertical: _kBadgeVPadding,
-      ),
-      decoration: BoxDecoration(
-        color: AppPalette.isDark(context)
-            ? const Color(0xFF1E293B)
-            : HomeColors.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(9999),
-      ),
-      child: Text(
-        'UNAND',
-        style: HomeTextStyles.labelSm.copyWith(
-          color: HomeColors.primaryContainer,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-  }
-}
 
 /// Settings gear action button.
 class _SettingsButton extends StatelessWidget {

@@ -11,23 +11,8 @@ import '../../theme/home_text_styles.dart';
 /// Header bar height (HTML `h-16` = 64px).
 const double _kBarHeight = 64;
 
-/// Logo height (HTML `h-8` = 32px).
-const double _kLogoHeight = 32;
-
-/// Gap between logo and text block (Tailwind `gap-2.5` = 10px).
-const double _kLogoTextGap = 10;
-
-/// UNAND badge horizontal padding (Tailwind `px-1.5` = 6px).
-const double _kBadgeHPadding = 6;
-
-/// UNAND badge vertical padding (Tailwind `py-0.5` = 2px).
-const double _kBadgeVPadding = 2;
-
-/// Gap between KILAS text and UNAND badge (Tailwind `gap-1` = 4px).
-const double _kTitleBadgeGap = 4;
-
-/// Tagline top margin (Tailwind `mt-0.5` = 2px).
-const double _kTaglineTopMargin = 2;
+/// Logo height matching text block height (50px).
+const double _kLogoHeight = 50;
 
 /// Search button size (HTML `w-10 h-10` = 40px).
 const double _kSearchButtonSize = 40;
@@ -40,8 +25,8 @@ const double _kBlurSigma = 24;
 
 /// Fixed frosted-glass header bar for the home screen.
 ///
-/// Contains the KILAS logo, "UNAND" badge, tagline text, theme mode toggle button,
-/// and a search action button. Uses [BackdropFilter] for the glass effect.
+/// Menyajikan logo di kiri, teks "KILAS" tepat di tengah (center),
+/// dan tombol cari di sebelah kanan.
 class HomeAppBar extends StatelessWidget {
   const HomeAppBar({super.key, this.onSearchPressed});
 
@@ -66,110 +51,58 @@ class HomeAppBar extends StatelessWidget {
           child: SizedBox(
             height: _kBarHeight,
             child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-              child: Row(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+              child: Stack(
+                alignment: Alignment.center,
                 children: [
-                  Expanded(child: _LogoBrand()),
-                  _SearchButton(onPressed: onSearchPressed),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// KILAS logo image + "KILAS" text + "UNAND" badge + tagline.
-class _LogoBrand extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        SizedBox(
-          height: _kLogoHeight,
-          child: Image.asset(
-            'assets/icons/app_logo.png',
-            height: _kLogoHeight,
-            fit: BoxFit.contain,
-            errorBuilder: (_, _, _) => Container(
-              width: _kLogoHeight,
-              height: _kLogoHeight,
-              decoration: const BoxDecoration(
-                color: HomeColors.primaryContainer,
-                shape: BoxShape.circle,
-              ),
-              alignment: Alignment.center,
-              child: const Icon(
-                Icons.bolt,
-                color: HomeColors.onPrimary,
-                size: 20,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: _kLogoTextGap),
-        Expanded(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Text(
-                    'KILAS',
-                    style: HomeTextStyles.headlineSm.copyWith(
-                      color: AppPalette.textPrimary(context),
-                      height: 1.0,
-                      letterSpacing: -0.45,
+                  // Logo di sebelah kiri
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: SizedBox(
+                      height: _kLogoHeight,
+                      child: Image.asset(
+                        'assets/icons/app_logo_rev1.png',
+                        height: _kLogoHeight,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, _, _) => Container(
+                          width: _kLogoHeight,
+                          height: _kLogoHeight,
+                          decoration: const BoxDecoration(
+                            color: HomeColors.primaryContainer,
+                            shape: BoxShape.circle,
+                          ),
+                          alignment: Alignment.center,
+                          child: const Icon(
+                            Icons.bolt,
+                            color: HomeColors.onPrimary,
+                            size: 20,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                  const SizedBox(width: _kTitleBadgeGap),
-                  const _UnandBadge(),
+
+                  // Teks "KILAS" persis di tengah
+                  Center(
+                    child: Text(
+                      'KILAS',
+                      style: HomeTextStyles.headlineSm.copyWith(
+                        color: AppPalette.textPrimary(context),
+                        height: 1.0,
+                        letterSpacing: -0.45,
+                      ),
+                    ),
+                  ),
+
+                  // Tombol cari di sebelah kanan
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: _SearchButton(onPressed: onSearchPressed),
+                  ),
                 ],
               ),
-              const SizedBox(height: _kTaglineTopMargin),
-              Text(
-                'Halo Mahasiswa, Pantau Kampus',
-                style: HomeTextStyles.labelSm.copyWith(
-                  color: AppPalette.textSecondary(context),
-                  height: 1.0,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
+            ),
           ),
-        ),
-      ],
-    );
-  }
-}
-
-/// Small "UNAND" chip next to the KILAS title.
-class _UnandBadge extends StatelessWidget {
-  const _UnandBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: _kBadgeHPadding,
-        vertical: _kBadgeVPadding,
-      ),
-      decoration: BoxDecoration(
-        color: AppPalette.isDark(context)
-            ? const Color(0xFF1E293B)
-            : HomeColors.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(9999),
-      ),
-      child: Text(
-        'UNAND',
-        style: HomeTextStyles.labelSm.copyWith(
-          color: HomeColors.primaryContainer,
-          fontWeight: FontWeight.w700,
         ),
       ),
     );

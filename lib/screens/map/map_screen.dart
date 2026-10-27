@@ -61,14 +61,14 @@ class MapScreen extends StatelessWidget {
                             child: Row(
                               children: [
                                 SizedBox(
-                                  height: 32,
+                                  height: 50,
                                   child: Image.asset(
-                                    'assets/icons/app_logo.png',
-                                    height: 32,
+                                    'assets/icons/app_logo_rev1.png',
+                                    height: 50,
                                     fit: BoxFit.contain,
                                     errorBuilder: (_, _, _) => Container(
-                                      width: 32,
-                                      height: 32,
+                                      width: 50,
+                                      height: 50,
                                       decoration: const BoxDecoration(
                                         color: HomeColors.primaryContainer,
                                         shape: BoxShape.circle,
@@ -77,57 +77,19 @@ class MapScreen extends StatelessWidget {
                                       child: const Icon(
                                         Icons.map_rounded,
                                         color: HomeColors.onPrimary,
-                                        size: 18,
+                                        size: 22,
                                       ),
                                     ),
                                   ),
                                 ),
                                 const SizedBox(width: 10),
-                                Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Text(
-                                          'Peta Kampus',
-                                          style: HomeTextStyles.headlineSm.copyWith(
-                                            color: AppPalette.textPrimary(context),
-                                            height: 1.0,
-                                            letterSpacing: -0.45,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 6,
-                                            vertical: 2,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: AppPalette.isDark(context)
-                                                ? const Color(0xFF1E293B)
-                                                : HomeColors.surfaceContainerHigh,
-                                            borderRadius: BorderRadius.circular(9999),
-                                          ),
-                                          child: Text(
-                                            'UNAND',
-                                            style: HomeTextStyles.labelSm.copyWith(
-                                              color: HomeColors.primaryContainer,
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      'Sebaran Hotspot & Laporan Mahasiswa',
-                                      style: HomeTextStyles.labelSm.copyWith(
-                                        color: AppPalette.textSecondary(context),
-                                        height: 1.0,
-                                      ),
-                                    ),
-                                  ],
+                                Text(
+                                  'Peta Hotspot Laporan',
+                                  style: HomeTextStyles.headlineSm.copyWith(
+                                    color: AppPalette.textPrimary(context),
+                                    height: 1.0,
+                                    letterSpacing: -0.45,
+                                  ),
                                 ),
                               ],
                             ),
