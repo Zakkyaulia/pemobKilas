@@ -1,6 +1,7 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../../theme/app_palette.dart';
 import '../../../theme/app_spacing.dart';
@@ -158,13 +159,23 @@ class _QrProfileSheetState extends State<QrProfileSheet>
             ),
             child: Column(
               children: [
-                SizedBox(
-                  width: 200,
-                  height: 200,
-                  child: CustomPaint(
-                    painter: _QrMatrixPainter(
-                      data: 'kilas://user/${user.username}',
-                      color: const Color(0xFF0F172A),
+                RepaintBoundary(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: QrImageView(
+                      data: 'https://kilas.app/u/${user.username.replaceAll('@', '')}',
+                      version: QrVersions.auto,
+                      size: 200.0,
+                      backgroundColor: Colors.white,
+                      padding: const EdgeInsets.all(10),
+                      eyeStyle: const QrEyeStyle(
+                        eyeShape: QrEyeShape.square,
+                        color: Color(0xFF0F172A),
+                      ),
+                      dataModuleStyle: const QrDataModuleStyle(
+                        dataModuleShape: QrDataModuleShape.square,
+                        color: Color(0xFF0F172A),
+                      ),
                     ),
                   ),
                 ),
@@ -206,10 +217,12 @@ class _QrProfileSheetState extends State<QrProfileSheet>
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
             onPressed: () {
+              final link = 'https://kilas.app/u/${user.username.replaceAll('@', '')}';
+              Clipboard.setData(ClipboardData(text: link));
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
-                    'Tautan profil @ghezz berhasil disalin ke clipboard!',
+                    'Tautan profil ${user.username} berhasil disalin ke clipboard!',
                     style: HomeTextStyles.labelMd.copyWith(color: Colors.white),
                   ),
                   backgroundColor: const Color(0xFF1E293B),
@@ -338,6 +351,89 @@ class _QrProfileSheetState extends State<QrProfileSheet>
                 style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
               ),
             ),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(child: Divider(color: AppPalette.divider(context))),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Text(
+                  'ATAU TES SIMULASI SCAN REKAN',
+                  style: HomeTextStyles.labelSm.copyWith(
+                    color: AppPalette.textSecondary(context),
+                    letterSpacing: 0.5,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Expanded(child: Divider(color: AppPalette.divider(context))),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            alignment: WrapAlignment.center,
+            children: [
+              ActionChip(
+                backgroundColor: isDark ? const Color(0xFF13203A) : const Color(0xFFEFF4FF),
+                side: BorderSide(
+                  color: HomeColors.primaryContainer.withValues(alpha: 0.3),
+                ),
+                avatar: const CircleAvatar(
+                  radius: 12,
+                  backgroundColor: HomeColors.primaryContainer,
+                  child: Text('AF', style: TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.w700)),
+                ),
+                label: Text(
+                  'Ahmad Fauzan .S',
+                  style: HomeTextStyles.labelSm.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppPalette.textPrimary(context),
+                  ),
+                ),
+                onPressed: () => _showScannedProfileDialog(
+                  context,
+                  name: 'Ahmad Fauzan .S',
+                  username: '@ahmadfauzan',
+                  nim: '2211521008',
+                  jurusan: 'Sistem Informasi',
+                  fakultas: 'Fakultas Teknologi Informasi',
+                  bio: 'Aktif berkontribusi melaporkan fasilitas di UNAND.',
+                  initials: 'AF',
+                ),
+              ),
+              ActionChip(
+                backgroundColor: isDark ? const Color(0xFF13203A) : const Color(0xFFEFF4FF),
+                side: BorderSide(
+                  color: HomeColors.primaryContainer.withValues(alpha: 0.3),
+                ),
+                avatar: const CircleAvatar(
+                  radius: 12,
+                  backgroundColor: HomeColors.primaryContainer,
+                  child: Text('AH', style: TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.w700)),
+                ),
+                label: Text(
+                  'Aziz Hakim',
+                  style: HomeTextStyles.labelSm.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: AppPalette.textPrimary(context),
+                  ),
+                ),
+                onPressed: () => _showScannedProfileDialog(
+                  context,
+                  name: 'Aziz Hakim',
+                  username: '@aziz_hakim',
+                  nim: '2211522014',
+                  jurusan: 'Teknik Komputer',
+                  fakultas: 'Fakultas Teknologi Informasi',
+                  bio: 'Mahasiswa Teknik Komputer UNAND angkatan 2022.',
+                  initials: 'AH',
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -488,7 +584,16 @@ class _QrProfileSheetState extends State<QrProfileSheet>
     }
   }
 
-  void _showScannedProfileDialog(BuildContext context) {
+  void _showScannedProfileDialog(
+    BuildContext context, {
+    String name = 'Ahmad Fauzan .S',
+    String username = '@ahmadfauzan',
+    String nim = '2211521008',
+    String jurusan = 'Sistem Informasi',
+    String fakultas = 'Fakultas Teknologi Informasi',
+    String bio = 'Aktif berkontribusi melaporkan fasilitas di UNAND.',
+    String initials = 'AF',
+  }) {
     final isDarkTheme = AppPalette.isDark(context);
     showModalBottomSheet(
       context: context,
@@ -555,12 +660,12 @@ class _QrProfileSheetState extends State<QrProfileSheet>
               ),
               child: Row(
                 children: [
-                  const CircleAvatar(
+                  CircleAvatar(
                     radius: 26,
                     backgroundColor: HomeColors.primaryContainer,
                     child: Text(
-                      'AF',
-                      style: TextStyle(
+                      initials,
+                      style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
                         fontSize: 16,
@@ -575,7 +680,7 @@ class _QrProfileSheetState extends State<QrProfileSheet>
                         Row(
                           children: [
                             Text(
-                              'Ahmad Fauzan .S',
+                              name,
                               style: HomeTextStyles.labelMd.copyWith(
                                 fontWeight: FontWeight.w700,
                                 color: AppPalette.textPrimary(context),
@@ -591,7 +696,7 @@ class _QrProfileSheetState extends State<QrProfileSheet>
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          '2211521008 • Sistem Informasi',
+                          '$nim • $jurusan',
                           style: HomeTextStyles.bodySm.copyWith(
                             color: AppPalette.textSecondary(context),
                             fontSize: 12,
@@ -599,7 +704,7 @@ class _QrProfileSheetState extends State<QrProfileSheet>
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Aktif berkontribusi melaporkan fasilitas di UNAND.',
+                          bio,
                           style: HomeTextStyles.bodySm.copyWith(
                             color: AppPalette.textPrimary(context),
                             fontSize: 11.5,
@@ -632,14 +737,14 @@ class _QrProfileSheetState extends State<QrProfileSheet>
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const PublicProfileScreen(
-                        name: 'Ahmad Fauzan .S',
-                        username: '@ahmadfauzan',
-                        nim: '2211521008',
-                        jurusan: 'Sistem Informasi',
-                        fakultas: 'Fakultas Teknologi Informasi',
-                        bio: 'Aktif berkontribusi melaporkan fasilitas di UNAND.',
-                        initials: 'AF',
+                      builder: (context) => PublicProfileScreen(
+                        name: name,
+                        username: username,
+                        nim: nim,
+                        jurusan: jurusan,
+                        fakultas: fakultas,
+                        bio: bio,
+                        initials: initials,
                       ),
                     ),
                   );
@@ -685,97 +790,3 @@ class _QrProfileSheetState extends State<QrProfileSheet>
   }
 }
 
-/// Custom painter untuk merender QR code vector matriks bersih dan stabil.
-class _QrMatrixPainter extends CustomPainter {
-  _QrMatrixPainter({required this.data, required this.color});
-
-  final String data;
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-
-    const moduleCount = 21;
-    final moduleSize = size.width / moduleCount;
-
-    // Corner square finder patterns
-    void drawFinder(double startX, double startY) {
-      // Outer 7x7
-      canvas.drawRect(
-        Rect.fromLTWH(startX * moduleSize, startY * moduleSize, 7 * moduleSize, 7 * moduleSize),
-        paint,
-      );
-      // Inner white 5x5
-      canvas.drawRect(
-        Rect.fromLTWH((startX + 1) * moduleSize, (startY + 1) * moduleSize, 5 * moduleSize, 5 * moduleSize),
-        Paint()..color = Colors.white,
-      );
-      // Core 3x3
-      canvas.drawRect(
-        Rect.fromLTWH((startX + 2) * moduleSize, (startY + 2) * moduleSize, 3 * moduleSize, 3 * moduleSize),
-        paint,
-      );
-    }
-
-    drawFinder(0, 0); // Top-left
-    drawFinder(moduleCount - 7.0, 0); // Top-right
-    drawFinder(0, moduleCount - 7.0); // Bottom-left
-
-    // Deterministic pseudo-random pattern based on username hash
-    final rand = Random(data.hashCode);
-    for (int r = 0; r < moduleCount; r++) {
-      for (int c = 0; c < moduleCount; c++) {
-        // Skip corner finder areas
-        if ((r < 8 && c < 8) ||
-            (r < 8 && c >= moduleCount - 8) ||
-            (r >= moduleCount - 8 && c < 8)) {
-          continue;
-        }
-        // Center KILAS logo area
-        if (r >= 8 && r <= 12 && c >= 8 && c <= 12) {
-          continue;
-        }
-        if (rand.nextBool()) {
-          canvas.drawRRect(
-            RRect.fromRectAndRadius(
-              Rect.fromLTWH(c * moduleSize + 0.5, r * moduleSize + 0.5, moduleSize - 1, moduleSize - 1),
-              const Radius.circular(1.5),
-            ),
-            paint,
-          );
-        }
-      }
-    }
-
-    // Draw central KILAS shield/bolt emblem
-    final centerRect = Rect.fromLTWH(8.5 * moduleSize, 8.5 * moduleSize, 4 * moduleSize, 4 * moduleSize);
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(centerRect, const Radius.circular(6)),
-      Paint()..color = HomeColors.primaryContainer,
-    );
-
-    final boltPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-
-    final path = Path();
-    final cx = centerRect.center.dx;
-    final cy = centerRect.center.dy;
-    path.moveTo(cx - 3, cy - 8);
-    path.lineTo(cx + 4, cy - 8);
-    path.lineTo(cx, cy - 1);
-    path.lineTo(cx + 5, cy - 1);
-    path.lineTo(cx - 4, cy + 9);
-    path.lineTo(cx - 1, cy + 1);
-    path.lineTo(cx - 5, cy + 1);
-    path.close();
-    canvas.drawPath(path, boltPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _QrMatrixPainter oldDelegate) =>
-      oldDelegate.data != data || oldDelegate.color != color;
-}
