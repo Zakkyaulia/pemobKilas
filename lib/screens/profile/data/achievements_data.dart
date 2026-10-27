@@ -82,8 +82,8 @@ class AchievementsData {
       AchievementBadge(
         kodeLencana: 'CAMPUS_HERO',
         nama: 'Pahlawan Kampus',
-        deskripsi: 'Meraih akumulasi minimal 10 dukungan upvote dari mahasiswa lain.',
-        icon: Icons.thumb_up_alt_rounded,
+        deskripsi: 'Meraih akumulasi minimal 10 upvote dari mahasiswa lain.',
+        icon: Icons.arrow_upward_rounded,
         iconColor: const Color(0xFF10B981),
         iconBg: const Color(0xFFECFDF5),
         isUnlocked: totalUpvotes >= 10,
@@ -91,7 +91,7 @@ class AchievementsData {
         progress: (totalUpvotes / 10).clamp(0.0, 1.0),
         progressLabel: totalUpvotes >= 10
             ? 'Selesai ($totalUpvotes/10)'
-            : '$totalUpvotes / 10 Upvotes',
+            : '$totalUpvotes / 10 Upvote',
       ),
 
       // 3. Mata Elang

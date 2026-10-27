@@ -36,7 +36,7 @@ class ActivityLogItem {
       case ActivityActionType.hapusLaporan:
         return 'Hapus Laporan';
       case ActivityActionType.upvote:
-        return 'Dukungan (Upvote)';
+        return 'Upvote';
       case ActivityActionType.bookmark:
         return 'Bookmark';
     }
@@ -51,7 +51,7 @@ class ActivityLogItem {
       case ActivityActionType.hapusLaporan:
         return Icons.delete_outline_rounded;
       case ActivityActionType.upvote:
-        return Icons.thumb_up_alt_rounded;
+        return Icons.arrow_upward_rounded;
       case ActivityActionType.bookmark:
         return Icons.bookmark_added_rounded;
     }

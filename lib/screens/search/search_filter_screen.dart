@@ -1001,7 +1001,7 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                       ),
                       const SizedBox(width: 6),
                       _buildUserStatChip(
-                        icon: Icons.thumb_up_alt_outlined,
+                        icon: Icons.arrow_upward_rounded,
                         label: '${user.totalUpvotes} Upvote',
                         isDark: isDark,
                       ),

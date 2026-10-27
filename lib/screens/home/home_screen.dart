@@ -155,7 +155,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (isUpvoted) {
       UserProfileRepository.instance.addActivity(
         actionType: ActivityActionType.upvote,
-        title: 'Memberikan Dukungan',
+        title: 'Memberikan Upvote',
         description: 'Upvote pada laporan "${report.title ?? "Laporan Kampus"}"',
         reportId: report.id,
       );
@@ -170,7 +170,7 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                isUpvoted ? Icons.thumb_up : Icons.thumb_up_alt_outlined,
+                Icons.arrow_upward_rounded,
                 size: _kToastIconSize,
                 color: isUpvoted ? Colors.greenAccent : Colors.orangeAccent,
               ),

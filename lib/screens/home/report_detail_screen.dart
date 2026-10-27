@@ -57,7 +57,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
     if (isUpvoted) {
       UserProfileRepository.instance.addActivity(
         actionType: ActivityActionType.upvote,
-        title: 'Memberikan Dukungan',
+        title: 'Memberikan Upvote',
         description: 'Upvote pada laporan "${updated.title ?? "Laporan Kampus"}"',
         reportId: updated.id,
       );
@@ -71,7 +71,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
           content: Row(
             children: [
               Icon(
-                isUpvoted ? Icons.thumb_up : Icons.thumb_up_alt_outlined,
+                Icons.arrow_upward_rounded,
                 color: isUpvoted ? Colors.greenAccent : Colors.orangeAccent,
                 size: 20,
               ),

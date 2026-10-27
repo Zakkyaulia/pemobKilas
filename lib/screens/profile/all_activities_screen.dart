@@ -100,7 +100,7 @@ class _AllActivitiesScreenState extends State<AllActivitiesScreen> {
                   item.actionType == ActivityActionType.ubahLaporan ||
                   item.actionType == ActivityActionType.hapusLaporan;
             }
-            if (_selectedFilter == 'Dukungan') {
+            if (_selectedFilter == 'Upvote') {
               return item.actionType == ActivityActionType.upvote;
             }
             if (_selectedFilter == 'Bookmark') {
@@ -123,7 +123,7 @@ class _AllActivitiesScreenState extends State<AllActivitiesScreen> {
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
-                      children: ['Semua', 'Laporan', 'Dukungan', 'Bookmark'].map((cat) {
+                      children: ['Semua', 'Laporan', 'Upvote', 'Bookmark'].map((cat) {
                         final isSelected = _selectedFilter == cat;
                         return Padding(
                           padding: const EdgeInsets.only(right: 8),
@@ -296,7 +296,7 @@ class _AllActivitiesScreenState extends State<AllActivitiesScreen> {
       case ActivityActionType.upvote:
         iconBg = const Color(0xFFF59E0B).withValues(alpha: 0.12);
         iconColor = const Color(0xFFF59E0B);
-        icon = Icons.thumb_up_alt_outlined;
+        icon = Icons.arrow_upward_rounded;
         break;
       case ActivityActionType.bookmark:
         iconBg = const Color(0xFF8B5CF6).withValues(alpha: 0.12);

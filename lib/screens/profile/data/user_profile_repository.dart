@@ -30,7 +30,7 @@ class UserProfileRepository extends ChangeNotifier {
       ActivityLogItem(
         id: 'act-2',
         actionType: ActivityActionType.upvote,
-        title: 'Memberikan Dukungan',
+        title: 'Memberikan Upvote',
         description: 'Upvote pada laporan Bundaran PKM UNAND',
         timestamp: DateTime.now().subtract(const Duration(hours: 2)),
         reportId: 'post-2',
@@ -54,7 +54,7 @@ class UserProfileRepository extends ChangeNotifier {
       ActivityLogItem(
         id: 'act-5',
         actionType: ActivityActionType.upvote,
-        title: 'Memberikan Dukungan',
+        title: 'Memberikan Upvote',
         description: 'Upvote pada laporan Pipa Air Toilet Bocor Gedung C',
         timestamp: DateTime.now().subtract(const Duration(days: 2)),
         reportId: 'post-4',

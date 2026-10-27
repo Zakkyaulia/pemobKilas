@@ -98,7 +98,7 @@ class ProfileStatsRow extends StatelessWidget {
               Expanded(
                 child: _buildStatCard(
                   context: context,
-                  icon: Icons.thumb_up_alt_outlined,
+                  icon: Icons.arrow_upward_rounded,
                   iconBg: const Color(0xFFDBEAFE),
                   iconColor: const Color(0xFF1D4ED8),
                   value: '$totalUpvotes',

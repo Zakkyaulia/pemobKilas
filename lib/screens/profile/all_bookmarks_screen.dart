@@ -258,13 +258,13 @@ class _AllBookmarksScreenState extends State<AllBookmarksScreen> {
                                       Row(
                                         children: [
                                           Icon(
-                                            Icons.thumb_up_alt_rounded,
+                                            Icons.arrow_upward_rounded,
                                             size: 12,
                                             color: HomeColors.primaryContainer,
                                           ),
                                           const SizedBox(width: 4),
                                           Text(
-                                            '${item.upvoteCount} Dukungan',
+                                            '${item.upvoteCount} Upvote',
                                             style: HomeTextStyles.labelSm.copyWith(
                                               fontSize: 10.5,
                                               color: AppPalette.textSecondary(context),
