@@ -19,6 +19,28 @@ enum BadgeVariant {
   icon,
 }
 
+/// Standard categories for reports in KILAS.
+abstract final class ReportCategories {
+  /// Category label for campus condition issues ("Kondisi Kampus").
+  static const String kondisiKampus = 'Kondisi Kampus';
+
+  /// Standard category label for important announcements/info ("Info Penting").
+  static const String infoPenting = 'Info Penting';
+
+  /// Alternative label used in search/filter ("Informasi Penting").
+  static const String informasiPenting = 'Informasi Penting';
+
+  /// Helper to check if a badge label matches "Info Penting" / "Informasi Penting".
+  static bool isImportantInfo(String? label) {
+    return label == infoPenting || label == informasiPenting;
+  }
+
+  /// Helper to check if a badge label matches "Kondisi Kampus".
+  static bool isCampusCondition(String? label) {
+    return label == kondisiKampus;
+  }
+}
+
 /// Lightweight UI model representing a single feed item.
 ///
 /// Used by both [ReportCard] and [OfficialInfoCard] widgets.
@@ -266,5 +288,89 @@ class ReportModel {
     final base = timestamp ?? 'Baru saja';
     return isEdited && !base.contains('(diedit)') ? '$base • (diedit)' : base;
   }
+
+  /// Membuat [ReportModel] dari Map/SQLite/JSON.
+  factory ReportModel.fromMap(Map<String, dynamic> map) {
+    final cTypeStr = (map['card_type'] ?? map['cardType'] ?? 'report').toString();
+    final cardType = cTypeStr == 'official' ? CardType.official : CardType.report;
+
+    final bVariantStr = (map['badge_variant'] ?? map['badgeVariant'] ?? 'dot').toString();
+    final badgeVariant = bVariantStr == 'icon' ? BadgeVariant.icon : BadgeVariant.dot;
+
+    DateTime? parseDate(dynamic val) {
+      if (val == null) return null;
+      if (val is DateTime) return val;
+      return DateTime.tryParse(val.toString());
+    }
+
+    return ReportModel(
+      id: (map['id'] ?? '').toString(),
+      cardType: cardType,
+      authorName: (map['author_name'] ?? map['authorName'] ?? 'Warga Kampus').toString(),
+      authorUsername: map['author_username'] ?? map['authorUsername'],
+      authorInitials: map['author_initials'] ?? map['authorInitials'],
+      authorAvatarUrl: map['author_avatar_url'] ?? map['authorAvatarUrl'],
+      avatarBgColor: const Color(0xFFE2E8F0),
+      avatarFgColor: const Color(0xFF006A61),
+      isVerified: map['is_verified'] ?? map['isVerified'] ?? false,
+      metaIcon: Icons.location_on_rounded,
+      metaIconColor: const Color(0xFF006A61),
+      metaText: (map['meta_text'] ?? map['metaText'] ?? 'UNAND').toString(),
+      locationName: map['location_name'] ?? map['locationName'],
+      locationDetail: map['location_detail'] ?? map['locationDetail'],
+      timestamp: map['timestamp'],
+      createdAt: parseDate(map['created_at'] ?? map['createdAt']),
+      editedAt: parseDate(map['edited_at'] ?? map['editedAt']),
+      badgeLabel: (map['badge_label'] ?? map['badgeLabel'] ?? 'Fasilitas').toString(),
+      badgeVariant: badgeVariant,
+      badgeBgColor: const Color(0xFFECFDF5),
+      badgeTextColor: const Color(0xFF059669),
+      title: map['title'],
+      description: map['description'],
+      imageUrl: map['image_url'] ?? map['imageUrl'],
+      contentTitle: map['content_title'] ?? map['contentTitle'],
+      contentDescription: map['content_description'] ?? map['contentDescription'],
+      upvoteCount: (map['upvote_count'] ?? map['upvoteCount'] ?? 0) is int
+          ? (map['upvote_count'] ?? map['upvoteCount'] ?? 0) as int
+          : int.tryParse((map['upvote_count'] ?? map['upvoteCount'] ?? 0).toString()) ?? 0,
+      isUpvoted: map['is_upvoted'] ?? map['isUpvoted'] ?? false,
+      isBookmarked: map['is_bookmarked'] ?? map['isBookmarked'] ?? false,
+    );
+  }
+
+  /// Membuat [ReportModel] dari format JSON (alias untuk [fromMap]).
+  factory ReportModel.fromJson(Map<String, dynamic> json) => ReportModel.fromMap(json);
+
+  /// Mengonversi [ReportModel] menjadi format Map (untuk SQLite atau manipulasi objek).
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'card_type': cardType.name,
+      'author_name': authorName,
+      'author_username': authorUsername,
+      'author_initials': authorInitials,
+      'author_avatar_url': authorAvatarUrl,
+      'is_verified': isVerified,
+      'meta_text': metaText,
+      'location_name': locationName,
+      'location_detail': locationDetail,
+      'timestamp': timestamp,
+      'created_at': createdAt?.toIso8601String(),
+      'edited_at': editedAt?.toIso8601String(),
+      'badge_label': badgeLabel,
+      'badge_variant': badgeVariant.name,
+      'title': title,
+      'description': description,
+      'image_url': imageUrl,
+      'content_title': contentTitle,
+      'content_description': contentDescription,
+      'upvote_count': upvoteCount,
+      'is_upvoted': isUpvoted,
+      'is_bookmarked': isBookmarked,
+    };
+  }
+
+  /// Mengonversi [ReportModel] menjadi format Map/JSON untuk dikirim ke API backend (alias [toMap]).
+  Map<String, dynamic> toJson() => toMap();
 }
 

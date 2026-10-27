@@ -177,6 +177,22 @@ abstract final class HomeColors {
 
   /// `#10B981` — Selesai, toast check icon.
   static const Color statusResolved = Color(0xFF10B981);
+
+  // ── Badge & Action Containers ───────────────────────────────────────────
+  /// `#FEF3DC` — "Kondisi Kampus" badge container bg.
+  static const Color conditionBg = Color(0xFFFEF3DC);
+
+  /// `#9C6200` — "Kondisi Kampus" badge border.
+  static const Color conditionBorder = Color(0xFF9C6200);
+
+  /// `#653E00` — "Kondisi Kampus" badge text.
+  static const Color conditionText = Color(0xFF653E00);
+
+  /// `#E5EEFF` — Light blue surface container.
+  static const Color bgBlue100 = Color(0xFFE5EEFF);
+
+  /// `#0B3A9C` — Deep primary blue for high contrast text/icons.
+  static const Color primaryDeep = Color(0xFF0B3A9C);
 }
 
 /// [ThemeExtension] for status-category colors that have no

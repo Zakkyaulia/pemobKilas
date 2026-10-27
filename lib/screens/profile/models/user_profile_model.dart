@@ -71,6 +71,43 @@ class ActivityLogItem {
         return const Color(0xFF8B5CF6);
     }
   }
+
+  /// Membuat [ActivityLogItem] dari Map / SQLite / JSON.
+  factory ActivityLogItem.fromMap(Map<String, dynamic> map) {
+    ActivityActionType parseAction(String? typeStr) {
+      return ActivityActionType.values.firstWhere(
+        (e) => e.name == typeStr,
+        orElse: () => ActivityActionType.buatLaporan,
+      );
+    }
+
+    return ActivityLogItem(
+      id: (map['id'] ?? '').toString(),
+      actionType: parseAction(map['action_type'] ?? map['actionType']),
+      title: (map['title'] ?? '').toString(),
+      description: (map['description'] ?? '').toString(),
+      timestamp: DateTime.tryParse(map['timestamp']?.toString() ?? '') ?? DateTime.now(),
+      reportId: map['report_id'] ?? map['reportId'],
+    );
+  }
+
+  /// Alias [fromMap] untuk format JSON.
+  factory ActivityLogItem.fromJson(Map<String, dynamic> json) => ActivityLogItem.fromMap(json);
+
+  /// Mengonversi [ActivityLogItem] ke format Map (SQLite).
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'action_type': actionType.name,
+      'title': title,
+      'description': description,
+      'timestamp': timestamp.toIso8601String(),
+      'report_id': reportId,
+    };
+  }
+
+  /// Mengonversi [ActivityLogItem] ke format JSON.
+  Map<String, dynamic> toJson() => toMap();
 }
 
 /// Model profil pengguna sesuai spesifikasi PRD (Entitas User).
@@ -127,4 +164,42 @@ class UserProfileModel {
       shakeToDraftAktif: shakeToDraftAktif ?? this.shakeToDraftAktif,
     );
   }
+
+  /// Membuat [UserProfileModel] dari Map / SQLite / API Backend.
+  factory UserProfileModel.fromMap(Map<String, dynamic> map) {
+    return UserProfileModel(
+      userId: (map['user_id'] ?? map['userId'] ?? '').toString(),
+      email: (map['email'] ?? '').toString(),
+      username: (map['username'] ?? '').toString(),
+      nama: (map['nama'] ?? '').toString(),
+      bio: (map['bio'] ?? '').toString(),
+      fotoProfil: map['foto_profil'] ?? map['fotoProfil'],
+      pengingatAktif: map['pengingat_aktif'] ?? map['pengingatAktif'] ?? true,
+      fakultas: (map['fakultas'] ?? 'Fakultas Teknologi Informasi').toString(),
+      jurusan: (map['jurusan'] ?? 'Sistem Informasi UNAND \'24').toString(),
+      shakeToDraftAktif: map['shake_to_draft_aktif'] ?? map['shakeToDraftAktif'] ?? true,
+    );
+  }
+
+  /// Alias [fromMap] untuk JSON backend.
+  factory UserProfileModel.fromJson(Map<String, dynamic> json) => UserProfileModel.fromMap(json);
+
+  /// Mengonversi [UserProfileModel] ke Map (untuk SQLite / Local Storage).
+  Map<String, dynamic> toMap() {
+    return {
+      'user_id': userId,
+      'email': email,
+      'username': username,
+      'nama': nama,
+      'bio': bio,
+      'foto_profil': fotoProfil,
+      'pengingat_aktif': pengingatAktif,
+      'fakultas': fakultas,
+      'jurusan': jurusan,
+      'shake_to_draft_aktif': shakeToDraftAktif,
+    };
+  }
+
+  /// Mengonversi [UserProfileModel] ke JSON untuk sinkronisasi ke API.
+  Map<String, dynamic> toJson() => toMap();
 }

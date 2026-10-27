@@ -10,6 +10,7 @@ import '../home/data/report_repository.dart';
 import '../home/report_detail_screen.dart';
 import 'data/user_profile_repository.dart';
 import 'models/user_profile_model.dart';
+import '../../utils/time_utils.dart';
 
 /// Halaman khusus untuk melihat seluruh riwayat aktivitas akun mahasiswa secara penuh.
 class AllActivitiesScreen extends StatefulWidget {
@@ -305,15 +306,7 @@ class _AllActivitiesScreenState extends State<AllActivitiesScreen> {
         break;
     }
 
-    final diff = DateTime.now().difference(item.timestamp);
-    String timeAgo;
-    if (diff.inMinutes < 60) {
-      timeAgo = '${diff.inMinutes}m lalu';
-    } else if (diff.inHours < 24) {
-      timeAgo = '${diff.inHours}j lalu';
-    } else {
-      timeAgo = '${diff.inDays}h lalu';
-    }
+    final timeAgo = TimeUtils.formatTimeAgo(item.timestamp);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),

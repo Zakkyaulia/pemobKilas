@@ -7,6 +7,7 @@ import '../../../theme/home_text_styles.dart';
 import '../all_activities_screen.dart';
 import '../data/user_profile_repository.dart';
 import '../models/user_profile_model.dart';
+import '../../../../utils/time_utils.dart';
 
 /// Tab Riwayat Aktivitas Pribadi (FR-24 & FR-C6).
 ///
@@ -38,22 +39,6 @@ class _ProfileActivityTabState extends State<ProfileActivityTab> {
     '7 Hari Terakhir',
   ];
 
-  String _formatTimestamp(DateTime time) {
-    final now = DateTime.now();
-    final diff = now.difference(time);
-
-    if (diff.inMinutes < 1) {
-      return 'Baru saja';
-    } else if (diff.inMinutes < 60) {
-      return '${diff.inMinutes}m lalu';
-    } else if (diff.inHours < 24) {
-      return '${diff.inHours}j lalu';
-    } else if (diff.inDays < 7) {
-      return '${diff.inDays}h lalu';
-    } else {
-      return '${time.day}/${time.month}/${time.year}';
-    }
-  }
 
   bool _matchesType(ActivityLogItem item) {
     if (_selectedFilter == 'Semua') return true;
@@ -380,7 +365,7 @@ class _ProfileActivityTabState extends State<ProfileActivityTab> {
                                   ),
                                   const Spacer(),
                                   Text(
-                                    _formatTimestamp(item.timestamp),
+                                    TimeUtils.formatTimeAgo(item.timestamp),
                                     style: HomeTextStyles.labelSm.copyWith(
                                       fontWeight: FontWeight.w500,
                                       color: AppPalette.textSecondary(context),

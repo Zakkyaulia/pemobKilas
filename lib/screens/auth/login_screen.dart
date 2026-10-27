@@ -9,6 +9,7 @@ import '../../widgets/auth/biometric_login_button.dart';
 import '../../widgets/auth/login_form.dart';
 import '../../widgets/auth/login_header.dart';
 import '../../widgets/auth/student_guide_link.dart';
+import '../../services/auth_session_service.dart';
 import '../main_screen.dart';
 import 'register_screen.dart';
 
@@ -37,13 +38,17 @@ import 'register_screen.dart';
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
 
-  void _handleLogin(BuildContext context, Map<String, String> data) {
+  void _handleLogin(BuildContext context, Map<String, String> data) async {
     // [MISSING API] Login API integration goes here.
-    // For now, show a snackbar with the submitted data.
     final method = data['method'] ?? 'unknown';
     final identifier = method == 'email'
         ? data['email'] ?? ''
         : data['nim'] ?? '';
+
+    // Simpan sesi login lokal via SharedPreferences
+    await AuthSessionService.saveSession(identifier: identifier);
+
+    if (!context.mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

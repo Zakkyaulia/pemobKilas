@@ -60,4 +60,25 @@ class ReportRepository extends ChangeNotifier {
 
   /// Find the index of a report by its [id]. Returns -1 if not found.
   int indexById(String id) => _reports.indexWhere((r) => r.id == id);
+
+  /// Fetch data laporan secara asinkron (Backend Ready).
+  ///
+  /// Nanti saat REST API / Supabase / Firebase aktif, cukup hubungkan
+  /// pemanggilan HTTP di dalam method ini tanpa perlu mengubah UI.
+  Future<List<ReportModel>> fetchReports({bool simulateDelay = false}) async {
+    if (simulateDelay) {
+      await Future.delayed(const Duration(milliseconds: 400));
+    }
+    return List.unmodifiable(_reports);
+  }
+
+  /// Sinkronisasi perubahan status upvote laporan ke server backend.
+  Future<bool> syncUpvote(String id, bool isUpvoted, int count) async {
+    final idx = indexById(id);
+    if (idx != -1) {
+      updateAt(idx, _reports[idx].copyWith(isUpvoted: isUpvoted, upvoteCount: count));
+    }
+    // Slot untuk memanggil endpoint: PUT /api/reports/$id/upvote
+    return true;
+  }
 }

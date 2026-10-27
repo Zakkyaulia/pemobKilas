@@ -8,6 +8,7 @@ import '../../theme/app_theme_controller.dart';
 import '../../theme/home_colors.dart';
 import '../../theme/home_shadows.dart';
 import '../../theme/home_text_styles.dart';
+import '../../services/auth_session_service.dart';
 import '../auth/login_screen.dart';
 import 'data/user_profile_repository.dart';
 
@@ -499,12 +500,15 @@ class _LogoutButton extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              onPressed: () {
+              onPressed: () async {
                 Navigator.of(dialogCtx).pop();
+                // Hapus sesi login lokal via SharedPreferences
+                await AuthSessionService.clearSession();
                 // Kunci kembali bookmark saat logout
                 UserProfileRepository.instance.lockBookmark();
 
                 // Navigasi ke LoginScreen & bersihkan riwayat stack
+                if (!context.mounted) return;
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(builder: (_) => const LoginScreen()),
                   (route) => false,

@@ -152,4 +152,23 @@ class UserProfileRepository extends ChangeNotifier {
     _activities.removeWhere((item) => item.id == id);
     notifyListeners();
   }
+
+  /// Memperbarui seluruh objek profil pengguna.
+  void setProfile(UserProfileModel model) {
+    _profile = model;
+    notifyListeners();
+  }
+
+  /// Mengambil data profil pengguna secara asinkron dari API backend.
+  Future<UserProfileModel> fetchProfile() async {
+    // Slot untuk memanggil endpoint: GET /api/user/profile
+    return _profile;
+  }
+
+  /// Sinkronisasi pembaharuan profil ke backend server.
+  Future<bool> syncProfile(UserProfileModel updated) async {
+    setProfile(updated);
+    // Slot untuk memanggil endpoint: PUT /api/user/profile
+    return true;
+  }
 }

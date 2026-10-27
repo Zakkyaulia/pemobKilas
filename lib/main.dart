@@ -5,7 +5,9 @@ import 'theme/app_theme.dart';
 import 'theme/app_theme_controller.dart';
 import 'theme/home_colors.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await AppThemeController.init();
   runApp(const KilasApp());
 }
 

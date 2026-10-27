@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../services/auth_session_service.dart';
 import '../../theme/home_colors.dart';
 import '../../theme/home_text_styles.dart';
 import '../auth/login_screen.dart';
+import '../main_screen.dart';
 
 /// Screen pembuka (Splash Screen) dengan animasi logo KILAS,
 /// efek cahaya pulsing (civic pulse), dan transisi halus ke halaman login.
@@ -67,12 +69,14 @@ class _SplashScreenState extends State<SplashScreen>
     });
   }
 
-  void _navigateToNextScreen() {
+  void _navigateToNextScreen() async {
+    if (!mounted) return;
+    final bool isLoggedIn = await AuthSessionService.isLoggedIn();
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) =>
-            const LoginScreen(),
+            isLoggedIn ? const MainScreen() : const LoginScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
         },
