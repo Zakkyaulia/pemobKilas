@@ -226,7 +226,7 @@ class _ProfileBookmarksTabState extends State<ProfileBookmarksTab> {
                             Row(
                               children: [
                                 Icon(
-                                  Icons.thumb_up_alt_rounded,
+                                  Icons.arrow_upward_rounded,
                                   size: 11,
                                   color: isDark
                                       ? const Color(0xFF60A5FA)

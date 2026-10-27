@@ -287,13 +287,13 @@ class ProfileReportsTab extends StatelessWidget {
                       Row(
                         children: [
                           Icon(
-                            Icons.thumb_up_alt_rounded,
+                            Icons.arrow_upward_rounded,
                             size: 13,
                             color: isDark ? const Color(0xFF60A5FA) : HomeColors.primaryContainer,
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            '${item.upvoteCount} Dukungan',
+                            '${item.upvoteCount} Upvote',
                             style: HomeTextStyles.labelSm.copyWith(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,

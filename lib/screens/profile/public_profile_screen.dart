@@ -660,7 +660,7 @@ class PublicProfileScreen extends StatelessWidget {
         Expanded(
           child: _buildMetricCard(
             context: context,
-            icon: Icons.thumb_up_alt_outlined,
+            icon: Icons.arrow_upward_rounded,
             iconBg: const Color(0xFFDBEAFE),
             iconColor: const Color(0xFF1D4ED8),
             value: '$totalUpvotes',
@@ -883,9 +883,7 @@ class PublicProfileScreen extends StatelessWidget {
                           Row(
                             children: [
                               Icon(
-                                item.isUpvoted
-                                    ? Icons.thumb_up
-                                    : Icons.thumb_up_alt_outlined,
+                                Icons.arrow_upward_rounded,
                                 size: 13,
                                 color: item.isUpvoted
                                     ? HomeColors.primaryContainer

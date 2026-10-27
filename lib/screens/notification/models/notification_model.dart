@@ -92,7 +92,7 @@ class NotificationItem {
   String get categoryLabel {
     switch (type) {
       case NotifType.upvote:
-        return 'Dukungan';
+        return 'Upvote';
       case NotifType.infoResmi:
         return 'Info Resmi';
       case NotifType.pengingat:

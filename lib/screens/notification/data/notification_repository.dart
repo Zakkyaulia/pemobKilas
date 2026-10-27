@@ -73,8 +73,8 @@ class NotificationRepository extends ChangeNotifier {
       NotificationItem(
         id: 'notif-1',
         type: NotifType.upvote,
-        title: '42 orang mendukung laporanmu',
-        body: 'Laporan "AC Ruang Kuliah GKB C 204 bocor & tidak dingin" mendapat banyak dukungan dari warga kampus.',
+        title: '42 orang memberikan upvote pada laporanmu',
+        body: 'Laporan "AC Ruang Kuliah GKB C 204 bocor & tidak dingin" mendapat banyak upvote dari warga kampus.',
         timestamp: now.subtract(const Duration(minutes: 5)),
         isRead: false,
         reportId: 'post-1',
