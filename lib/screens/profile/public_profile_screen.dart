@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../theme/app_palette.dart';
 import '../../theme/app_spacing.dart';
@@ -125,89 +126,103 @@ class PublicProfileScreen extends StatelessWidget {
     final isDark = AppPalette.isDark(context);
     showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
+      builder: (ctx) => Dialog(
         backgroundColor: AppPalette.surface(context),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 16,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: SizedBox(
-                width: 180,
-                height: 180,
-                child: CustomPaint(
-                  painter: _PublicQrMatrixPainter(
-                    data: 'kilas://user/${username.replaceAll('@', '')}',
-                    color: const Color(0xFF0F172A),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        child: Container(
+          width: 320,
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.08),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: RepaintBoundary(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: QrImageView(
+                      data: 'https://kilas.app/u/${username.replaceAll('@', '')}',
+                      version: QrVersions.auto,
+                      size: 180.0,
+                      backgroundColor: Colors.white,
+                      padding: const EdgeInsets.all(8),
+                      eyeStyle: const QrEyeStyle(
+                        eyeShape: QrEyeShape.square,
+                        color: Color(0xFF0F172A),
+                      ),
+                      dataModuleStyle: const QrDataModuleStyle(
+                        dataModuleShape: QrDataModuleShape.square,
+                        color: Color(0xFF0F172A),
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              name,
-              textAlign: TextAlign.center,
-              style: HomeTextStyles.headlineSm.copyWith(
-                fontWeight: FontWeight.w700,
-                color: AppPalette.textPrimary(context),
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              username,
-              style: HomeTextStyles.labelMd.copyWith(
-                fontWeight: FontWeight.w700,
-                color: isDark
-                    ? const Color(0xFF60A5FA)
-                    : HomeColors.primaryContainer,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Pindai QR ini melalui aplikasi KILAS untuk membuka profil mahasiswa ini secara cepat.',
-              textAlign: TextAlign.center,
-              style: HomeTextStyles.bodySm.copyWith(
-                color: AppPalette.textSecondary(context),
-                fontSize: 12,
-              ),
-            ),
-            const SizedBox(height: 18),
-            SizedBox(
-              width: double.infinity,
-              height: 44,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: HomeColors.primaryContainer,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
-                ),
-                onPressed: () => Navigator.pop(ctx),
-                child: Text(
-                  'Tutup',
-                  style: HomeTextStyles.labelMd.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                  ),
+              const SizedBox(height: 16),
+              Text(
+                name,
+                textAlign: TextAlign.center,
+                style: HomeTextStyles.headlineSm.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: AppPalette.textPrimary(context),
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 2),
+              Text(
+                username,
+                style: HomeTextStyles.labelMd.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: isDark
+                      ? const Color(0xFF60A5FA)
+                      : HomeColors.primaryContainer,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Pindai QR ini melalui aplikasi KILAS untuk membuka profil mahasiswa ini secara cepat.',
+                textAlign: TextAlign.center,
+                style: HomeTextStyles.bodySm.copyWith(
+                  color: AppPalette.textSecondary(context),
+                  fontSize: 12,
+                ),
+              ),
+              const SizedBox(height: 18),
+              SizedBox(
+                width: double.infinity,
+                height: 44,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: HomeColors.primaryContainer,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  onPressed: () => Navigator.pop(ctx),
+                  child: Text(
+                    'Tutup',
+                    style: HomeTextStyles.labelMd.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1057,118 +1072,4 @@ class PublicProfileScreen extends StatelessWidget {
       color: HomeColors.primaryContainer,
     );
   }
-}
-
-/// Custom painter untuk menggambar QR code vector stabil
-class _PublicQrMatrixPainter extends CustomPainter {
-  _PublicQrMatrixPainter({required this.data, required this.color});
-
-  final String data;
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-
-    const moduleCount = 21;
-    final moduleSize = size.width / moduleCount;
-
-    void drawFinder(double startX, double startY) {
-      canvas.drawRect(
-        Rect.fromLTWH(
-          startX * moduleSize,
-          startY * moduleSize,
-          7 * moduleSize,
-          7 * moduleSize,
-        ),
-        paint,
-      );
-      canvas.drawRect(
-        Rect.fromLTWH(
-          (startX + 1) * moduleSize,
-          (startY + 1) * moduleSize,
-          5 * moduleSize,
-          5 * moduleSize,
-        ),
-        Paint()..color = Colors.white,
-      );
-      canvas.drawRect(
-        Rect.fromLTWH(
-          (startX + 2) * moduleSize,
-          (startY + 2) * moduleSize,
-          3 * moduleSize,
-          3 * moduleSize,
-        ),
-        paint,
-      );
-    }
-
-    drawFinder(0, 0);
-    drawFinder(moduleCount - 7.0, 0);
-    drawFinder(0, moduleCount - 7.0);
-
-    final seed = data.hashCode;
-    for (int r = 0; r < moduleCount; r++) {
-      for (int c = 0; c < moduleCount; c++) {
-        if ((r < 8 && c < 8) ||
-            (r < 8 && c >= moduleCount - 8) ||
-            (r >= moduleCount - 8 && c < 8)) {
-          continue;
-        }
-        if (r >= 8 && r <= 12 && c >= 8 && c <= 12) {
-          continue;
-        }
-        // Pseudo-random deterministic module
-        if (((r * 31 + c * 17 + seed) % 5) == 0 ||
-            ((r * 13 + c * 29 + seed) % 7) == 0) {
-          canvas.drawRRect(
-            RRect.fromRectAndRadius(
-              Rect.fromLTWH(
-                c * moduleSize + 0.5,
-                r * moduleSize + 0.5,
-                moduleSize - 1,
-                moduleSize - 1,
-              ),
-              const Radius.circular(1.5),
-            ),
-            paint,
-          );
-        }
-      }
-    }
-
-    final centerRect = Rect.fromLTWH(
-      8.5 * moduleSize,
-      8.5 * moduleSize,
-      4 * moduleSize,
-      4 * moduleSize,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(centerRect, const Radius.circular(6)),
-      Paint()..color = HomeColors.primaryContainer,
-    );
-
-    final boltPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-
-    final path = Path();
-    final cx = centerRect.center.dx;
-    final cy = centerRect.center.dy;
-    path.moveTo(cx - 3, cy - 8);
-    path.lineTo(cx + 4, cy - 8);
-    path.lineTo(cx, cy - 1);
-    path.lineTo(cx + 5, cy - 1);
-    path.lineTo(cx - 4, cy + 9);
-    path.lineTo(cx - 1, cy + 1);
-    path.lineTo(cx - 5, cy + 1);
-    path.close();
-    canvas.drawPath(path, boltPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _PublicQrMatrixPainter oldDelegate) =>
-      oldDelegate.data != data || oldDelegate.color != color;
 }
