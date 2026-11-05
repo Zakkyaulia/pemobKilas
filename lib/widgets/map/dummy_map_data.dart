@@ -42,7 +42,7 @@ class DummyMapData {
     ReportGeoData(
       id: 'post-3',
       title: 'Maintenance Lift Gedung Rektorat Sayap Kanan',
-      category: 'Info Penting',
+      category: 'Informasi Penting',
       position: const LatLng(-0.914820, 100.460115),
     ),
     // post-4: Fadhil — Lampu Jalan Padam FTI
@@ -70,7 +70,7 @@ class DummyMapData {
     ReportGeoData(
       id: 'post-7',
       title: 'Penambahan Rute & Jam Operasional Bus Kampus UNAND',
-      category: 'Info Penting',
+      category: 'Informasi Penting',
       position: const LatLng(-0.912450, 100.456780),
     ),
     // post-8: Rian — Kran Air Toilet Perpustakaan
@@ -91,7 +91,7 @@ class DummyMapData {
     ReportGeoData(
       id: 'post-10',
       title: 'Pelayanan Bebas Pustaka & Unggah Mandiri Skripsi Online',
-      category: 'Info Penting',
+      category: 'Informasi Penting',
       position: const LatLng(-0.913890, 100.460750),
     ),
     // post-11: Ilham — Stopkontak Korslet Lab F
@@ -112,7 +112,7 @@ class DummyMapData {
     ReportGeoData(
       id: 'post-13',
       title: 'Aksi Donor Darah Sukarela Dies Natalis UNAND',
-      category: 'Info Penting',
+      category: 'Informasi Penting',
       position: const LatLng(-0.913480, 100.458850),
     ),
     // post-14: Bayu — Pohon Tumbang Lapangan Futsal
@@ -133,7 +133,7 @@ class DummyMapData {
     ReportGeoData(
       id: 'post-16',
       title: 'Pembukaan Proposal Hibah Riset & Pengabdian Kolaboratif',
-      category: 'Info Penting',
+      category: 'Informasi Penting',
       position: const LatLng(-0.914750, 100.460200),
     ),
     // post-17: Kevin — Wifi Rusak Plaza
@@ -147,7 +147,7 @@ class DummyMapData {
     ReportGeoData(
       id: 'post-18',
       title: 'Jadwal Pemeliharaan Rutin Server Portal Akademik & SIA',
-      category: 'Info Penting',
+      category: 'Informasi Penting',
       position: const LatLng(-0.915200, 100.458600),
     ),
   ];

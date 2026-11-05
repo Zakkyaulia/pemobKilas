@@ -80,7 +80,7 @@ abstract final class HomeColors {
   /// `#E5EEFF` — dividers, borders between cards.
   static const Color surfaceContainer = Color(0xFFE5EEFF);
 
-  /// `#DCE9FF` — UNAND badge bg, Info Penting badge bg.
+  /// `#DCE9FF` — UNAND badge bg, Informasi Penting badge bg.
   static const Color surfaceContainerHigh = Color(0xFFDCE9FF);
 
   /// `#D3E4FE`

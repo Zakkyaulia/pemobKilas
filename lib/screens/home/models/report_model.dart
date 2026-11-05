@@ -15,7 +15,7 @@ enum BadgeVariant {
   /// Small coloured dot (e.g. "Kondisi Kampus").
   dot,
 
-  /// Material icon (e.g. "Info Penting" with campaign icon).
+  /// Material icon (e.g. "Informasi Penting" with campaign icon).
   icon,
 }
 
@@ -24,16 +24,20 @@ abstract final class ReportCategories {
   /// Category label for campus condition issues ("Kondisi Kampus").
   static const String kondisiKampus = 'Kondisi Kampus';
 
-  /// Standard category label for important announcements/info ("Info Penting").
-  static const String infoPenting = 'Info Penting';
-
-  /// Alternative label used in search/filter ("Informasi Penting").
+  /// Category label for important announcements/info ("Informasi Penting").
   static const String informasiPenting = 'Informasi Penting';
 
-  /// Helper to check if a badge label matches "Info Penting" / "Informasi Penting".
+  /// Label lama yang mungkin masih tersimpan di data lokal (SharedPreferences).
+  static const String _legacyInfoPenting = 'Info Penting';
+
+  /// Helper to check if a badge label matches "Informasi Penting".
   static bool isImportantInfo(String? label) {
-    return label == infoPenting || label == informasiPenting;
+    return label == informasiPenting || label == _legacyInfoPenting;
   }
+
+  /// Menyeragamkan label lama ("Info Penting") ke istilah resmi.
+  static String normalize(String label) =>
+      label == _legacyInfoPenting ? informasiPenting : label;
 
   /// Helper to check if a badge label matches "Kondisi Kampus".
   static bool isCampusCondition(String? label) {
@@ -43,7 +47,7 @@ abstract final class ReportCategories {
 
 /// Lightweight UI model representing a single feed item.
 ///
-/// Used by both [ReportCard] and [OfficialInfoCard] widgets.
+/// Rendered by the [ReportCard] widget.
 /// All colour and icon values are Flutter types so this is
 /// strictly a presentation-layer model.
 class ReportModel {
@@ -58,7 +62,6 @@ class ReportModel {
     this.authorAvatarUrl,
     required this.avatarBgColor,
     required this.avatarFgColor,
-    this.isVerified = false,
     // ── Meta ────────────────────────────────────────────────
     required this.metaIcon,
     required this.metaIconColor,
@@ -103,7 +106,6 @@ class ReportModel {
   final String? authorAvatarUrl;
   final Color avatarBgColor;
   final Color avatarFgColor;
-  final bool isVerified;
 
   // Meta row & Timestamp (FR-A2)
   final IconData metaIcon;
@@ -167,7 +169,6 @@ class ReportModel {
     String? authorAvatarUrl,
     Color? avatarBgColor,
     Color? avatarFgColor,
-    bool? isVerified,
     IconData? metaIcon,
     Color? metaIconColor,
     String? metaText,
@@ -205,7 +206,6 @@ class ReportModel {
       authorAvatarUrl: authorAvatarUrl ?? this.authorAvatarUrl,
       avatarBgColor: avatarBgColor ?? this.avatarBgColor,
       avatarFgColor: avatarFgColor ?? this.avatarFgColor,
-      isVerified: isVerified ?? this.isVerified,
       metaIcon: metaIcon ?? this.metaIcon,
       metaIconColor: metaIconColor ?? this.metaIconColor,
       metaText: metaText ?? this.metaText,
@@ -312,7 +312,6 @@ class ReportModel {
       authorAvatarUrl: map['author_avatar_url'] ?? map['authorAvatarUrl'],
       avatarBgColor: const Color(0xFFE2E8F0),
       avatarFgColor: const Color(0xFF006A61),
-      isVerified: map['is_verified'] ?? map['isVerified'] ?? false,
       metaIcon: Icons.location_on_rounded,
       metaIconColor: const Color(0xFF006A61),
       metaText: (map['meta_text'] ?? map['metaText'] ?? 'UNAND').toString(),
@@ -321,7 +320,8 @@ class ReportModel {
       timestamp: map['timestamp'],
       createdAt: parseDate(map['created_at'] ?? map['createdAt']),
       editedAt: parseDate(map['edited_at'] ?? map['editedAt']),
-      badgeLabel: (map['badge_label'] ?? map['badgeLabel'] ?? 'Fasilitas').toString(),
+      badgeLabel: ReportCategories.normalize(
+          (map['badge_label'] ?? map['badgeLabel'] ?? 'Fasilitas').toString()),
       badgeVariant: badgeVariant,
       badgeBgColor: const Color(0xFFECFDF5),
       badgeTextColor: const Color(0xFF059669),
@@ -350,7 +350,6 @@ class ReportModel {
       'author_username': authorUsername,
       'author_initials': authorInitials,
       'author_avatar_url': authorAvatarUrl,
-      'is_verified': isVerified,
       'meta_text': metaText,
       'location_name': locationName,
       'location_detail': locationDetail,

@@ -32,7 +32,7 @@ const Color _kAmber = Color(0xFFF59E0B);
 /// 1. Filter Periode ("Minggu Ini", "Bulan Ini", "Semua Waktu").
 /// 2. Kartu metrik: Laporan Terbit & Total Upvote.
 /// 3. Grafik garis upvote diterima per hari/minggu/bulan (mengikuti filter).
-/// 4. Distribusi kategori ringkas (Kondisi Kampus vs Info Penting).
+/// 4. Distribusi kategori ringkas (Kondisi Kampus vs Informasi Penting).
 /// 5. Laporan Terpopuler Saya (navigasi ke detail laporan).
 class PersonalStatsDashboardScreen extends StatefulWidget {
   const PersonalStatsDashboardScreen({super.key});
@@ -123,7 +123,7 @@ class _PersonalStatsDashboardScreenState
               .where((r) => r.badgeLabel == 'Kondisi Kampus')
               .length;
           final infoReports = filteredReports
-              .where((r) => r.badgeLabel == 'Info Penting')
+              .where((r) => ReportCategories.isImportantInfo(r.badgeLabel))
               .length;
 
           // Seri grafik upvote (granularitas mengikuti filter)
@@ -840,7 +840,7 @@ class _PersonalStatsDashboardScreenState
                 child: _buildLegendItem(
                   context: context,
                   color: HomeColors.primary,
-                  label: 'Info Penting',
+                  label: 'Informasi Penting',
                   detail:
                       '$infoCount laporan (${(infoPct * 100).toStringAsFixed(0)}%)',
                 ),

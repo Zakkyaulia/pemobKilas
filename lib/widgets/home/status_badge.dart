@@ -21,7 +21,7 @@ const double _kBadgeIconSize = 14;
 ///
 /// Two visual variants:
 /// - **dot**: colored circle + label (e.g. "Kondisi Kampus").
-/// - **icon**: Material icon + label (e.g. "Info Penting" with campaign icon).
+/// - **icon**: Material icon + label (e.g. "Informasi Penting" with campaign icon).
 class StatusBadge extends StatelessWidget {
   /// Creates a badge with a small colored dot indicator.
   const StatusBadge.dot({

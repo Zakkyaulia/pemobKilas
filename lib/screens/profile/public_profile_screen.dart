@@ -40,7 +40,6 @@ class PublicProfileScreen extends StatelessWidget {
     this.jurusan = 'Sistem Informasi',
     this.fakultas = 'Fakultas Teknologi Informasi',
     this.bio = 'Mahasiswa aktif Universitas Andalas.',
-    this.isVerified = false,
     this.avatarBgColor,
     this.avatarFgColor,
   });
@@ -54,16 +53,9 @@ class PublicProfileScreen extends StatelessWidget {
       username: cleanUsername,
       avatarUrl: report.authorAvatarUrl,
       initials: report.authorInitials,
-      jurusan: report.isVerified
-          ? 'Institusi Resmi Kampus'
-          : 'Sistem Informasi UNAND',
-      fakultas: report.isVerified
-          ? 'Universitas Andalas'
-          : 'Fakultas Teknologi Informasi',
-      bio: report.isVerified
-          ? 'Akun dan kanal informasi resmi terverifikasi Universitas Andalas.'
-          : 'Mahasiswa aktif berkontribusi melaporkan fasilitas kampus demi kenyamanan bersama di UNAND.',
-      isVerified: report.isVerified,
+      jurusan: 'Sistem Informasi UNAND',
+      fakultas: 'Fakultas Teknologi Informasi',
+      bio: 'Mahasiswa aktif berkontribusi melaporkan fasilitas kampus demi kenyamanan bersama di UNAND.',
       avatarBgColor: report.avatarBgColor,
       avatarFgColor: report.avatarFgColor,
     );
@@ -80,7 +72,6 @@ class PublicProfileScreen extends StatelessWidget {
       jurusan: user.jurusan,
       fakultas: user.fakultas,
       bio: user.bio,
-      isVerified: user.isVerified,
       avatarBgColor: user.avatarBgColor,
       avatarFgColor: user.avatarFgColor,
     );
@@ -94,7 +85,6 @@ class PublicProfileScreen extends StatelessWidget {
   final String jurusan;
   final String fakultas;
   final String bio;
-  final bool isVerified;
   final Color? avatarBgColor;
   final Color? avatarFgColor;
 
@@ -393,14 +383,6 @@ class PublicProfileScreen extends StatelessWidget {
                                             overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
-                                        if (isVerified) ...[
-                                          const SizedBox(width: 4),
-                                          const Icon(
-                                            Icons.verified_rounded,
-                                            size: 16,
-                                            color: HomeColors.primaryContainer,
-                                          ),
-                                        ],
                                       ],
                                     ),
                                     Text(
@@ -497,14 +479,6 @@ class PublicProfileScreen extends StatelessWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        if (isVerified) ...[
-                          const SizedBox(width: 4),
-                          const Icon(
-                            Icons.verified_rounded,
-                            size: 16,
-                            color: HomeColors.primaryContainer,
-                          ),
-                        ],
                       ],
                     ),
                     const SizedBox(height: 4),
@@ -676,7 +650,7 @@ class PublicProfileScreen extends StatelessWidget {
             icon: Icons.verified_user_outlined,
             iconBg: const Color(0xFFD1FAE5),
             iconColor: const Color(0xFF059669),
-            value: isVerified ? 'Resmi' : 'Aktif',
+            value: 'Aktif',
             label: 'Status Akun',
             isDark: isDark,
             valueFontSize: 18,

@@ -1063,7 +1063,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
       locationDetail: _coordinates,
       timestamp: 'Baru saja',
       createdAt: DateTime.now(),
-      badgeLabel: isCondition ? 'Kondisi Kampus' : 'Info Penting',
+      badgeLabel: isCondition ? 'Kondisi Kampus' : 'Informasi Penting',
       badgeVariant: isCondition ? BadgeVariant.dot : BadgeVariant.icon,
       badgeDotColor: isCondition ? HomeColors.statusCondition : null,
       badgeIcon: isCondition ? null : Icons.campaign,

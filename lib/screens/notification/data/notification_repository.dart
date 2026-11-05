@@ -82,7 +82,7 @@ class NotificationRepository extends ChangeNotifier {
       NotificationItem(
         id: 'notif-2',
         type: NotifType.infoResmi,
-        title: 'Info Penting dari Biro Umum UNAND',
+        title: 'Informasi Penting dari Biro Umum UNAND',
         body: 'Maintenance Lift Gedung Rektorat Sayap Kanan dijadwalkan hari ini hingga pukul 16:00 WIB.',
         timestamp: now.subtract(const Duration(hours: 2)),
         isRead: false,

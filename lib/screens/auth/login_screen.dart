@@ -40,10 +40,7 @@ class LoginScreen extends StatelessWidget {
 
   void _handleLogin(BuildContext context, Map<String, String> data) async {
     // [MISSING API] Login API integration goes here.
-    final method = data['method'] ?? 'unknown';
-    final identifier = method == 'email'
-        ? data['email'] ?? ''
-        : data['nim'] ?? '';
+    final identifier = data['email'] ?? '';
 
     // Simpan sesi login lokal via SharedPreferences
     await AuthSessionService.saveSession(identifier: identifier);
@@ -53,7 +50,7 @@ class LoginScreen extends StatelessWidget {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Login sukses: $method — $identifier',
+          'Login sukses: $identifier',
           style: GoogleFonts.plusJakartaSans(
             color: Colors.white,
             fontSize: 13,

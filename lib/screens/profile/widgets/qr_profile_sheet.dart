@@ -603,12 +603,6 @@ class _QrProfileSheetState extends State<QrProfileSheet>
                                 color: AppPalette.textPrimary(context),
                               ),
                             ),
-                            const SizedBox(width: 4),
-                            const Icon(
-                              Icons.verified_rounded,
-                              size: 15,
-                              color: HomeColors.primaryContainer,
-                            ),
                           ],
                         ),
                         const SizedBox(height: 2),

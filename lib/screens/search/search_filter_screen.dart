@@ -145,7 +145,7 @@ Duration _parseAge(String metaText) {
 List<SearchResultItem> _buildLiveResults() {
   final repo = ReportRepository.instance;
   return repo.reports.map((r) {
-    final category = r.badgeLabel == 'Info Penting'
+    final category = ReportCategories.isImportantInfo(r.badgeLabel)
         ? ReportCategory.informasiPenting
         : ReportCategory.kondisiKampus;
     final title = r.title ?? (r.contentTitle ?? '');
@@ -950,14 +950,6 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      if (user.isVerified) ...[
-                        const SizedBox(width: 4),
-                        const Icon(
-                          Icons.verified_rounded,
-                          size: 15,
-                          color: Color(0xFF3B82F6),
-                        ),
-                      ],
                     ],
                   ),
                   const SizedBox(height: 2),

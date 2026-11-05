@@ -6,7 +6,6 @@ import '../../theme/app_spacing.dart';
 import '../../theme/home_colors.dart';
 import '../../theme/home_text_styles.dart';
 import '../../widgets/home/home_app_bar.dart';
-import '../../widgets/home/official_info_card.dart';
 import '../../widgets/home/report_card.dart';
 import '../../widgets/home/report_card_header.dart';
 import '../../widgets/home/status_badge.dart';
@@ -439,8 +438,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-/// Maps a [ReportModel] to the appropriate card widget
-/// ([ReportCard] or [OfficialInfoCard]).
+/// Maps a [ReportModel] to a uniform [ReportCard] widget.
 class _FeedItem extends StatelessWidget {
   const _FeedItem({
     required this.report,
@@ -462,30 +460,10 @@ class _FeedItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final header = _buildHeader();
-
-    if (report.cardType == CardType.official) {
-      return OfficialInfoCard(
-        header: header,
-        contentIcon: report.contentIcon!,
-        contentTitle: report.contentTitle!,
-        contentDescription: report.contentDescription!,
-        upvoteCount: report.upvoteCount,
-        isUpvoted: report.isUpvoted,
-        isBookmarked: report.isBookmarked,
-        timestamp: report.timeAgoDisplay,
-        onTap: onTap,
-        onUpvoteChanged: onUpvoteChanged,
-        onUpvoteCooldown: onUpvoteCooldown,
-        onBookmarkChanged: onBookmarkChanged,
-        onSharePressed: onSharePressed,
-      );
-    }
-
     return ReportCard(
-      header: header,
-      title: report.title!,
-      description: report.description!,
+      header: _buildHeader(),
+      title: report.title ?? report.contentTitle ?? '',
+      description: report.description ?? report.contentDescription ?? '',
       imageUrl: report.imageUrl,
       imageHeight: report.imageHeight ?? 224,
       aspectRatio: report.aspectRatio,
@@ -536,7 +514,6 @@ class _FeedItem extends StatelessWidget {
       displayName: report.authorName,
       // Jangan tampilkan email/handle di feed agar header lapang dan tidak menumpuk
       username: null,
-      isVerified: report.isVerified,
       metaIcon: report.metaIcon,
       metaIconColor: report.metaIconColor,
       // Hanya lokasi (waktu upload dipindah ke footer di bawah button upvote)

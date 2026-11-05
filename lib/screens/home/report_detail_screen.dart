@@ -6,7 +6,6 @@ import '../../theme/app_spacing.dart';
 import '../../theme/home_colors.dart';
 import '../../theme/home_text_styles.dart';
 import '../../widgets/home/network_image_box.dart';
-import '../../widgets/home/official_content_box.dart';
 import '../../widgets/home/report_card_footer.dart';
 import '../../widgets/home/report_card_header.dart';
 import '../../widgets/home/status_badge.dart';
@@ -391,13 +390,6 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
                     aspectRatio: _report.aspectRatio,
                     semanticLabel: _report.imageSemanticLabel,
                   ),
-              ] else if (_report.contentTitle != null) ...[
-                const SizedBox(height: 16),
-                OfficialContentBox(
-                  icon: _report.contentIcon ?? Icons.campaign,
-                  title: _report.contentTitle!,
-                  description: _report.contentDescription ?? '',
-                ),
               ],
 
               const SizedBox(height: 24),
@@ -457,7 +449,6 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
       avatar: avatar,
       displayName: _report.authorName,
       username: null,
-      isVerified: _report.isVerified,
       metaIcon: _report.metaIcon,
       metaIconColor: _report.metaIconColor,
       metaText: _report.locationDisplay,

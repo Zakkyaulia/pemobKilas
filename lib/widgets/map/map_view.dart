@@ -344,13 +344,13 @@ class _MapViewState extends State<MapView> {
 
   /// Warna aksen berdasarkan kategori laporan.
   Color _categoryColor(String category) {
-    if (category == 'Info Penting') return HomeColors.primaryContainer;
+    if (category == 'Informasi Penting') return HomeColors.primaryContainer;
     return HomeColors.statusCondition; // 'Kondisi Kampus' dan default
   }
 
   /// Ikon berdasarkan kategori laporan.
   IconData _categoryIcon(String category) {
-    if (category == 'Info Penting') return Icons.campaign_outlined;
+    if (category == 'Informasi Penting') return Icons.campaign_outlined;
     return Icons.report_problem_outlined; // 'Kondisi Kampus' dan default
   }
 }

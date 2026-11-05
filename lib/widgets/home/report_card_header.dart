@@ -10,9 +10,6 @@ const double _kAvatarGap = 10;
 /// Gap between name and username (Tailwind `gap-1.5` = 6px).
 const double _kNameUsernameGap = 6;
 
-/// Gap between name and verified icon (Tailwind `gap-1` = 4px).
-const double _kNameVerifiedGap = 4;
-
 /// Gap between meta icon and text (Tailwind `gap-1` = 4px).
 const double _kMetaGap = 4;
 
@@ -25,21 +22,15 @@ const double _kNameFontSize = 15;
 /// Meta icon size (HTML `text-[13px]`).
 const double _kMetaIconSize = 13;
 
-/// Verified check icon size (HTML `text-[15px]`).
-const double _kVerifiedIconSize = 15;
-
 /// Top row of a report / info card showing author identity,
 /// location + timestamp metadata, and a status badge.
 ///
-/// Works for both regular user reports and official announcements
-/// by toggling [username] vs [isVerified].
 class ReportCardHeader extends StatelessWidget {
   const ReportCardHeader({
     super.key,
     required this.avatar,
     required this.displayName,
     this.username,
-    this.isVerified = false,
     required this.metaIcon,
     this.metaIconColor = HomeColors.primary,
     required this.metaText,
@@ -56,8 +47,6 @@ class ReportCardHeader extends StatelessWidget {
   /// Handle like "@zakkyaldrin" — shown for regular users.
   final String? username;
 
-  /// When `true`, a filled [Icons.check_circle] is shown after the name.
-  final bool isVerified;
 
   /// Icon shown before [metaText] (e.g. [Icons.location_on]).
   final IconData metaIcon;
@@ -152,14 +141,6 @@ class _NameRow extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        if (header.isVerified) ...[
-          const SizedBox(width: _kNameVerifiedGap),
-          const Icon(
-            Icons.check_circle,
-            size: _kVerifiedIconSize,
-            color: HomeColors.primary,
-          ),
-        ],
         if (header.username != null) ...[
           const SizedBox(width: _kNameUsernameGap),
           Flexible(

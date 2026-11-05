@@ -5,7 +5,7 @@ enum NotifType {
   /// Laporan kamu mendapatkan upvote dari pengguna lain.
   upvote,
 
-  /// Ada informasi/pengumuman resmi dari admin/biro kampus.
+  /// Ada laporan kategori "Informasi Penting" dari pengguna lain.
   infoResmi,
 
   /// Pengingat laporan harian jam 16:00 WIB (FR-18 / FR-B7).
@@ -94,7 +94,7 @@ class NotificationItem {
       case NotifType.upvote:
         return 'Upvote';
       case NotifType.infoResmi:
-        return 'Info Resmi';
+        return 'Informasi Penting';
       case NotifType.pengingat:
         return 'Pengingat';
       case NotifType.statusLaporan:

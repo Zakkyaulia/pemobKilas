@@ -9,16 +9,15 @@ import 'auth_text_field.dart';
 /// The authentication form card for the Login screen.
 ///
 /// Contains:
-/// - Login method toggle (Email / NIM)
-/// - Conditional fields based on selected method
+/// - Email field
+/// - Password field
 /// - Submit button with loading state
 ///
 /// This widget manages its own form state (controllers, validation,
 /// form key) and delegates the login action to the [onSubmit] callback.
 ///
-/// Form validation follows PRD:
-/// - Email: must be valid email format, domain @student.unand.ac.id
-/// - NIM: must be numeric and non-empty
+/// Form validation:
+/// - Email: must be a valid email format
 /// - Password: must not be empty, minimum 6 characters
 class LoginForm extends StatefulWidget {
   const LoginForm({super.key, this.onSubmit});
@@ -26,9 +25,7 @@ class LoginForm extends StatefulWidget {
   /// Called when the form is valid and the user taps "Masuk".
   ///
   /// Receives a map with keys:
-  /// - `method`: 'email' or 'nim'
-  /// - `email`: email address (only for email method)
-  /// - `nim`: NIM string (only for NIM method)
+  /// - `email`: email address
   /// - `password`: password string
   final void Function(Map<String, String> data)? onSubmit;
 
@@ -56,7 +53,6 @@ class _LoginFormState extends State<LoginForm> {
     setState(() => _isLoading = true);
 
     final data = <String, String>{
-      'method': 'email',
       'email': _emailController.text.trim(),
       'password': _passwordController.text.trim(),
     };

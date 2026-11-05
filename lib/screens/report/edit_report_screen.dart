@@ -524,7 +524,7 @@ class _EditReportScreenState extends State<EditReportScreen> {
     final updated = widget.report.copyWith(
       title: title,
       description: description,
-      badgeLabel: isCondition ? 'Kondisi Kampus' : 'Info Penting',
+      badgeLabel: isCondition ? 'Kondisi Kampus' : 'Informasi Penting',
       badgeVariant: isCondition ? BadgeVariant.dot : BadgeVariant.icon,
       badgeDotColor: isCondition ? HomeColors.statusCondition : null,
       badgeIcon: isCondition ? null : Icons.campaign,

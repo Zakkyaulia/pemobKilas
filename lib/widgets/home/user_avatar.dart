@@ -31,7 +31,7 @@ class UserAvatar extends StatelessWidget {
   /// Two-letter initials (e.g. "ZA", "AH").
   final String? initials;
 
-  /// Icon to display instead of initials (e.g. [Icons.verified]).
+  /// Icon to display instead of initials (e.g. [Icons.person]).
   final IconData? icon;
 
   /// Circle background color.

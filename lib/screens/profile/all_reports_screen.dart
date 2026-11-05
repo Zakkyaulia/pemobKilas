@@ -42,8 +42,8 @@ class _AllReportsScreenState extends State<AllReportsScreen> {
             if (_selectedFilter == 'Kondisi Kampus') {
               return r.badgeLabel == 'Kondisi Kampus';
             }
-            if (_selectedFilter == 'Info Penting') {
-              return r.badgeLabel == 'Info Penting';
+            if (_selectedFilter == ReportCategories.informasiPenting) {
+              return ReportCategories.isImportantInfo(r.badgeLabel);
             }
             return true;
           }).where((r) {
@@ -111,7 +111,7 @@ class _AllReportsScreenState extends State<AllReportsScreen> {
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
-                      children: ['Semua', 'Kondisi Kampus', 'Info Penting'].map((cat) {
+                      children: ['Semua', 'Kondisi Kampus', 'Informasi Penting'].map((cat) {
                         final isSelected = _selectedFilter == cat;
                         return Padding(
                           padding: const EdgeInsets.only(right: 8),

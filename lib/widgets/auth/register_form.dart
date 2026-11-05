@@ -6,6 +6,7 @@ import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 import 'auth_text_field.dart';
 
+/// Form registrasi akun mahasiswa: Username, Email, dan Password.
 class RegisterForm extends StatefulWidget {
   const RegisterForm({super.key, this.onSubmit});
 
@@ -19,7 +20,6 @@ class _RegisterFormState extends State<RegisterForm> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _usernameController = TextEditingController();
-  final _nimController = TextEditingController();
   final _passwordController = TextEditingController();
 
   bool _isLoading = false;
@@ -28,7 +28,6 @@ class _RegisterFormState extends State<RegisterForm> {
   void dispose() {
     _emailController.dispose();
     _usernameController.dispose();
-    _nimController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -41,7 +40,6 @@ class _RegisterFormState extends State<RegisterForm> {
     final data = <String, String>{
       'email': _emailController.text.trim(),
       'username': _usernameController.text.trim(),
-      'nim': _nimController.text.trim(),
       'password': _passwordController.text.trim(),
     };
 
@@ -65,12 +63,6 @@ class _RegisterFormState extends State<RegisterForm> {
 
   String? _validateRequired(String? value, String label) {
     if (value == null || value.trim().isEmpty) return '$label tidak boleh kosong';
-    return null;
-  }
-
-  String? _validateNim(String? value) {
-    if (value == null || value.trim().isEmpty) return 'NIM tidak boleh kosong';
-    if (!RegExp(r'^\d+$').hasMatch(value.trim())) return 'NIM hanya boleh berisi angka';
     return null;
   }
 
@@ -116,16 +108,6 @@ class _RegisterFormState extends State<RegisterForm> {
               keyboardType: TextInputType.emailAddress,
               validator: _validateEmail,
               prefixIcon: Icons.email_outlined,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-
-            AuthTextField(
-              label: 'NIM (Kelengkapan Profil)',
-              hintText: 'Masukkan NIM',
-              controller: _nimController,
-              keyboardType: TextInputType.number,
-              validator: _validateNim,
-              prefixIcon: Icons.badge_outlined,
             ),
             const SizedBox(height: AppSpacing.lg),
 

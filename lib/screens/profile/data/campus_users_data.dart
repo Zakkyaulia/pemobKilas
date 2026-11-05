@@ -14,7 +14,6 @@ class CampusUserItem {
   final String jurusan;
   final String fakultas;
   final String bio;
-  final bool isVerified;
   final Color avatarBgColor;
   final Color avatarFgColor;
   final int reportCount;
@@ -30,7 +29,6 @@ class CampusUserItem {
     this.jurusan = 'Sistem Informasi',
     this.fakultas = 'Fakultas Teknologi Informasi',
     this.bio = 'Mahasiswa aktif Universitas Andalas.',
-    this.isVerified = false,
     this.avatarBgColor = HomeColors.surfaceVariant,
     this.avatarFgColor = HomeColors.primary,
     this.reportCount = 0,
@@ -51,7 +49,6 @@ class CampusUserItem {
       jurusan: jurusan,
       fakultas: fakultas,
       bio: bio,
-      isVerified: isVerified,
       avatarBgColor: avatarBgColor,
       avatarFgColor: avatarFgColor,
       reportCount: reportCount,
@@ -195,10 +192,9 @@ class CampusUsersData {
       name: 'Humas Universitas Andalas',
       username: '@unand_official',
       initials: 'UN',
-      jurusan: 'Lembaga Resmi Kampus',
+      jurusan: 'Humas Kampus',
       fakultas: 'Universitas Andalas',
-      bio: 'Kanal publikasi resmi, kebijakan, dan klarifikasi informasi kampus Universitas Andalas.',
-      isVerified: true,
+      bio: 'Kanal publikasi, kebijakan, dan klarifikasi informasi kampus Universitas Andalas.',
       avatarBgColor: Color(0xFFDBEAFE),
       avatarFgColor: Color(0xFF1E40AF),
     ),
@@ -227,12 +223,9 @@ class CampusUsersData {
           username: report.authorUsername ?? uname,
           initials: report.authorInitials ??
               (report.authorName.isNotEmpty ? report.authorName[0] : 'U'),
-          jurusan: report.isVerified ? 'Institusi Resmi' : 'Sistem Informasi',
-          fakultas: report.isVerified
-              ? 'Universitas Andalas'
-              : 'Fakultas Teknologi Informasi',
+          jurusan: 'Sistem Informasi',
+          fakultas: 'Fakultas Teknologi Informasi',
           bio: 'Mahasiswa aktif Universitas Andalas.',
-          isVerified: report.isVerified,
           avatarBgColor: report.avatarBgColor,
           avatarFgColor: report.avatarFgColor,
           avatarUrl: report.authorAvatarUrl,

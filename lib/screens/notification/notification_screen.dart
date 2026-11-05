@@ -318,7 +318,7 @@ class _FilterChips extends StatelessWidget {
   static const _filters = [
     (null, 'Semua', Icons.apps_rounded),
     (NotifType.upvote, 'Upvote', Icons.arrow_upward_rounded),
-    (NotifType.infoResmi, 'Info Resmi', Icons.campaign_rounded),
+    (NotifType.infoResmi, 'Informasi Penting', Icons.campaign_rounded),
     (NotifType.pengingat, 'Pengingat', Icons.alarm_rounded),
     (NotifType.statusLaporan, 'Status', Icons.check_circle_outline_rounded),
     (NotifType.aktivitasDiri, 'Aktivitas', Icons.edit_note_rounded),
