@@ -8,11 +8,10 @@ class CampusUserItem {
   final String userId;
   final String name;
   final String username;
-  final String? nim;
   final String? avatarUrl;
   final String initials;
-  final String jurusan;
-  final String fakultas;
+  final String? jurusan;
+  final String? fakultas;
   final String bio;
   final Color avatarBgColor;
   final Color avatarFgColor;
@@ -23,11 +22,10 @@ class CampusUserItem {
     required this.userId,
     required this.name,
     required this.username,
-    this.nim,
     this.avatarUrl,
     required this.initials,
-    this.jurusan = 'Sistem Informasi',
-    this.fakultas = 'Fakultas Teknologi Informasi',
+    this.jurusan,
+    this.fakultas,
     this.bio = 'Mahasiswa aktif Universitas Andalas.',
     this.avatarBgColor = HomeColors.surfaceVariant,
     this.avatarFgColor = HomeColors.primary,
@@ -43,7 +41,6 @@ class CampusUserItem {
       userId: userId,
       name: name,
       username: username,
-      nim: nim,
       avatarUrl: avatarUrl,
       initials: initials,
       jurusan: jurusan,
@@ -67,7 +64,6 @@ class CampusUsersData {
       userId: 'usr-2411522036',
       name: 'Ghezy Pramudinata .B',
       username: '@ghezz',
-      nim: '2411522036',
       initials: 'Gh',
       jurusan: 'Sistem Informasi \'24',
       fakultas: 'Fakultas Teknologi Informasi',
@@ -81,7 +77,6 @@ class CampusUsersData {
       userId: 'usr-2311512004',
       name: 'Ahmad Fauzan .S',
       username: '@ahmadfauzan',
-      nim: '2311512004',
       initials: 'AF',
       jurusan: 'Teknik Komputer \'23',
       fakultas: 'Fakultas Teknologi Informasi',
@@ -95,7 +90,6 @@ class CampusUsersData {
       userId: 'usr-2310912015',
       name: 'Aziz Hakim',
       username: '@aziz_hakim',
-      nim: '2310912015',
       initials: 'AH',
       jurusan: 'Teknik Mesin \'23',
       fakultas: 'Fakultas Teknik',
@@ -107,7 +101,6 @@ class CampusUsersData {
       userId: 'usr-2210921008',
       name: 'Fadhil Ramadhan',
       username: '@fadhil_r',
-      nim: '2210921008',
       initials: 'FR',
       jurusan: 'Teknik Sipil \'22',
       fakultas: 'Fakultas Teknik',
@@ -119,7 +112,6 @@ class CampusUsersData {
       userId: 'usr-2411013012',
       name: 'Putri Anisa',
       username: '@putrianisa',
-      nim: '2411013012',
       initials: 'PA',
       jurusan: 'Farmasi \'24',
       fakultas: 'Fakultas Farmasi',
@@ -131,7 +123,6 @@ class CampusUsersData {
       userId: 'usr-2310811044',
       name: 'Diki Pratama',
       username: '@dikipratama',
-      nim: '2310811044',
       initials: 'DP',
       jurusan: 'Ilmu Hukum \'23',
       fakultas: 'Fakultas Hukum',
@@ -143,7 +134,6 @@ class CampusUsersData {
       userId: 'usr-2310312019',
       name: 'Siti Rahma',
       username: '@sitirahma',
-      nim: '2310312019',
       initials: 'SR',
       jurusan: 'Pendidikan Dokter \'23',
       fakultas: 'Fakultas Kedokteran',
@@ -155,7 +145,6 @@ class CampusUsersData {
       userId: 'usr-2210611022',
       name: 'Rian Saputra',
       username: '@riansaputra',
-      nim: '2210611022',
       initials: 'RS',
       jurusan: 'Peternakan \'22',
       fakultas: 'Fakultas Peternakan',
@@ -167,7 +156,6 @@ class CampusUsersData {
       userId: 'usr-2410421005',
       name: 'Ilham Pratama',
       username: '@ilham_p',
-      nim: '2410421005',
       initials: 'IP',
       jurusan: 'Biologi \'24',
       fakultas: 'FMIPA',
@@ -179,7 +167,6 @@ class CampusUsersData {
       userId: 'usr-2310522031',
       name: 'Nabila Khairunisa',
       username: '@nabilakh',
-      nim: '2310522031',
       initials: 'NK',
       jurusan: 'Manajemen \'23',
       fakultas: 'Fakultas Ekonomi dan Bisnis',
@@ -223,9 +210,7 @@ class CampusUsersData {
           username: report.authorUsername ?? uname,
           initials: report.authorInitials ??
               (report.authorName.isNotEmpty ? report.authorName[0] : 'U'),
-          jurusan: 'Sistem Informasi',
-          fakultas: 'Fakultas Teknologi Informasi',
-          bio: 'Mahasiswa aktif Universitas Andalas.',
+          bio: 'Civitas Universitas Andalas.',
           avatarBgColor: report.avatarBgColor,
           avatarFgColor: report.avatarFgColor,
           avatarUrl: report.authorAvatarUrl,

@@ -821,9 +821,9 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
       final matchName = u.name.toLowerCase().contains(cleanQuery);
       final matchUsername =
           u.username.toLowerCase().replaceAll('@', '').contains(cleanQuery);
-      final matchNim = u.nim != null && u.nim!.contains(cleanQuery);
-      final matchJurusan = u.jurusan.toLowerCase().contains(cleanQuery);
-      return matchName || matchUsername || matchNim || matchJurusan;
+      final matchJurusan =
+          u.jurusan?.toLowerCase().contains(cleanQuery) ?? false;
+      return matchName || matchUsername || matchJurusan;
     }).toList();
 
     return Padding(
@@ -961,17 +961,19 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                       color: _kPrimary,
                     ),
                   ),
-                  const SizedBox(height: 3),
-                  Text(
-                    '${user.jurusan} • ${user.fakultas}',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w400,
-                      color: AppPalette.textSecondary(context),
+                  if (user.jurusan != null || user.fakultas != null) ...[
+                    const SizedBox(height: 3),
+                    Text(
+                      [user.jurusan, user.fakultas].whereType<String>().join(' • '),
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w400,
+                        color: AppPalette.textSecondary(context),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  ],
                   const SizedBox(height: 6),
                   Row(
                     children: [

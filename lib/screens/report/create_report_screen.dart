@@ -84,12 +84,24 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
   /// Status & data penguncian GPS asli
   GpsLockStatus _gpsStatus = GpsLockStatus.initial;
   String _locationName = 'Menghubungkan ke sensor GPS...';
+
+  /// Nama tempat hasil reverse geocoding. `null` jika belum/gagal didapat —
+  /// [_locationName] hanya label status UI dan tidak pernah disimpan.
+  String? _resolvedLocationName;
+
+  /// Permintaan reverse geocoding yang sedang berjalan (ditunggu saat submit).
+  Future<String?>? _pendingGeocode;
   String _coordinates = '';
   double? _latitude;
   double? _longitude;
   double? _accuracy;
   String? _gpsErrorMessage;
   bool _isInCampusArea = true;
+
+  /// Form terkunci jika GPS terkunci di luar batas kampus — hanya tombol
+  /// Refresh lokasi yang tetap aktif.
+  bool get _isFormLocked =>
+      _gpsStatus == GpsLockStatus.locked && !_isInCampusArea;
   bool _allowPopWithoutPrompt = false;
 
   static const int _maxDescriptionLength = 1500;
@@ -143,8 +155,9 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
         }
       }
     }
-    if (draft.locationName != null && draft.locationName!.isNotEmpty) {
-      _locationName = draft.locationName!;
+    if (draft.latitude != null && draft.longitude != null) {
+      _resolvedLocationName = draft.locationName;
+      _locationName = draft.locationName ?? 'Titik GPS tersimpan dari draft';
       _coordinates = draft.coordinates ?? '';
       _latitude = draft.latitude;
       _longitude = draft.longitude;
@@ -733,6 +746,8 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
     setState(() {
       _gpsStatus = GpsLockStatus.locating;
       _locationName = 'Mengunci sinyal satelit GPS...';
+      _resolvedLocationName = null;
+      _pendingGeocode = null;
       _gpsErrorMessage = null;
     });
 
@@ -757,12 +772,22 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
         _isInCampusArea = CampusBoundary.contains(LatLng(lat, lng));
       });
 
+      if (!_isInCampusArea) {
+        FocusScope.of(context).unfocus();
+        _showErrorSnackBar(
+            'Lokasi Anda berada di luar area kampus UNAND. Form laporan dinonaktifkan — tekan Refresh setelah berada di dalam area kampus.');
+      }
+
       // Lakukan reverse geocoding untuk nama gedung/jalan yang ramah pengguna
-      final resolvedName = await LocationService.instance.reverseGeocode(lat, lng);
-      if (!mounted) return;
+      final geocode = LocationService.instance.reverseGeocode(lat, lng);
+      _pendingGeocode = geocode;
+      final resolvedName = await geocode;
+      // Abaikan hasil usang jika GPS sudah dikunci ulang.
+      if (!mounted || !identical(_pendingGeocode, geocode)) return;
 
       setState(() {
         if (resolvedName != null && resolvedName.isNotEmpty) {
+          _resolvedLocationName = resolvedName;
           _locationName = resolvedName;
         } else {
           _locationName = 'Titik GPS Akurat (Lat: ${lat.toStringAsFixed(5)}, Lng: ${lng.toStringAsFixed(5)})';
@@ -1031,9 +1056,19 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
       ),
     );
 
-    if (confirmed == true) {
-      _executeSubmitReport(title, description);
+    if (confirmed != true) return;
+
+    // Jika nama lokasi masih dicari, tunggu hasilnya (maks. timeout geocoding)
+    // agar yang tersimpan bukan teks status seperti "Mencari detail lokasi...".
+    final pending = _pendingGeocode;
+    if (_resolvedLocationName == null && pending != null) {
+      final name = await pending;
+      if (!mounted) return;
+      if (identical(_pendingGeocode, pending) && name != null && name.isNotEmpty) {
+        _resolvedLocationName = name;
+      }
     }
+    _executeSubmitReport(title, description);
   }
 
   void _executeSubmitReport(String title, String description) {
@@ -1058,8 +1093,8 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
       avatarFgColor: HomeColors.primary,
       metaIcon: Icons.location_on,
       metaIconColor: HomeColors.primary,
-      metaText: '$_locationName • Baru saja',
-      locationName: _locationName,
+      metaText: '${_resolvedLocationName ?? 'Area Kampus UNAND'} • Baru saja',
+      locationName: _resolvedLocationName,
       locationDetail: _coordinates,
       timestamp: 'Baru saja',
       createdAt: DateTime.now(),
@@ -1300,7 +1335,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
       selectedCategory: _selectedCategory,
       mediaFilePath: _selectedMediaFile?.path,
       isVideo: _isVideo,
-      locationName: _locationName,
+      locationName: _resolvedLocationName,
       coordinates: _coordinates,
       latitude: _latitude,
       longitude: _longitude,
@@ -1489,27 +1524,31 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // 1. Preview Media (Default: 2 pilihan Kamera & Galeri)
-                _buildMediaSection(context, isDark),
+                _lockable(_buildMediaSection(context, isDark)),
                 const SizedBox(height: AppSpacing.lg),
 
                 // 2. Pencatatan GPS Otomatis
                 _buildGpsCard(context, isDark),
+                if (_isFormLocked) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  _buildOutsideCampusNotice(context, isDark),
+                ],
                 const SizedBox(height: AppSpacing.xl),
 
                 // 3. Pilihan Kategori Isu (dengan garis tepi tegas & ikon native)
-                _buildCategorySelector(context, isDark),
+                _lockable(_buildCategorySelector(context, isDark)),
                 const SizedBox(height: AppSpacing.xl),
 
                 // 4. Input Judul Laporan (rapi single-border)
-                _buildTitleInput(context, isDark),
+                _lockable(_buildTitleInput(context, isDark)),
                 const SizedBox(height: AppSpacing.lg),
 
                 // 5. Input Keterangan Laporan (rapi single-border)
-                _buildDescriptionInput(context, isDark),
+                _lockable(_buildDescriptionInput(context, isDark)),
                 const SizedBox(height: AppSpacing.xxl),
 
                 // 6. Tombol Aksi Bawah
-                _buildActionButtons(context, isDark),
+                _lockable(_buildActionButtons(context, isDark)),
                 const SizedBox(height: AppSpacing.xxl),
               ],
             ),
@@ -1938,6 +1977,51 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Menonaktifkan & meredupkan bagian form saat [_isFormLocked].
+  Widget _lockable(Widget child) {
+    final locked = _isFormLocked;
+    return IgnorePointer(
+      ignoring: locked,
+      child: AnimatedOpacity(
+        opacity: locked ? 0.4 : 1,
+        duration: const Duration(milliseconds: 200),
+        child: child,
+      ),
+    );
+  }
+
+  /// Pesan tetap di bawah kartu GPS selama form terkunci.
+  Widget _buildOutsideCampusNotice(BuildContext context, bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.error.withValues(alpha: isDark ? 0.18 : 0.08),
+        borderRadius: BorderRadius.circular(_kRadiusMd),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.lock_outline_rounded, size: 18, color: AppColors.error),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Form laporan dinonaktifkan karena Anda berada di luar area kampus UNAND. '
+              'Pindah ke dalam area kampus lalu tekan Refresh.',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w500,
+                color: AppPalette.textPrimary(context),
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -2714,6 +2798,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
         const SizedBox(height: 8),
         TextField(
           controller: _titleController,
+          enabled: !_isFormLocked,
           style: GoogleFonts.plusJakartaSans(
             fontSize: 14,
             fontWeight: FontWeight.w500,
@@ -2784,6 +2869,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
         const SizedBox(height: 8),
         TextField(
           controller: _descriptionController,
+          enabled: !_isFormLocked,
           maxLines: 5,
           maxLength: _maxDescriptionLength,
           maxLengthEnforcement: MaxLengthEnforcement.enforced,

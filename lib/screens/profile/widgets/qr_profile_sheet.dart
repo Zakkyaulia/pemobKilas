@@ -505,7 +505,6 @@ class _QrProfileSheetState extends State<QrProfileSheet>
     BuildContext context, {
     String name = 'Ahmad Fauzan .S',
     String username = '@ahmadfauzan',
-    String nim = '2211521008',
     String jurusan = 'Sistem Informasi',
     String fakultas = 'Fakultas Teknologi Informasi',
     String bio = 'Aktif berkontribusi melaporkan fasilitas di UNAND.',
@@ -607,7 +606,7 @@ class _QrProfileSheetState extends State<QrProfileSheet>
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          '$nim • $jurusan',
+                          '$jurusan • $fakultas',
                           style: HomeTextStyles.bodySm.copyWith(
                             color: AppPalette.textSecondary(context),
                             fontSize: 12,
@@ -651,7 +650,6 @@ class _QrProfileSheetState extends State<QrProfileSheet>
                       builder: (context) => PublicProfileScreen(
                         name: name,
                         username: username,
-                        nim: nim,
                         jurusan: jurusan,
                         fakultas: fakultas,
                         bio: bio,

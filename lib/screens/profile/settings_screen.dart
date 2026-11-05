@@ -57,7 +57,6 @@ class SettingsScreen extends StatelessWidget {
                 _SettingsGroup(
                   children: [
                     _ReminderTile(),
-                    _ShakeDraftTile(),
                     _DarkModeTile(),
                   ],
                 ),
@@ -297,46 +296,6 @@ class _ReminderTile extends StatelessWidget {
             activeTrackColor: HomeColors.primaryContainer,
             onChanged: (val) {
               UserProfileRepository.instance.togglePengingatHarian(val);
-            },
-          ),
-        );
-      },
-    );
-  }
-}
-
-/// Goyang HP untuk Buka Draft (FR-23 / FR-C5).
-class _ShakeDraftTile extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: UserProfileRepository.instance,
-      builder: (context, _) {
-        final profile = UserProfileRepository.instance.profile;
-        return ListTile(
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          leading: _SettingIcon(
-            icon: Icons.vibration_rounded,
-            color: const Color(0xFF8B5CF6),
-          ),
-          title: Text(
-            'Goyang HP untuk Buka Draft',
-            style: HomeTextStyles.labelLg.copyWith(
-              color: AppPalette.textPrimary(context),
-            ),
-          ),
-          subtitle: Text(
-            'Deteksi guncangan accelerometer aktif',
-            style: HomeTextStyles.bodySm.copyWith(
-              color: AppPalette.textSecondary(context),
-            ),
-          ),
-          trailing: Switch.adaptive(
-            value: profile.shakeToDraftAktif,
-            activeTrackColor: const Color(0xFF8B5CF6),
-            onChanged: (val) {
-              UserProfileRepository.instance.toggleShakeToDraft(val);
             },
           ),
         );

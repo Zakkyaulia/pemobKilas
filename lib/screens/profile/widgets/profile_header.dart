@@ -361,47 +361,25 @@ class ProfileHeader extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: AppSpacing.xs),
-                    Row(
-                      children: [
-                        Text(
-                          user.username,
-                          style: HomeTextStyles.labelMd.copyWith(
-                            color: isDark
-                                ? const Color(0xFF60A5FA)
-                                : HomeColors.primaryContainer,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 6),
-                          child: Text(
-                            '•',
-                            style: HomeTextStyles.bodySm.copyWith(
-                              color: AppPalette.textSecondary(context),
-                            ),
-                          ),
-                        ),
-                        Flexible(
-                          child: Text(
-                            user.userId.replaceAll('usr-', ''),
-                            style: HomeTextStyles.bodySm.copyWith(
-                              color: AppPalette.textSecondary(context),
-                              fontWeight: FontWeight.w500,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
                     Text(
-                      '${user.jurusan} 🎓',
-                      style: HomeTextStyles.labelSm.copyWith(
-                        color: AppPalette.textSecondary(context),
-                        fontWeight: FontWeight.w600,
+                      user.username,
+                      style: HomeTextStyles.labelMd.copyWith(
+                        color: isDark
+                            ? const Color(0xFF60A5FA)
+                            : HomeColors.primaryContainer,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
+                    if (user.jurusan != null) ...[
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        '${user.jurusan} 🎓',
+                        style: HomeTextStyles.labelSm.copyWith(
+                          color: AppPalette.textSecondary(context),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 6),
                     Text(
                       user.bio,

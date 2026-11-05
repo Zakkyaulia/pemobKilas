@@ -167,49 +167,7 @@ class ProfileQuickSettings extends StatelessWidget {
                       color: AppPalette.divider(context),
                     ),
 
-                    // 2. Shake HP untuk Draft (FR-23)
-                    ListTile(
-                      leading: Container(
-                        width: 38,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF8B5CF6).withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(
-                          Icons.vibration_rounded,
-                          color: Color(0xFF8B5CF6),
-                          size: 20,
-                        ),
-                      ),
-                      title: Text(
-                        'Goyang HP untuk Buka Draft',
-                        style: HomeTextStyles.labelLg.copyWith(
-                          color: AppPalette.textPrimary(context),
-                        ),
-                      ),
-                      subtitle: Text(
-                        'Deteksi guncangan accelerometer aktif',
-                        style: HomeTextStyles.bodySm.copyWith(
-                          color: AppPalette.textSecondary(context),
-                        ),
-                      ),
-                      trailing: Switch.adaptive(
-                        value: profile.shakeToDraftAktif,
-                        activeTrackColor: const Color(0xFF8B5CF6),
-                        onChanged: (val) {
-                          UserProfileRepository.instance.toggleShakeToDraft(val);
-                        },
-                      ),
-                    ),
-
-                    Divider(
-                      height: 1,
-                      indent: 64,
-                      color: AppPalette.divider(context),
-                    ),
-
-                    // 3. Tampilan Mode Gelap
+                    // 2. Tampilan Mode Gelap
                     ListTile(
                       leading: Container(
                         width: 38,

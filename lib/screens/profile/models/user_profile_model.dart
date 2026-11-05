@@ -123,9 +123,8 @@ class UserProfileModel {
     required this.bio,
     this.fotoProfil,
     this.pengingatAktif = true,
-    this.fakultas = 'Fakultas Teknologi Informasi',
-    this.jurusan = 'Sistem Informasi UNAND \'24',
-    this.shakeToDraftAktif = true,
+    this.fakultas,
+    this.jurusan,
   });
 
   final String userId;
@@ -135,9 +134,9 @@ class UserProfileModel {
   final String bio;
   final String? fotoProfil;
   final bool pengingatAktif;
-  final String fakultas;
-  final String jurusan;
-  final bool shakeToDraftAktif;
+  /// Opsional: tidak wajib diisi oleh civitas non-mahasiswa.
+  final String? fakultas;
+  final String? jurusan;
 
   UserProfileModel copyWith({
     String? userId,
@@ -149,7 +148,6 @@ class UserProfileModel {
     bool? pengingatAktif,
     String? fakultas,
     String? jurusan,
-    bool? shakeToDraftAktif,
   }) {
     return UserProfileModel(
       userId: userId ?? this.userId,
@@ -159,9 +157,9 @@ class UserProfileModel {
       bio: bio ?? this.bio,
       fotoProfil: fotoProfil ?? this.fotoProfil,
       pengingatAktif: pengingatAktif ?? this.pengingatAktif,
-      fakultas: fakultas ?? this.fakultas,
-      jurusan: jurusan ?? this.jurusan,
-      shakeToDraftAktif: shakeToDraftAktif ?? this.shakeToDraftAktif,
+      // null = tidak diubah, string kosong = dikosongkan.
+      fakultas: fakultas == null ? this.fakultas : _orNull(fakultas),
+      jurusan: jurusan == null ? this.jurusan : _orNull(jurusan),
     );
   }
 
@@ -175,11 +173,13 @@ class UserProfileModel {
       bio: (map['bio'] ?? '').toString(),
       fotoProfil: map['foto_profil'] ?? map['fotoProfil'],
       pengingatAktif: map['pengingat_aktif'] ?? map['pengingatAktif'] ?? true,
-      fakultas: (map['fakultas'] ?? 'Fakultas Teknologi Informasi').toString(),
-      jurusan: (map['jurusan'] ?? 'Sistem Informasi UNAND \'24').toString(),
-      shakeToDraftAktif: map['shake_to_draft_aktif'] ?? map['shakeToDraftAktif'] ?? true,
+      fakultas: _orNull(map['fakultas']?.toString()),
+      jurusan: _orNull(map['jurusan']?.toString()),
     );
   }
+
+  static String? _orNull(String? v) =>
+      (v == null || v.trim().isEmpty) ? null : v.trim();
 
   /// Alias [fromMap] untuk JSON backend.
   factory UserProfileModel.fromJson(Map<String, dynamic> json) => UserProfileModel.fromMap(json);
@@ -196,7 +196,6 @@ class UserProfileModel {
       'pengingat_aktif': pengingatAktif,
       'fakultas': fakultas,
       'jurusan': jurusan,
-      'shake_to_draft_aktif': shakeToDraftAktif,
     };
   }
 

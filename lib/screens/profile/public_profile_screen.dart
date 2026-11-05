@@ -24,7 +24,7 @@ import '../../widgets/profile/stat_metric_card.dart';
 /// 2. Menekan avatar/nama pengirim laporan pada Feed beranda atau Detail Laporan.
 ///
 /// Karakteristik Profil Publik sesuai PRD:
-/// - Menampilkan identitas publik: Foto profil, nama lengkap, username, fakultas/jurusan, bio, status verifikasi.
+/// - Menampilkan identitas publik: Foto profil, nama lengkap, username, fakultas/jurusan (jika diisi), bio.
 /// - Menampilkan metrik kontribusi publik: Jumlah laporan terbitan, total upvote diterima.
 /// - Menampilkan daftar laporan yang dipublikasikan oleh mahasiswa tersebut.
 /// - Tombol interaktif untuk menyalin tautan profil dan menampilkan QR publik.
@@ -34,11 +34,10 @@ class PublicProfileScreen extends StatelessWidget {
     super.key,
     required this.name,
     required this.username,
-    this.nim,
     this.avatarUrl,
     this.initials,
-    this.jurusan = 'Sistem Informasi',
-    this.fakultas = 'Fakultas Teknologi Informasi',
+    this.jurusan,
+    this.fakultas,
     this.bio = 'Mahasiswa aktif Universitas Andalas.',
     this.avatarBgColor,
     this.avatarFgColor,
@@ -53,9 +52,7 @@ class PublicProfileScreen extends StatelessWidget {
       username: cleanUsername,
       avatarUrl: report.authorAvatarUrl,
       initials: report.authorInitials,
-      jurusan: 'Sistem Informasi UNAND',
-      fakultas: 'Fakultas Teknologi Informasi',
-      bio: 'Mahasiswa aktif berkontribusi melaporkan fasilitas kampus demi kenyamanan bersama di UNAND.',
+      bio: 'Civitas Universitas Andalas yang aktif berkontribusi melaporkan kondisi kampus.',
       avatarBgColor: report.avatarBgColor,
       avatarFgColor: report.avatarFgColor,
     );
@@ -66,7 +63,6 @@ class PublicProfileScreen extends StatelessWidget {
     return PublicProfileScreen(
       name: user.name,
       username: user.username,
-      nim: user.nim,
       avatarUrl: user.avatarUrl,
       initials: user.initials,
       jurusan: user.jurusan,
@@ -79,11 +75,10 @@ class PublicProfileScreen extends StatelessWidget {
 
   final String name;
   final String username;
-  final String? nim;
   final String? avatarUrl;
   final String? initials;
-  final String jurusan;
-  final String fakultas;
+  final String? jurusan;
+  final String? fakultas;
   final String bio;
   final Color? avatarBgColor;
   final Color? avatarFgColor;
@@ -460,7 +455,7 @@ class PublicProfileScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 16),
-              // Nama, NIM/Username, Jurusan
+              // Nama, Username, Jurusan
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -493,46 +488,28 @@ class PublicProfileScreen extends StatelessWidget {
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                        if (nim != null && nim!.isNotEmpty) ...[
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 6),
-                            child: Text(
-                              '•',
-                              style: HomeTextStyles.bodySm.copyWith(
-                                color: AppPalette.textSecondary(context),
-                              ),
-                            ),
-                          ),
-                          Flexible(
-                            child: Text(
-                              nim!,
-                              style: HomeTextStyles.bodySm.copyWith(
-                                color: AppPalette.textSecondary(context),
-                                fontWeight: FontWeight.w500,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
                       ],
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '$jurusan 🎓',
-                      style: HomeTextStyles.labelSm.copyWith(
-                        color: AppPalette.textSecondary(context),
-                        fontWeight: FontWeight.w600,
+                    if (jurusan != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        '$jurusan 🎓',
+                        style: HomeTextStyles.labelSm.copyWith(
+                          color: AppPalette.textSecondary(context),
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      fakultas,
-                      style: HomeTextStyles.bodySm.copyWith(
-                        color: AppPalette.textSecondary(context),
-                        fontSize: 11.5,
+                    ],
+                    if (fakultas != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        fakultas!,
+                        style: HomeTextStyles.bodySm.copyWith(
+                          color: AppPalette.textSecondary(context),
+                          fontSize: 11.5,
+                        ),
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ),

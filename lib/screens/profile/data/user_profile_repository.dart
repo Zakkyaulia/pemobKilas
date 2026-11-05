@@ -15,7 +15,6 @@ class UserProfileRepository extends ChangeNotifier {
       pengingatAktif: true,
       fakultas: 'Fakultas Teknologi Informasi',
       jurusan: 'Sistem Informasi UNAND \'24',
-      shakeToDraftAktif: true,
     );
 
     _activities = [
@@ -99,12 +98,6 @@ class UserProfileRepository extends ChangeNotifier {
   /// Mengaktifkan / mematikan saklar pengingat harian (FR-18 / FR-B7).
   void togglePengingatHarian(bool value) {
     _profile = _profile.copyWith(pengingatAktif: value);
-    notifyListeners();
-  }
-
-  /// Mengaktifkan / mematikan fitur shake to open draft (FR-23 / FR-C5).
-  void toggleShakeToDraft(bool value) {
-    _profile = _profile.copyWith(shakeToDraftAktif: value);
     notifyListeners();
   }
 

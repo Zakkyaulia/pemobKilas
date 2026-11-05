@@ -40,7 +40,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
     _namaController = TextEditingController(text: profile.nama);
     _usernameController = TextEditingController(text: profile.username);
     _bioController = TextEditingController(text: profile.bio);
-    _jurusanController = TextEditingController(text: profile.jurusan);
+    _jurusanController = TextEditingController(text: profile.jurusan ?? '');
   }
 
   @override
@@ -172,7 +172,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
               context: context,
               label: 'Program Studi / Fakultas',
               controller: _jurusanController,
-              hint: 'Contoh: Sistem Informasi UNAND \'24',
+              hint: 'Opsional, contoh: Sistem Informasi UNAND \'24',
             ),
             const SizedBox(height: AppSpacing.md),
             _buildField(
