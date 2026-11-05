@@ -7,6 +7,8 @@ import 'package:latlong2/latlong.dart';
 import '../../theme/app_palette.dart';
 import '../../theme/home_colors.dart';
 import '../../theme/home_text_styles.dart';
+import 'campus_boundary.dart';
+import 'density_zones.dart';
 import 'dummy_map_data.dart';
 
 // Ambang jarak (dalam derajat) untuk mengelompokkan pin yang saling berdekatan.
@@ -31,7 +33,7 @@ List<ReportGeoData> _findCluster(
       .toList();
 }
 
-/// Komponen peta yang menampilkan heatmap kepadatan laporan.
+/// Komponen peta yang menampilkan zona kepadatan laporan.
 class MapView extends StatefulWidget {
   /// Jarak dari atas yang harus dihindari tooltip (tinggi header bar).
   final double topInset;
@@ -50,6 +52,9 @@ class _MapViewState extends State<MapView> {
 
   late final List<ReportGeoData> _reports;
 
+  /// Zona kepadatan organik (KDE) — dihitung sekali dari [_reports].
+  DensityZonesOverlay? _densityZones;
+
   /// Laporan yang sedang aktif ditampilkan di tooltip.
   ReportGeoData? _selectedReport;
 
@@ -67,6 +72,10 @@ class _MapViewState extends State<MapView> {
     _reports = _use1000Points
         ? DummyMapData.generateDummyReports(1000)
         : DummyMapData.basicReports;
+    _densityZones = buildDensityZones(
+      _reports,
+      boundary: CampusBoundary.unand,
+    );
   }
 
   @override
@@ -141,7 +150,10 @@ class _MapViewState extends State<MapView> {
                 debugPrint('Gagal memuat tile: $error');
               },
             ),
-            // Layer Kepadatan & Titik Individual
+            // Layer Zona Kepadatan Organik (terikat koordinat geografis)
+            // Selalu ada satu child di posisi ini agar struktur tree stabil.
+            _densityZones?.toLayer() ?? const SizedBox.shrink(),
+            // Layer Titik Individual
             _MapLayers(
               reports: _reports,
               selectedReportId: _selectedReport?.id,
@@ -398,46 +410,11 @@ class _MapLayers extends StatelessWidget {
     final camera = MapCamera.of(context);
     final currentZoom = camera.zoom;
 
-    // 1. Hitung radius heatmap yang diinterpolasi dari zoom (mirip heatmap-radius)
-    // Di zoom 14 -> 16px, di zoom 18 -> 60px
-    final double heatRadius = 16.0 + ((currentZoom - 14.0) / 4.0) * 44.0;
-
-    // 2. Hitung intensitas warna (opacity)
-    // Makin dekat zoom, makin transparan agar nama jalan terlihat
-    final double heatOpacity =
-        (1.1 - ((currentZoom - 14.0) / 4.0)).clamp(0.4, 0.8);
-
-    // 3. Tampilkan titik pin/lingkaran padat individual HANYA pada zoom >= 16.5
+    // Tampilkan titik pin/lingkaran padat individual HANYA pada zoom >= 16.5
     final bool showPoints = currentZoom >= 16.5;
 
     return Stack(
       children: [
-        // LAYER 1: Simulasi Heatmap
-        MarkerLayer(
-          markers: reports.map((report) {
-            return Marker(
-              point: report.position,
-              width: heatRadius * 2,
-              height: heatRadius * 2,
-              child: Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      const Color(0xFF8B0000).withValues(alpha: heatOpacity),
-                      Colors.red.withValues(alpha: heatOpacity * 0.7),
-                      Colors.orange.withValues(alpha: heatOpacity * 0.4),
-                      Colors.yellow.withValues(alpha: heatOpacity * 0.1),
-                      Colors.transparent,
-                    ],
-                    stops: const [0.0, 0.2, 0.5, 0.8, 1.0],
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-
         // LAYER 2: Titik Individu (Point/Circle)
         if (showPoints)
           MarkerLayer(

@@ -11,6 +11,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_palette.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/home_colors.dart';
+import '../../widgets/map/campus_boundary.dart';
 import '../../widgets/map/dummy_map_data.dart';
 import '../home/data/report_repository.dart';
 import '../home/models/report_model.dart';
@@ -148,6 +149,10 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
       _latitude = draft.latitude;
       _longitude = draft.longitude;
       _gpsStatus = GpsLockStatus.locked;
+      if (_latitude != null && _longitude != null) {
+        _isInCampusArea =
+            CampusBoundary.contains(LatLng(_latitude!, _longitude!));
+      }
     }
   }
 
@@ -748,8 +753,8 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
         _coordinates = formattedCoords;
         _locationName = 'Mencari detail lokasi...';
         _gpsErrorMessage = null;
-        // Bounding box perkiraan kampus Unand Limau Manis
-        _isInCampusArea = (lat <= -0.9000 && lat >= -0.9350 && lng >= 100.4400 && lng <= 100.4800);
+        // Batas wilayah kampus Unand (polygon, sama dengan peta hotspot)
+        _isInCampusArea = CampusBoundary.contains(LatLng(lat, lng));
       });
 
       // Lakukan reverse geocoding untuk nama gedung/jalan yang ramah pengguna
@@ -939,6 +944,13 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
     // ── Validasi Wajib: Titik Koordinat GPS Harus Terkunci Terlebih Dahulu ──
     if (_gpsStatus != GpsLockStatus.locked || _latitude == null || _longitude == null) {
       _showGpsRequiredDialog();
+      return;
+    }
+
+    // ── Validasi Wajib: Lokasi Harus Berada di Dalam Batas Kampus UNAND ──
+    if (!CampusBoundary.contains(LatLng(_latitude!, _longitude!))) {
+      _showErrorSnackBar(
+          'Lokasi Anda berada di luar area kampus UNAND. Laporan hanya dapat dikirim dari dalam area kampus.');
       return;
     }
 
