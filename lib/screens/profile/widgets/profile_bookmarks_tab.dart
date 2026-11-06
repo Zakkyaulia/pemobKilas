@@ -14,8 +14,7 @@ import '../../home/report_detail_screen.dart';
 
 /// Tab tampilan Koleksi Bookmark berbentuk Grid di Profil (FR-10).
 ///
-/// Syarat Wajib PRD: Halaman ini WAJIB melewati Local Authentication
-/// (Sidik Jari / PIN) terlebih dahulu sebelum menampilkan grid laporan bookmark.
+/// Sesuai keputusan tim, koleksi bookmark ditampilkan tanpa kunci biometrik.
 class ProfileBookmarksTab extends StatefulWidget {
   const ProfileBookmarksTab({
     super.key,

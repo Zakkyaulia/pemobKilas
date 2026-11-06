@@ -1,19 +1,49 @@
+import '../../../widgets/home/video_player_box.dart';
+
+/// Status unggah draft laporan (FR-20 / FR-C2).
+enum DraftStatus {
+  /// Belum diunggah; menunggu dikirim (manual atau otomatis saat online).
+  menunggu,
+
+  /// Sedang dikirim ke server.
+  mengunggah,
+
+  /// Gagal diunggah; lihat [DraftModel.errorMessage].
+  gagal,
+}
+
+extension DraftStatusLabel on DraftStatus {
+  String get label {
+    switch (this) {
+      case DraftStatus.menunggu:
+        return 'Menunggu';
+      case DraftStatus.mengunggah:
+        return 'Mengunggah';
+      case DraftStatus.gagal:
+        return 'Gagal';
+    }
+  }
+}
+
 /// Model data representasi draft laporan KILAS UNAND.
 ///
 /// Menyimpan kondisi parsial atau lengkap dari sebuah laporan yang sedang
 /// disusun pengguna sebelum dipublikasikan ke linimasa atau peta.
+/// Draft hanya disimpan di perangkat (tidak ada di database server).
 class DraftModel {
   const DraftModel({
     required this.id,
     this.title,
     this.description,
     this.selectedCategory = 'Kondisi Kampus',
-    this.mediaFilePath,
-    this.isVideo = false,
+    this.mediaPaths = const [],
     this.locationName,
     this.coordinates,
     this.latitude,
     this.longitude,
+    this.status = DraftStatus.menunggu,
+    this.errorMessage,
+    this.retryCount = 0,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -30,13 +60,10 @@ class DraftModel {
   /// Kategori isu yang dipilih: 'Kondisi Kampus' atau 'Informasi Penting'.
   final String selectedCategory;
 
-  /// Path berkas media lokal di penyimpanan perangkat pengguna (jika ada).
-  final String? mediaFilePath;
+  /// Path berkas media lokal (maks. 5, maks. 1 video), urut sesuai pilihan.
+  final List<String> mediaPaths;
 
-  /// Menandakan apakah media berupa video atau gambar.
-  final bool isVideo;
-
-  /// Nama lokasi atau landmark kampus saat draft disimpan.
+  /// Nama lokasi hasil reverse geocoding saat draft disimpan (null jika gagal).
   final String? locationName;
 
   /// Koordinat ringkas GPS (format: "lat, lng").
@@ -47,6 +74,15 @@ class DraftModel {
 
   /// Nilai longitude GPS saat draft disimpan.
   final double? longitude;
+
+  /// Status unggah draft.
+  final DraftStatus status;
+
+  /// Alasan gagal unggah terakhir (bila [status] = gagal).
+  final String? errorMessage;
+
+  /// Berapa kali draft sudah dicoba diunggah.
+  final int retryCount;
 
   /// Waktu pembuatan awal draft.
   final DateTime createdAt;
@@ -60,12 +96,14 @@ class DraftModel {
     String? title,
     String? description,
     String? selectedCategory,
-    String? mediaFilePath,
-    bool? isVideo,
+    List<String>? mediaPaths,
     String? locationName,
     String? coordinates,
     double? latitude,
     double? longitude,
+    DraftStatus? status,
+    String? errorMessage,
+    int? retryCount,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -74,12 +112,14 @@ class DraftModel {
       title: title ?? this.title,
       description: description ?? this.description,
       selectedCategory: selectedCategory ?? this.selectedCategory,
-      mediaFilePath: mediaFilePath ?? this.mediaFilePath,
-      isVideo: isVideo ?? this.isVideo,
+      mediaPaths: mediaPaths ?? this.mediaPaths,
       locationName: locationName ?? this.locationName,
       coordinates: coordinates ?? this.coordinates,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
+      status: status ?? this.status,
+      errorMessage: errorMessage ?? this.errorMessage,
+      retryCount: retryCount ?? this.retryCount,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -102,5 +142,18 @@ class DraftModel {
   }
 
   /// Cek apakah draft memiliki lampiran media.
-  bool get hasMedia => mediaFilePath != null && mediaFilePath!.trim().isNotEmpty;
+  bool get hasMedia => mediaPaths.isNotEmpty;
+
+  /// Jumlah foto & video terlampir.
+  int get videoCount => mediaPaths.where(isVideoMedia).length;
+  int get photoCount => mediaPaths.length - videoCount;
+
+  /// Ringkasan lampiran, misal "2 Foto • 1 Video".
+  String get mediaSummary {
+    final parts = <String>[
+      if (photoCount > 0) '$photoCount Foto',
+      if (videoCount > 0) '$videoCount Video',
+    ];
+    return parts.join(' • ');
+  }
 }

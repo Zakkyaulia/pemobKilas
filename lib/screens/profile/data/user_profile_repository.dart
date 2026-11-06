@@ -67,13 +67,10 @@ class UserProfileRepository extends ChangeNotifier {
   late UserProfileModel _profile;
   late List<ActivityLogItem> _activities;
 
-  /// Status autentikasi biometrik/PIN lokal untuk membuka koleksi Bookmark (FR-10).
-  bool _isBookmarkUnlocked = false;
-
   UserProfileModel get profile => _profile;
   UserProfileModel get currentUser => _profile;
   List<ActivityLogItem> get activities => List.unmodifiable(_activities);
-  bool get isBookmarkUnlocked => _isBookmarkUnlocked;
+
 
   /// Mengubah data profil pengguna (FR-03).
   void updateProfile({
@@ -98,18 +95,6 @@ class UserProfileRepository extends ChangeNotifier {
   /// Mengaktifkan / mematikan saklar pengingat harian (FR-18 / FR-B7).
   void togglePengingatHarian(bool value) {
     _profile = _profile.copyWith(pengingatAktif: value);
-    notifyListeners();
-  }
-
-  /// Membuka kunci koleksi bookmark setelah verifikasi biometrik / PIN berhasil (FR-10).
-  void unlockBookmark() {
-    _isBookmarkUnlocked = true;
-    notifyListeners();
-  }
-
-  /// Mengunci kembali koleksi bookmark.
-  void lockBookmark() {
-    _isBookmarkUnlocked = false;
     notifyListeners();
   }
 

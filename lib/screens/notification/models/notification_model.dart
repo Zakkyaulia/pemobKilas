@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
 
-/// Tipe notifikasi dalam aplikasi KILAS.
+/// Tipe notifikasi dalam aplikasi KILAS (sesuai PRD & ERD).
+///
+/// Konfirmasi aksi sendiri (buat/edit/hapus laporan) cukup ditampilkan
+/// sebagai snackbar, tidak disimpan sebagai notifikasi.
 enum NotifType {
-  /// Laporan kamu mendapatkan upvote dari pengguna lain.
+  /// Laporanmu mencapai milestone upvote: 5, 10, 25, 50, lalu setiap
+  /// kelipatan 50 (FR-11 / FR-A8). Di server: `upvote_milestone`.
   upvote,
 
-  /// Ada laporan kategori "Informasi Penting" dari pengguna lain.
-  infoResmi,
-
-  /// Pengingat laporan harian jam 16:00 WIB (FR-18 / FR-B7).
+  /// Pengingat harian "Belum melapor hari ini" jam 16:00 WIB
+  /// (FR-18 / FR-B7). Di server: `pengingat_harian`.
   pengingat,
-
-  /// Laporan kamu ditindaklanjuti atau statusnya berubah.
-  statusLaporan,
-
-  /// Konfirmasi aksi yang kamu lakukan (buat/edit/hapus laporan).
-  aktivitasDiri,
 }
+
+/// Milestone upvote yang memicu notifikasi: 5, 10, 25, 50, lalu kelipatan 50.
+bool isUpvoteMilestone(int count) =>
+    count == 5 || count == 10 || count == 25 || (count >= 50 && count % 50 == 0);
 
 /// Model satu item notifikasi.
 class NotificationItem {
@@ -45,14 +45,8 @@ class NotificationItem {
     switch (type) {
       case NotifType.upvote:
         return Icons.arrow_upward_rounded;
-      case NotifType.infoResmi:
-        return Icons.campaign_rounded;
       case NotifType.pengingat:
         return Icons.alarm_rounded;
-      case NotifType.statusLaporan:
-        return Icons.check_circle_outline_rounded;
-      case NotifType.aktivitasDiri:
-        return Icons.edit_note_rounded;
     }
   }
 
@@ -61,14 +55,8 @@ class NotificationItem {
     switch (type) {
       case NotifType.upvote:
         return const Color(0xFF1E60FF);
-      case NotifType.infoResmi:
-        return const Color(0xFF0048D4);
       case NotifType.pengingat:
         return const Color(0xFFF59E0B);
-      case NotifType.statusLaporan:
-        return const Color(0xFF10B981);
-      case NotifType.aktivitasDiri:
-        return const Color(0xFF8B5CF6);
     }
   }
 
@@ -77,14 +65,8 @@ class NotificationItem {
     switch (type) {
       case NotifType.upvote:
         return const Color(0xFFDCE1FF);
-      case NotifType.infoResmi:
-        return const Color(0xFFDCE9FF);
       case NotifType.pengingat:
         return const Color(0xFFFEF3C7);
-      case NotifType.statusLaporan:
-        return const Color(0xFFD1FAE5);
-      case NotifType.aktivitasDiri:
-        return const Color(0xFFEDE9FE);
     }
   }
 
@@ -93,14 +75,8 @@ class NotificationItem {
     switch (type) {
       case NotifType.upvote:
         return 'Upvote';
-      case NotifType.infoResmi:
-        return 'Informasi Penting';
       case NotifType.pengingat:
         return 'Pengingat';
-      case NotifType.statusLaporan:
-        return 'Status Laporan';
-      case NotifType.aktivitasDiri:
-        return 'Aktivitas';
     }
   }
 
@@ -128,10 +104,14 @@ class NotificationItem {
   /// Membuat [NotificationItem] dari Map / SQLite / JSON.
   factory NotificationItem.fromMap(Map<String, dynamic> map) {
     NotifType parseType(String? typeStr) {
-      return NotifType.values.firstWhere(
-        (e) => e.name == typeStr,
-        orElse: () => NotifType.infoResmi,
-      );
+      // Nama tipe dari server (ERD) dipetakan ke enum aplikasi.
+      switch (typeStr) {
+        case 'upvote':
+        case 'upvote_milestone':
+          return NotifType.upvote;
+        default:
+          return NotifType.pengingat;
+      }
     }
 
     return NotificationItem(

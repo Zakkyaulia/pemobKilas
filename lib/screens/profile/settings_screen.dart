@@ -463,8 +463,6 @@ class _LogoutButton extends StatelessWidget {
                 Navigator.of(dialogCtx).pop();
                 // Hapus sesi login lokal via SharedPreferences
                 await AuthSessionService.clearSession();
-                // Kunci kembali bookmark saat logout
-                UserProfileRepository.instance.lockBookmark();
 
                 // Navigasi ke LoginScreen & bersihkan riwayat stack
                 if (!context.mounted) return;

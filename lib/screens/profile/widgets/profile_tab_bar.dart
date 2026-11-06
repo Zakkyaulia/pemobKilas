@@ -7,7 +7,7 @@ import '../../../theme/home_text_styles.dart';
 
 /// Segmented tab bar untuk berpindah antara:
 /// 0. Laporan (laporan milik pengguna sendiri)
-/// 1. 🔒 Bookmark (koleksi bookmark terkunci biometrik, FR-10)
+/// 1. Bookmark (koleksi bookmark, FR-10)
 /// 2. Riwayat (log aktivitas pribadi, FR-24 / FR-C6)
 class ProfileTabBar extends StatelessWidget {
   const ProfileTabBar({

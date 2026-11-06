@@ -5,12 +5,11 @@ import '../../theme/app_palette.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/home_colors.dart';
 import '../../theme/home_text_styles.dart';
-import '../../widgets/home/network_image_box.dart';
+import '../../widgets/home/report_media_gallery.dart';
 import '../../widgets/home/report_card_footer.dart';
 import '../../widgets/home/report_card_header.dart';
 import '../../widgets/home/status_badge.dart';
 import '../../widgets/home/user_avatar.dart';
-import '../../widgets/home/video_player_box.dart';
 import '../profile/data/user_profile_repository.dart';
 import '../profile/models/user_profile_model.dart';
 import '../profile/public_profile_screen.dart';
@@ -376,20 +375,14 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
               ],
 
               // Media Bukti Laporan (Foto atau Video)
-              if (_report.imageUrl != null) ...[
+              if (_report.media.isNotEmpty) ...[
                 const SizedBox(height: 16),
-                if (isVideoMedia(_report.imageUrl))
-                  VideoPlayerBox(
-                    videoUrl: _report.imageUrl!,
-                    aspectRatio: _report.aspectRatio ?? 16 / 9,
-                  )
-                else
-                  NetworkImageBox(
-                    imageUrl: _report.imageUrl!,
-                    height: _report.aspectRatio == null ? 260 : null,
-                    aspectRatio: _report.aspectRatio,
-                    semanticLabel: _report.imageSemanticLabel,
-                  ),
+                ReportMediaGallery(
+                  media: _report.media,
+                  aspectRatio: _report.aspectRatio,
+                  singleImageHeight: 260,
+                  semanticLabel: _report.imageSemanticLabel,
+                ),
               ],
 
               const SizedBox(height: 24),

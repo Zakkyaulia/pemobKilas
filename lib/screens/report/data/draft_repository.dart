@@ -52,6 +52,9 @@ class DraftRepository extends ChangeNotifier {
         coordinates: '-0.9155, 100.4590',
         latitude: -0.9155,
         longitude: 100.4590,
+        status: DraftStatus.gagal,
+        errorMessage: 'Koneksi terputus saat mengunggah. Coba lagi saat online.',
+        retryCount: 1,
         createdAt: now.subtract(const Duration(days: 1, hours: 2)),
         updatedAt: now.subtract(const Duration(hours: 18)),
       ),
@@ -66,6 +69,30 @@ class DraftRepository extends ChangeNotifier {
     } else {
       _drafts.insert(0, draft);
     }
+    notifyListeners();
+  }
+
+  /// Memperbarui status unggah draft (Menunggu / Mengunggah / Gagal).
+  void updateStatus(String id, DraftStatus status, {String? errorMessage}) {
+    final index = _drafts.indexWhere((d) => d.id == id);
+    if (index < 0) return;
+    final d = _drafts[index];
+    _drafts[index] = DraftModel(
+      id: d.id,
+      title: d.title,
+      description: d.description,
+      selectedCategory: d.selectedCategory,
+      mediaPaths: d.mediaPaths,
+      locationName: d.locationName,
+      coordinates: d.coordinates,
+      latitude: d.latitude,
+      longitude: d.longitude,
+      status: status,
+      errorMessage: status == DraftStatus.gagal ? errorMessage : null,
+      retryCount: status == DraftStatus.gagal ? d.retryCount + 1 : d.retryCount,
+      createdAt: d.createdAt,
+      updatedAt: d.updatedAt,
+    );
     notifyListeners();
   }
 

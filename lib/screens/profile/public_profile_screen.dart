@@ -28,7 +28,7 @@ import '../../widgets/profile/stat_metric_card.dart';
 /// - Menampilkan metrik kontribusi publik: Jumlah laporan terbitan, total upvote diterima.
 /// - Menampilkan daftar laporan yang dipublikasikan oleh mahasiswa tersebut.
 /// - Tombol interaktif untuk menyalin tautan profil dan menampilkan QR publik.
-/// - Menjamin privasi: TIDAK menampilkan tab bookmark (privat biometrik), riwayat aktivitas pribadi (audit log), atau tombol edit/pengaturan akun.
+/// - Menjamin privasi: TIDAK menampilkan tab bookmark (privat), riwayat aktivitas pribadi (audit log), atau tombol edit/pengaturan akun.
 class PublicProfileScreen extends StatelessWidget {
   const PublicProfileScreen({
     super.key,
@@ -881,7 +881,7 @@ class PublicProfileScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Data privat seperti nomor telepon, bookmark terkunci, riwayat aktivitas akun, dan edit profil tidak ditampilkan pada tampilan profil publik ini.',
+                  'Data privat seperti nomor telepon, koleksi bookmark, riwayat aktivitas akun, dan edit profil tidak ditampilkan pada tampilan profil publik ini.',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 11,
                     color: AppPalette.textSecondary(context),

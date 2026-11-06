@@ -465,6 +465,7 @@ class _FeedItem extends StatelessWidget {
       title: report.title ?? report.contentTitle ?? '',
       description: report.description ?? report.contentDescription ?? '',
       imageUrl: report.imageUrl,
+      media: report.media,
       imageHeight: report.imageHeight ?? 224,
       aspectRatio: report.aspectRatio,
       imageSemanticLabel: report.imageSemanticLabel,

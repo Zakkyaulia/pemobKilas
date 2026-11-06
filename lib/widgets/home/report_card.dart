@@ -3,10 +3,9 @@ import 'package:flutter/material.dart';
 import '../../theme/app_palette.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/home_text_styles.dart';
-import 'network_image_box.dart';
+import 'report_media_gallery.dart';
 import 'report_card_footer.dart';
 import 'report_card_header.dart';
-import 'video_player_box.dart';
 
 /// Gap between title and description (Tailwind `gap-1` = 4px).
 const double _kTitleDescGap = 4;
@@ -17,7 +16,7 @@ const double _kSectionGap = 12;
 /// Full-width user report card for the home feed.
 ///
 /// Composes [ReportCardHeader], title, description, an optional
-/// [NetworkImageBox], and [ReportCardFooter].
+/// [ReportMediaGallery], and [ReportCardFooter].
 class ReportCard extends StatelessWidget {
   const ReportCard({
     super.key,
@@ -25,6 +24,7 @@ class ReportCard extends StatelessWidget {
     required this.title,
     required this.description,
     this.imageUrl,
+    this.media = const [],
     this.imageHeight = 224,
     this.aspectRatio,
     this.imageSemanticLabel,
@@ -61,6 +61,9 @@ class ReportCard extends StatelessWidget {
 
   /// Optional photo URL — omit for text-only reports.
   final String? imageUrl;
+
+  /// Seluruh media laporan (1–5). Bila kosong, [imageUrl] yang dipakai.
+  final List<String> media;
 
   /// Height of the image container (default 224px = Tailwind `h-56`).
   final double imageHeight;
@@ -108,20 +111,14 @@ class ReportCard extends StatelessWidget {
             header,
             const SizedBox(height: _kSectionGap),
             _TitleDescription(title: title, description: description),
-            if (imageUrl != null) ...[
+            if (media.isNotEmpty || imageUrl != null) ...[
               const SizedBox(height: _kSectionGap),
-              if (isVideoMedia(imageUrl))
-                VideoPlayerBox(
-                  videoUrl: imageUrl!,
-                  aspectRatio: aspectRatio ?? 16 / 9,
-                )
-              else
-                NetworkImageBox(
-                  imageUrl: imageUrl!,
-                  height: aspectRatio == null ? imageHeight : null,
-                  aspectRatio: aspectRatio,
-                  semanticLabel: imageSemanticLabel,
-                ),
+              ReportMediaGallery(
+                media: media.isNotEmpty ? media : [imageUrl!],
+                aspectRatio: aspectRatio,
+                singleImageHeight: imageHeight,
+                semanticLabel: imageSemanticLabel,
+              ),
             ],
             const SizedBox(height: _kSectionGap),
             ReportCardFooter(

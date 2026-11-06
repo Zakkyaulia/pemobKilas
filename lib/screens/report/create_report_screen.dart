@@ -11,6 +11,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_palette.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/home_colors.dart';
+import '../../widgets/home/video_player_box.dart';
 import '../../widgets/map/campus_boundary.dart';
 import '../../widgets/map/dummy_map_data.dart';
 import '../home/data/report_repository.dart';
@@ -19,6 +20,7 @@ import '../profile/data/user_profile_repository.dart';
 import 'package:latlong2/latlong.dart';
 import 'data/draft_repository.dart';
 import 'draft_screen.dart';
+import 'media_rules.dart';
 import 'models/draft_model.dart';
 
 // ─── Design tokens mapped to centralized HomeColors ──────────────────────────
@@ -32,18 +34,12 @@ const double _kRadiusLg = 16.0;
 const double _kRadiusMd = 12.0;
 const double _kRadiusSm = 8.0;
 
-/// Batas maksimal ukuran file (10 MB).
-const int _kMaxFileSizeBytes = 10 * 1024 * 1024;
-
-/// Batas maksimal durasi rekaman video (15 detik).
-const Duration _kMaxVideoDuration = Duration(seconds: 15);
-
 /// Screen untuk membuat dan mengunggah laporan baru ke aplikasi KILAS.
 ///
 /// Fitur Fungsional & Keamanan:
 /// - Default tampilan: 2 opsi pemilihan (Kamera & Galeri)
 /// - Dialog Izin Keamanan & Ketentuan Privasi (Terms & Policy)
-/// - Integrasi nyata [ImagePicker] dengan validasi ukuran file (<= 10MB) & durasi video
+/// - Integrasi nyata [ImagePicker]: 1–5 media per laporan (maks. 1 video), lihat [MediaRules]
 /// - Konfirmasi dialog: Kirim Laporan, Simpan Draft, dan Hapus Media (mencegah salah klik)
 /// - Intersepsi navigasi Back (PopScope) dengan konfirmasi jika ada draf/media belum disimpan
 /// - Teks tombol rapi dan vertikal presisi tanpa kepotong
@@ -66,14 +62,13 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
 
   final ImagePicker _picker = ImagePicker();
 
-  /// Media file nyata yang dipilih pengguna (null saat pertama kali masuk).
-  XFile? _selectedMediaFile;
+  /// Media yang dipilih pengguna (1–5, maks. 1 video), urut sesuai pilihan.
+  final List<XFile> _mediaFiles = [];
 
-  /// True jika media yang dipilih adalah video.
-  bool _isVideo = false;
+  /// Index media yang sedang ditampilkan di pratinjau besar.
+  int _activeMediaIndex = 0;
 
-  /// Ukuran file terpilih dalam bytes.
-  int _selectedFileSize = 0;
+  List<String> get _mediaPaths => _mediaFiles.map((f) => f.path).toList();
 
   /// Status persetujuan Syarat & Kebijakan Privasi (Terms & Policy).
   bool _hasConsent = false;
@@ -136,23 +131,17 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
       _descriptionController.text = draft.description!;
     }
     _selectedCategory = draft.selectedCategory;
-    if (draft.mediaFilePath != null && draft.mediaFilePath!.isNotEmpty) {
+    for (final path in draft.mediaPaths) {
+      if (path.isEmpty) continue;
       if (kIsWeb) {
-        _selectedMediaFile = XFile(draft.mediaFilePath!);
-        _isVideo = draft.isVideo;
-        _selectedFileSize = 0;
-      } else {
-        try {
-          final f = File(draft.mediaFilePath!);
-          if (f.existsSync()) {
-            _selectedMediaFile = XFile(draft.mediaFilePath!);
-            _selectedFileSize = f.lengthSync();
-            _isVideo = draft.isVideo;
-          }
-        } catch (_) {
-          _selectedMediaFile = XFile(draft.mediaFilePath!);
-          _isVideo = draft.isVideo;
-        }
+        _mediaFiles.add(XFile(path));
+        continue;
+      }
+      try {
+        // Lewati file yang sudah dihapus sistem dari penyimpanan sementara.
+        if (File(path).existsSync()) _mediaFiles.add(XFile(path));
+      } catch (_) {
+        _mediaFiles.add(XFile(path));
       }
     }
     if (draft.latitude != null && draft.longitude != null) {
@@ -179,7 +168,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
   /// Cek apakah pengguna telah memasukkan perubahan yang belum disimpan.
   bool get _hasUnsavedChanges {
     if (_allowPopWithoutPrompt) return false;
-    return _selectedMediaFile != null ||
+    return _mediaFiles.isNotEmpty ||
         _titleController.text.trim().isNotEmpty ||
         _descriptionController.text.trim().isNotEmpty;
   }
@@ -383,17 +372,35 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
     );
   }
 
-  /// Memvalidasi ukuran file apakah melebihi 10MB.
-  Future<bool> _validateFileSize(XFile file) async {
-    final length = await file.length();
-    if (length > _kMaxFileSizeBytes) {
-      final sizeMb = (length / (1024 * 1024)).toStringAsFixed(1);
-      _showErrorSnackBar(
-        'Ukuran file ($sizeMb MB) melebihi batas maksimal 10MB. Silakan pilih file yang lebih kecil.',
-      );
+  /// Menambahkan media bila lolos [MediaRules] (jumlah, 1 video, ukuran).
+  Future<bool> _tryAddMedia(XFile file, {required bool isVideo}) async {
+    final error = MediaRules.validateAdd(
+      current: _mediaPaths,
+      isVideo: isVideo,
+      bytes: await file.length(),
+    );
+    if (error != null) {
+      _showErrorSnackBar(error);
       return false;
     }
-    _selectedFileSize = length;
+    if (!mounted) return false;
+    setState(() {
+      _mediaFiles.add(file);
+      _activeMediaIndex = _mediaFiles.length - 1;
+    });
+    return true;
+  }
+
+  /// Menolak membuka pemilih media bila slot sudah penuh.
+  bool _ensureSlotAvailable({bool forVideo = false}) {
+    if (_mediaFiles.length >= MediaRules.maxMediaPerReport) {
+      _showErrorSnackBar('Maksimal ${MediaRules.maxMediaPerReport} media per laporan.');
+      return false;
+    }
+    if (forVideo && MediaRules.videoCount(_mediaPaths) >= MediaRules.maxVideoPerReport) {
+      _showErrorSnackBar('Hanya boleh ${MediaRules.maxVideoPerReport} video per laporan.');
+      return false;
+    }
     return true;
   }
 
@@ -441,23 +448,16 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                     'Ambil Foto',
                     style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                   ),
-                  subtitle: const Text('Gunakan foto untuk bukti visual fasilitas (Maks. 10MB)'),
+                  subtitle: const Text('Foto bukti visual fasilitas (Maks. 5MB)'),
                   onTap: () async {
                     Navigator.pop(ctx);
+                    if (!_ensureSlotAvailable()) return;
                     try {
                       final XFile? photo = await _picker.pickImage(
                         source: ImageSource.camera,
                         imageQuality: 85,
                       );
-                      if (photo != null) {
-                        final valid = await _validateFileSize(photo);
-                        if (!valid) return;
-
-                        setState(() {
-                          _selectedMediaFile = photo;
-                          _isVideo = false;
-                        });
-                      }
+                      if (photo != null) await _tryAddMedia(photo, isVideo: false);
                     } catch (e) {
                       _showErrorSnackBar('Gagal mengakses kamera: $e');
                     }
@@ -477,23 +477,16 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                     'Rekam Video',
                     style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                   ),
-                  subtitle: const Text('Maksimal durasi rekaman 15 detik (Maks. 10MB)'),
+                  subtitle: const Text('Maks. 1 video, durasi 30 detik (Maks. 25MB)'),
                   onTap: () async {
                     Navigator.pop(ctx);
+                    if (!_ensureSlotAvailable(forVideo: true)) return;
                     try {
                       final XFile? video = await _picker.pickVideo(
                         source: ImageSource.camera,
-                        maxDuration: _kMaxVideoDuration,
+                        maxDuration: MediaRules.maxVideoDuration,
                       );
-                      if (video != null) {
-                        final valid = await _validateFileSize(video);
-                        if (!valid) return;
-
-                        setState(() {
-                          _selectedMediaFile = video;
-                          _isVideo = true;
-                        });
-                      }
+                      if (video != null) await _tryAddMedia(video, isVideo: true);
                     } catch (e) {
                       _showErrorSnackBar('Gagal merekam video: $e');
                     }
@@ -551,22 +544,19 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                     'Pilih Foto',
                     style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                   ),
-                  subtitle: const Text('Format JPG atau PNG (Maks. 10MB)'),
+                  subtitle: Text(
+                    'JPG/PNG, bisa pilih beberapa (sisa ${MediaRules.remainingSlots(_mediaPaths)} slot, maks. 5MB/foto)',
+                  ),
                   onTap: () async {
                     Navigator.pop(ctx);
+                    if (!_ensureSlotAvailable()) return;
                     try {
-                      final XFile? photo = await _picker.pickImage(
-                        source: ImageSource.gallery,
+                      final photos = await _picker.pickMultiImage(
                         imageQuality: 85,
+                        limit: MediaRules.remainingSlots(_mediaPaths),
                       );
-                      if (photo != null) {
-                        final valid = await _validateFileSize(photo);
-                        if (!valid) return;
-
-                        setState(() {
-                          _selectedMediaFile = photo;
-                          _isVideo = false;
-                        });
+                      for (final photo in photos) {
+                        if (!await _tryAddMedia(photo, isVideo: false)) break;
                       }
                     } catch (e) {
                       _showErrorSnackBar('Gagal memilih foto: $e');
@@ -587,23 +577,16 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                     'Pilih Video',
                     style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w600),
                   ),
-                  subtitle: const Text('Format MP4 (Maks. 15 detik & Maks. 10MB)'),
+                  subtitle: const Text('MP4, maks. 1 video (30 detik & 25MB)'),
                   onTap: () async {
                     Navigator.pop(ctx);
+                    if (!_ensureSlotAvailable(forVideo: true)) return;
                     try {
                       final XFile? video = await _picker.pickVideo(
                         source: ImageSource.gallery,
-                        maxDuration: _kMaxVideoDuration,
+                        maxDuration: MediaRules.maxVideoDuration,
                       );
-                      if (video != null) {
-                        final valid = await _validateFileSize(video);
-                        if (!valid) return;
-
-                        setState(() {
-                          _selectedMediaFile = video;
-                          _isVideo = true;
-                        });
-                      }
+                      if (video != null) await _tryAddMedia(video, isVideo: true);
                     } catch (e) {
                       _showErrorSnackBar('Gagal memilih video: $e');
                     }
@@ -617,8 +600,8 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
     );
   }
 
-  /// Dialog konfirmasi sebelum menghapus media foto/video terlampir.
-  Future<void> _confirmRemoveMedia() async {
+  /// Dialog konfirmasi sebelum menghapus satu media terlampir.
+  Future<void> _confirmRemoveMedia(int index) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -636,7 +619,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
           ),
         ),
         content: Text(
-          'Apakah Anda yakin ingin menghapus foto/video ini dari laporan? Anda dapat memilih atau mengambil ulang media lainnya.',
+          'Apakah Anda yakin ingin menghapus media ini dari laporan? Media lain yang sudah dipilih tetap tersimpan.',
           style: GoogleFonts.plusJakartaSans(
             fontSize: 13,
             color: AppPalette.textSecondary(context),
@@ -698,9 +681,10 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
 
     if (confirmed == true) {
       setState(() {
-        _selectedMediaFile = null;
-        _isVideo = false;
-        _selectedFileSize = 0;
+        _mediaFiles.removeAt(index);
+        if (_activeMediaIndex >= _mediaFiles.length) {
+          _activeMediaIndex = _mediaFiles.isEmpty ? 0 : _mediaFiles.length - 1;
+        }
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -950,6 +934,12 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
     final title = _titleController.text.trim();
     final description = _descriptionController.text.trim();
 
+    // FR-04: minimal satu foto/video (sama dengan validasi server).
+    if (_mediaFiles.isEmpty) {
+      _showErrorSnackBar('Lampirkan minimal satu foto atau video sebagai bukti laporan.');
+      return;
+    }
+
     if (title.isEmpty) {
       _showErrorSnackBar('Mohon masukkan judul laporan.');
       return;
@@ -1106,11 +1096,12 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
       badgeTextColor: isCondition ? HomeColors.onTertiaryFixedVariant : HomeColors.primary,
       title: title,
       description: description,
-      imageUrl: _selectedMediaFile?.path,
+      mediaUrls: _mediaPaths,
+      imageUrl: _mediaPaths.isNotEmpty ? _mediaPaths.first : null,
       aspectRatio: 16 / 9,
       imageSemanticLabel: title,
-      upvoteCount: 1,
-      isUpvoted: true,
+      upvoteCount: 0,
+      isUpvoted: false,
     );
 
     ReportRepository.instance.addReport(newReport);
@@ -1333,8 +1324,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
       title: _titleController.text.trim(),
       description: _descriptionController.text.trim(),
       selectedCategory: _selectedCategory,
-      mediaFilePath: _selectedMediaFile?.path,
-      isVideo: _isVideo,
+      mediaPaths: _mediaPaths,
       locationName: _resolvedLocationName,
       coordinates: _coordinates,
       latitude: _latitude,
@@ -1714,7 +1704,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
   /// - Default: Wadah 2 pilihan (Kamera & Galeri) dengan batas file & durasi di bawah teks
   /// - Terlampir: Preview foto/video dengan label dinamis ("1 Foto Terlampir" / "1 Video Terlampir")
   Widget _buildMediaSection(BuildContext context, bool isDark) {
-    if (_selectedMediaFile == null) {
+    if (_mediaFiles.isEmpty) {
       // Default: Belum ada media, tampilkan wadah 2 pilihan (Kamera & Galeri)
       return Container(
         width: double.infinity,
@@ -1756,7 +1746,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
             const SizedBox(height: 4),
             // Batas ukuran & durasi tepat di bawah teks
             Text(
-              'Maks. ukuran file 10MB • Maks. durasi video 15 dtk',
+              MediaRules.summary,
               textAlign: TextAlign.center,
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 12,
@@ -1787,13 +1777,21 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
       );
     }
 
-    // Media Terlampir: Preview foto atau video asli dari perangkat
-    final sizeInMb = (_selectedFileSize / (1024 * 1024)).toStringAsFixed(1);
-    final badgeText = _isVideo
-        ? '1 Video Terlampir • Maks. 15 dtk'
-        : '1 Foto Terlampir • $sizeInMb MB';
+    // Media Terlampir: pratinjau media aktif + strip thumbnail semua media
+    final activeIndex = _activeMediaIndex.clamp(0, _mediaFiles.length - 1);
+    final activeFile = _mediaFiles[activeIndex];
+    final activeIsVideo = isVideoMedia(activeFile.path);
+    final videoCount = MediaRules.videoCount(_mediaPaths);
+    final photoCount = _mediaFiles.length - videoCount;
+    final badgeText = [
+      '${_mediaFiles.length}/${MediaRules.maxMediaPerReport} Media',
+      if (photoCount > 0) '$photoCount Foto',
+      if (videoCount > 0) '$videoCount Video',
+    ].join(' • ');
 
-    return Container(
+    return Column(
+      children: [
+        Container(
       height: 220,
       width: double.infinity,
       decoration: BoxDecoration(
@@ -1817,15 +1815,15 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
           fit: StackFit.expand,
           children: [
             // Preview Konten Media
-            if (!_isVideo)
+            if (!activeIsVideo)
               kIsWeb
                   ? Image.network(
-                      _selectedMediaFile!.path,
+                      activeFile.path,
                       fit: BoxFit.cover,
                       errorBuilder: (_, _, _) => _buildMediaFallback(),
                     )
                   : Image.file(
-                      File(_selectedMediaFile!.path),
+                      File(activeFile.path),
                       fit: BoxFit.cover,
                       errorBuilder: (_, _, _) => _buildMediaFallback(),
                     )
@@ -1859,7 +1857,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Text(
-                        _selectedMediaFile!.name,
+                        activeFile.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.plusJakartaSans(
@@ -1924,7 +1922,7 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
               ),
             ),
 
-            // Bottom action buttons: Ambil Ulang, Galeri, Hapus
+            // Bottom action buttons: tambah via Kamera / Galeri, hapus media aktif
             Positioned(
               bottom: 12,
               left: 12,
@@ -1933,18 +1931,22 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
                 children: [
                   _buildMediaActionButton(
                     icon: Icons.camera_alt_outlined,
-                    label: 'Ambil Ulang',
-                    onTap: _handleCameraAction,
+                    label: 'Kamera',
+                    onTap: () {
+                      if (_ensureSlotAvailable()) _handleCameraAction();
+                    },
                   ),
                   const SizedBox(width: 8),
                   _buildMediaActionButton(
                     icon: Icons.photo_library_outlined,
                     label: 'Galeri',
-                    onTap: _handleGalleryAction,
+                    onTap: () {
+                      if (_ensureSlotAvailable()) _handleGalleryAction();
+                    },
                   ),
                   const Spacer(),
                   GestureDetector(
-                    onTap: _confirmRemoveMedia,
+                    onTap: () => _confirmRemoveMedia(activeIndex),
                     child: Container(
                       width: 38,
                       height: 38,
@@ -1977,6 +1979,85 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
             ),
           ],
         ),
+      ),
+        ),
+        const SizedBox(height: 10),
+        _buildMediaThumbnailStrip(activeIndex),
+      ],
+    );
+  }
+
+  /// Strip thumbnail semua media + petak "Tambah" bila slot masih ada.
+  Widget _buildMediaThumbnailStrip(int activeIndex) {
+    final canAddMore = _mediaFiles.length < MediaRules.maxMediaPerReport;
+    return SizedBox(
+      height: 64,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: _mediaFiles.length + (canAddMore ? 1 : 0),
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder: (context, i) {
+          if (i == _mediaFiles.length) {
+            return GestureDetector(
+              onTap: _handleGalleryAction,
+              child: Container(
+                width: 64,
+                decoration: BoxDecoration(
+                  color: AppPalette.surface(context),
+                  borderRadius: BorderRadius.circular(_kRadiusMd),
+                  border: Border.all(color: AppPalette.divider(context), width: 1.2),
+                ),
+                child: const Icon(Icons.add_rounded, color: _kPrimary),
+              ),
+            );
+          }
+          final file = _mediaFiles[i];
+          final isVideo = isVideoMedia(file.path);
+          final selected = i == activeIndex;
+          return GestureDetector(
+            onTap: () => setState(() => _activeMediaIndex = i),
+            child: Stack(
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0F172A),
+                    borderRadius: BorderRadius.circular(_kRadiusMd),
+                    border: Border.all(
+                      color: selected ? _kPrimary : AppPalette.divider(context),
+                      width: selected ? 2 : 1,
+                    ),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: isVideo
+                      ? const Icon(Icons.play_circle_fill_rounded, color: Colors.white, size: 26)
+                      : (kIsWeb
+                          ? Image.network(file.path, fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) => _buildMediaFallback())
+                          : Image.file(File(file.path), fit: BoxFit.cover,
+                              errorBuilder: (_, _, _) => _buildMediaFallback())),
+                ),
+                Positioned(
+                  top: 2,
+                  right: 2,
+                  child: GestureDetector(
+                    onTap: () => _confirmRemoveMedia(i),
+                    child: Container(
+                      width: 20,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.65),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.close_rounded, color: Colors.white, size: 13),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

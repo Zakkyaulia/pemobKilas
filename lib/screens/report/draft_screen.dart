@@ -504,15 +504,37 @@ class _DraftCard extends StatelessWidget {
               spacing: 8,
               runSpacing: 6,
               children: [
+                _StatusChip(status: draft.status),
                 if (draft.hasMedia)
                   _MediaChip(
-                    mediaPath: draft.mediaFilePath!,
-                    isVideo: draft.isVideo,
+                    summary: draft.mediaSummary,
+                    hasVideo: draft.videoCount > 0,
                   ),
                 if (draft.locationName != null && draft.locationName!.isNotEmpty)
                   _LocationChip(locationName: draft.locationName!),
               ],
             ),
+
+            if (draft.status == DraftStatus.gagal && draft.errorMessage != null) ...[
+              const SizedBox(height: 8),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.error_outline_rounded, size: 14, color: Color(0xFFEF4444)),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      draft.errorMessage!,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 11.5,
+                        color: const Color(0xFFEF4444),
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
 
             const SizedBox(height: 12),
             const Divider(height: 1, thickness: 1),
@@ -571,15 +593,54 @@ class _DraftCard extends StatelessWidget {
   }
 }
 
+/// Chip status unggah draft (FR-20): Menunggu / Mengunggah / Gagal.
+class _StatusChip extends StatelessWidget {
+  const _StatusChip({required this.status});
+
+  final DraftStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    final (Color color, IconData icon) = switch (status) {
+      DraftStatus.menunggu => (const Color(0xFFF59E0B), Icons.schedule_send_rounded),
+      DraftStatus.mengunggah => (HomeColors.primaryContainer, Icons.cloud_upload_outlined),
+      DraftStatus.gagal => (const Color(0xFFEF4444), Icons.cloud_off_rounded),
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 4),
+          Text(
+            status.label,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Chip indikator media terlampir pada draft.
 class _MediaChip extends StatelessWidget {
   const _MediaChip({
-    required this.mediaPath,
-    required this.isVideo,
+    required this.summary,
+    required this.hasVideo,
   });
 
-  final String mediaPath;
-  final bool isVideo;
+  final String summary;
+  final bool hasVideo;
 
   @override
   Widget build(BuildContext context) {
@@ -594,13 +655,13 @@ class _MediaChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            isVideo ? Icons.videocam_rounded : Icons.image_rounded,
+            hasVideo ? Icons.perm_media_rounded : Icons.image_rounded,
             size: 14,
             color: HomeColors.primaryContainer,
           ),
           const SizedBox(width: 4),
           Text(
-            isVideo ? 'Video Terlampir' : 'Foto Terlampir',
+            '$summary Terlampir',
             style: GoogleFonts.plusJakartaSans(
               fontSize: 11,
               fontWeight: FontWeight.w600,

@@ -19,7 +19,7 @@ import 'widgets/profile_tab_bar.dart';
 /// Menyajikan:
 /// 1. Header Profil (FR-03 & Identitas Mahasiswa).
 /// 2. Dashboard Statistik Pribadi (FR-17 & FR-B6).
-/// 3. Tab Konten: Laporan Sendiri (FR-05, FR-06), Bookmark Terkunci Biometrik (FR-10), dan Riwayat Aktivitas (FR-24).
+/// 3. Tab Konten: Laporan Sendiri (FR-05, FR-06), Koleksi Bookmark (FR-10), dan Riwayat Aktivitas (FR-24).
 /// 4. Pengaturan Cepat & Keluar Akun (FR-18, FR-23, FR-02).
 ///
 /// Kerangka layout, header frosted glass, typography, dan spacing disinkronisasi

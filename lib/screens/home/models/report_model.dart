@@ -82,6 +82,7 @@ class ReportModel {
     this.title,
     this.description,
     this.imageUrl,
+    this.mediaUrls = const [],
     this.imageHeight,
     this.aspectRatio,
     this.imageSemanticLabel,
@@ -128,7 +129,12 @@ class ReportModel {
   // Content — report variant
   final String? title;
   final String? description;
+  /// Media sampul (media pertama). Dipakai thumbnail di seluruh aplikasi.
   final String? imageUrl;
+
+  /// Seluruh media laporan (1–5, maks. 1 video), urut sesuai `sort_order`.
+  /// Kosong untuk data lama yang hanya punya [imageUrl].
+  final List<String> mediaUrls;
   final double? imageHeight;
   final double? aspectRatio;
   final String? imageSemanticLabel;
@@ -142,6 +148,11 @@ class ReportModel {
   final int upvoteCount;
   final bool isUpvoted;
   final bool isBookmarked;
+
+  /// Daftar media efektif: [mediaUrls] bila ada, jika tidak [imageUrl].
+  List<String> get media => mediaUrls.isNotEmpty
+      ? mediaUrls
+      : (imageUrl != null && imageUrl!.isNotEmpty ? [imageUrl!] : const []);
 
   /// Apakah laporan ini pernah diedit (FR-A2 penanda "diedit").
   bool get isEdited => editedAt != null;
@@ -186,6 +197,7 @@ class ReportModel {
     String? title,
     String? description,
     String? imageUrl,
+    List<String>? mediaUrls,
     double? imageHeight,
     double? aspectRatio,
     String? imageSemanticLabel,
@@ -222,7 +234,12 @@ class ReportModel {
       badgeTextColor: badgeTextColor ?? this.badgeTextColor,
       title: title ?? this.title,
       description: description ?? this.description,
-      imageUrl: imageUrl ?? this.imageUrl,
+      // Mengganti daftar media otomatis memperbarui sampulnya.
+      imageUrl: imageUrl ??
+          (mediaUrls != null
+              ? (mediaUrls.isNotEmpty ? mediaUrls.first : null)
+              : this.imageUrl),
+      mediaUrls: mediaUrls ?? this.mediaUrls,
       imageHeight: imageHeight ?? this.imageHeight,
       aspectRatio: aspectRatio ?? this.aspectRatio,
       imageSemanticLabel: imageSemanticLabel ?? this.imageSemanticLabel,
@@ -303,6 +320,15 @@ class ReportModel {
       return DateTime.tryParse(val.toString());
     }
 
+    // API: "media": [{ "url": ..., "type": ..., "sort_order": n }] atau list string.
+    final rawMedia = map['media'];
+    final mediaFromMap = <String>[
+      if (rawMedia is List)
+        for (final m in rawMedia)
+          if (m is Map && m['url'] != null) m['url'].toString()
+          else if (m is String) m,
+    ];
+
     return ReportModel(
       id: (map['id'] ?? '').toString(),
       cardType: cardType,
@@ -327,7 +353,10 @@ class ReportModel {
       badgeTextColor: const Color(0xFF059669),
       title: map['title'],
       description: map['description'],
-      imageUrl: map['image_url'] ?? map['imageUrl'],
+      imageUrl: mediaFromMap.isNotEmpty
+          ? mediaFromMap.first
+          : (map['image_url'] ?? map['imageUrl']),
+      mediaUrls: mediaFromMap,
       contentTitle: map['content_title'] ?? map['contentTitle'],
       contentDescription: map['content_description'] ?? map['contentDescription'],
       upvoteCount: (map['upvote_count'] ?? map['upvoteCount'] ?? 0) is int
@@ -361,6 +390,7 @@ class ReportModel {
       'title': title,
       'description': description,
       'image_url': imageUrl,
+      'media': media,
       'content_title': contentTitle,
       'content_description': contentDescription,
       'upvote_count': upvoteCount,

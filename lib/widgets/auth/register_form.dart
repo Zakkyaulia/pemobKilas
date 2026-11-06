@@ -6,7 +6,7 @@ import '../../theme/app_radius.dart';
 import '../../theme/app_spacing.dart';
 import 'auth_text_field.dart';
 
-/// Form registrasi akun mahasiswa: Username, Email, dan Password.
+/// Form registrasi akun civitas UNAND: Nama, Username, Email, dan Password.
 class RegisterForm extends StatefulWidget {
   const RegisterForm({super.key, this.onSubmit});
 
@@ -18,6 +18,7 @@ class RegisterForm extends StatefulWidget {
 
 class _RegisterFormState extends State<RegisterForm> {
   final _formKey = GlobalKey<FormState>();
+  final _namaController = TextEditingController();
   final _emailController = TextEditingController();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -26,6 +27,7 @@ class _RegisterFormState extends State<RegisterForm> {
 
   @override
   void dispose() {
+    _namaController.dispose();
     _emailController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
@@ -38,8 +40,9 @@ class _RegisterFormState extends State<RegisterForm> {
     setState(() => _isLoading = true);
 
     final data = <String, String>{
+      'nama': _namaController.text.trim(),
       'email': _emailController.text.trim(),
-      'username': _usernameController.text.trim(),
+      'username': _usernameController.text.trim().replaceFirst('@', '').toLowerCase(),
       'password': _passwordController.text.trim(),
     };
 
@@ -61,14 +64,27 @@ class _RegisterFormState extends State<RegisterForm> {
     return null;
   }
 
-  String? _validateRequired(String? value, String label) {
-    if (value == null || value.trim().isEmpty) return '$label tidak boleh kosong';
+  String? _validateNama(String? value) {
+    final v = value?.trim() ?? '';
+    if (v.isEmpty) return 'Nama tidak boleh kosong';
+    if (v.length < 2) return 'Nama minimal 2 karakter';
+    if (v.length > 100) return 'Nama maksimal 100 karakter';
+    return null;
+  }
+
+  /// Sama dengan aturan backend: 3–30 karakter, huruf/angka/titik/garis bawah.
+  String? _validateUsername(String? value) {
+    final v = (value ?? '').trim().replaceFirst('@', '');
+    if (v.isEmpty) return 'Username tidak boleh kosong';
+    if (!RegExp(r'^[a-zA-Z0-9_.]{3,30}$').hasMatch(v)) {
+      return 'Username 3–30 karakter: huruf, angka, titik, atau garis bawah';
+    }
     return null;
   }
 
   String? _validatePassword(String? value) {
     if (value == null || value.trim().isEmpty) return 'Password tidak boleh kosong';
-    if (value.trim().length < 6) return 'Password minimal 6 karakter';
+    if (value.trim().length < 8) return 'Password minimal 8 karakter';
     return null;
   }
 
@@ -93,11 +109,21 @@ class _RegisterFormState extends State<RegisterForm> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             AuthTextField(
+              label: 'Nama',
+              hintText: 'Masukkan nama lengkap',
+              controller: _namaController,
+              keyboardType: TextInputType.name,
+              validator: _validateNama,
+              prefixIcon: Icons.badge_outlined,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+
+            AuthTextField(
               label: 'Username',
               hintText: 'Masukkan username',
               controller: _usernameController,
-              validator: (v) => _validateRequired(v, 'Username'),
-              prefixIcon: Icons.person_outline,
+              validator: _validateUsername,
+              prefixIcon: Icons.alternate_email_rounded,
             ),
             const SizedBox(height: AppSpacing.lg),
 

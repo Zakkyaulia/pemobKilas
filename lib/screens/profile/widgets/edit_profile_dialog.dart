@@ -6,11 +6,10 @@ import '../../../theme/app_spacing.dart';
 import '../../../theme/home_colors.dart';
 import '../../../theme/home_text_styles.dart';
 import '../data/user_profile_repository.dart';
-import '../models/user_profile_model.dart';
 
 /// Modal dialog untuk mengubah informasi profil pengguna (FR-03).
 ///
-/// Pengguna dapat memperbarui nama, bio, serta jurusan/fakultas.
+/// Pengguna dapat memperbarui nama, username, bio, serta fakultas & jurusan (opsional).
 class EditProfileDialog extends StatefulWidget {
   const EditProfileDialog({super.key});
 
@@ -32,6 +31,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
   late final TextEditingController _usernameController;
   late final TextEditingController _bioController;
   late final TextEditingController _jurusanController;
+  late final TextEditingController _fakultasController;
 
   @override
   void initState() {
@@ -41,6 +41,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
     _usernameController = TextEditingController(text: profile.username);
     _bioController = TextEditingController(text: profile.bio);
     _jurusanController = TextEditingController(text: profile.jurusan ?? '');
+    _fakultasController = TextEditingController(text: profile.fakultas ?? '');
   }
 
   @override
@@ -49,6 +50,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
     _usernameController.dispose();
     _bioController.dispose();
     _jurusanController.dispose();
+    _fakultasController.dispose();
     super.dispose();
   }
 
@@ -57,31 +59,39 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
     final username = _usernameController.text.trim();
     final bio = _bioController.text.trim();
     final jurusan = _jurusanController.text.trim();
+    final fakultas = _fakultasController.text.trim();
 
-    if (nama.isEmpty) {
+    void showError(String message) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Nama tidak boleh kosong.',
+            message,
             style: HomeTextStyles.labelMd.copyWith(color: Colors.white),
           ),
           backgroundColor: AppColors.error,
         ),
       );
+    }
+
+    if (nama.isEmpty) {
+      showError('Nama tidak boleh kosong.');
+      return;
+    }
+
+    // Username boleh diganti (QR profil ikut username baru); aturan sama dengan register.
+    final cleanUsername = username.replaceFirst('@', '');
+    if (!RegExp(r'^[a-zA-Z0-9_.]{3,30}$').hasMatch(cleanUsername)) {
+      showError('Username 3–30 karakter: huruf, angka, titik, atau garis bawah.');
       return;
     }
 
     UserProfileRepository.instance.updateProfile(
       nama: nama,
-      username: username.startsWith('@') ? username : '@$username',
+      username: '@${cleanUsername.toLowerCase()}',
       bio: bio,
+      // String kosong = dikosongkan (fakultas & jurusan opsional).
+      fakultas: fakultas,
       jurusan: jurusan,
-    );
-
-    UserProfileRepository.instance.addActivity(
-      actionType: ActivityActionType.ubahLaporan,
-      title: 'Memperbarui Profil',
-      description: 'Informasi biodata dan identitas profil diperbarui',
     );
 
     Navigator.pop(context);
@@ -170,9 +180,16 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
             const SizedBox(height: AppSpacing.md),
             _buildField(
               context: context,
-              label: 'Program Studi / Fakultas',
+              label: 'Fakultas (opsional)',
+              controller: _fakultasController,
+              hint: 'Contoh: Fakultas Teknologi Informasi',
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _buildField(
+              context: context,
+              label: 'Jurusan / Program Studi (opsional)',
               controller: _jurusanController,
-              hint: 'Opsional, contoh: Sistem Informasi UNAND \'24',
+              hint: 'Contoh: Sistem Informasi UNAND \'24',
             ),
             const SizedBox(height: AppSpacing.md),
             _buildField(
