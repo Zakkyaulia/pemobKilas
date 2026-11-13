@@ -57,4 +57,20 @@ abstract final class AuthSessionService {
       return null;
     }
   }
+
+  /// Mengambil JWT yang tersimpan untuk dikirim sebagai header Authorization.
+  ///
+  /// Gunakan ini untuk request API yang membutuhkan autentikasi:
+  /// ```dart
+  /// final token = await AuthSessionService.getToken();
+  /// headers: { 'Authorization': 'Bearer $token' }
+  /// ```
+  static Future<String?> getToken() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString(_keyAuthToken);
+    } catch (_) {
+      return null;
+    }
+  }
 }

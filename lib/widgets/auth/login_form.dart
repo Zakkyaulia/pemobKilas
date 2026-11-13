@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../models/auth_result.dart';
+import '../../services/auth_api_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_palette.dart';
 import '../../theme/app_radius.dart';
@@ -14,7 +16,8 @@ import 'auth_text_field.dart';
 /// - Submit button with loading state
 ///
 /// This widget manages its own form state (controllers, validation,
-/// form key) and delegates the login action to the [onSubmit] callback.
+/// form key) and delegates the login action to the [onSubmit] callback
+/// with the [AuthResult] on success, or shows an inline error on failure.
 ///
 /// Form validation:
 /// - Email: must be a valid email format
@@ -22,12 +25,8 @@ import 'auth_text_field.dart';
 class LoginForm extends StatefulWidget {
   const LoginForm({super.key, this.onSubmit});
 
-  /// Called when the form is valid and the user taps "Masuk".
-  ///
-  /// Receives a map with keys:
-  /// - `email`: email address
-  /// - `password`: password string
-  final void Function(Map<String, String> data)? onSubmit;
+  /// Called when login berhasil. Menerima [AuthResult] dari backend.
+  final void Function(AuthResult result)? onSubmit;
 
   @override
   State<LoginForm> createState() => _LoginFormState();
@@ -39,6 +38,7 @@ class _LoginFormState extends State<LoginForm> {
   final _passwordController = TextEditingController();
 
   bool _isLoading = false;
+  String? _errorMessage; // pesan error inline dari API
 
   @override
   void dispose() {
@@ -48,25 +48,30 @@ class _LoginFormState extends State<LoginForm> {
   }
 
   Future<void> _handleSubmit() async {
+    // Reset error sebelumnya
+    if (_errorMessage != null) setState(() => _errorMessage = null);
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
-    final data = <String, String>{
-      'email': _emailController.text.trim(),
-      'password': _passwordController.text.trim(),
-    };
+    try {
+      final result = await AuthApiService.login(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
 
-    // [MISSING API] Actual login API call should be integrated here.
-    // Currently delegates to the onSubmit callback.
-    // Simulating a brief async delay for UI feedback demonstration.
-    await Future.delayed(const Duration(seconds: 1));
-
-    if (mounted) {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+        widget.onSubmit?.call(result);
+      }
+    } on AuthException catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = e.message;
+        });
+      }
     }
-
-    widget.onSubmit?.call(data);
   }
 
   // ── Validators ──────────────────────────────────────────────────────────
@@ -136,6 +141,37 @@ class _LoginFormState extends State<LoginForm> {
               prefixIcon: Icons.lock_outline_rounded,
             ),
             const SizedBox(height: AppSpacing.xxl),
+
+            // ── Error Message dari API ──────────────────────────────────
+            if (_errorMessage != null) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                  vertical: AppSpacing.md,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.red.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.error_outline, color: Colors.red.shade700, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _errorMessage!,
+                        style: TextStyle(
+                          color: Colors.red.shade700,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+            ],
 
             // ── Submit Button ───────────────────────────────────────────
             SizedBox(

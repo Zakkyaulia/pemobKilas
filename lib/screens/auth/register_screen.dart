@@ -1,22 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../models/auth_result.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_palette.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
+import '../../services/auth_session_service.dart';
 import '../../widgets/auth/login_header.dart';
 import '../../widgets/auth/register_form.dart';
+import '../main_screen.dart';
 import 'login_screen.dart';
 
 class RegisterScreen extends StatelessWidget {
   const RegisterScreen({super.key});
 
-  void _handleRegister(BuildContext context, Map<String, String> data) {
+  void _handleRegister(BuildContext context, AuthResult result) async {
+    // Simpan sesi — register langsung auto-login (backend kembalikan token)
+    await AuthSessionService.saveSession(
+      identifier: result.user.email,
+      token: result.token,
+    );
+
+    if (!context.mounted) return;
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Registrasi sukses: ${data['username']}',
+          'Akun berhasil dibuat! Selamat datang, ${result.user.nama} 🎉',
           style: GoogleFonts.plusJakartaSans(
             color: Colors.white,
             fontSize: 13,
@@ -29,9 +40,9 @@ class RegisterScreen extends StatelessWidget {
       ),
     );
 
-    // Navigasi kembali ke LoginScreen setelah registrasi sukses
+    // Langsung masuk ke MainScreen (auto-login setelah register)
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => const LoginScreen()),
+      MaterialPageRoute(builder: (context) => const MainScreen()),
     );
   }
 
@@ -65,7 +76,7 @@ class RegisterScreen extends StatelessWidget {
                       const LoginHeader(),
 
                       RegisterForm(
-                        onSubmit: (data) => _handleRegister(context, data),
+                        onSubmit: (AuthResult result) => _handleRegister(context, result),
                       ),
                       const SizedBox(height: AppSpacing.xl),
 

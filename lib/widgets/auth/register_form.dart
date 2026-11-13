@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../models/auth_result.dart';
+import '../../services/auth_api_service.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_palette.dart';
 import '../../theme/app_radius.dart';
@@ -10,7 +12,8 @@ import 'auth_text_field.dart';
 class RegisterForm extends StatefulWidget {
   const RegisterForm({super.key, this.onSubmit});
 
-  final void Function(Map<String, String> data)? onSubmit;
+  /// Called when registrasi berhasil. Menerima [AuthResult] dari backend.
+  final void Function(AuthResult result)? onSubmit;
 
   @override
   State<RegisterForm> createState() => _RegisterFormState();
@@ -24,6 +27,7 @@ class _RegisterFormState extends State<RegisterForm> {
   final _passwordController = TextEditingController();
 
   bool _isLoading = false;
+  String? _errorMessage; // pesan error inline dari API
 
   @override
   void dispose() {
@@ -35,25 +39,32 @@ class _RegisterFormState extends State<RegisterForm> {
   }
 
   Future<void> _handleSubmit() async {
+    // Reset error sebelumnya
+    if (_errorMessage != null) setState(() => _errorMessage = null);
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
-    final data = <String, String>{
-      'nama': _namaController.text.trim(),
-      'email': _emailController.text.trim(),
-      'username': _usernameController.text.trim().replaceFirst('@', '').toLowerCase(),
-      'password': _passwordController.text.trim(),
-    };
+    try {
+      final result = await AuthApiService.register(
+        nama: _namaController.text.trim(),
+        username: _usernameController.text.trim().replaceFirst('@', '').toLowerCase(),
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
 
-    // Simulasi delay API
-    await Future.delayed(const Duration(seconds: 1));
-
-    if (mounted) {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+        widget.onSubmit?.call(result);
+      }
+    } on AuthException catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = e.message;
+        });
+      }
     }
-
-    widget.onSubmit?.call(data);
   }
 
   String? _validateEmail(String? value) {
@@ -147,6 +158,37 @@ class _RegisterFormState extends State<RegisterForm> {
               prefixIcon: Icons.lock_outline_rounded,
             ),
             const SizedBox(height: AppSpacing.xxl),
+
+            // ── Error Message dari API ──────────────────────────────────
+            if (_errorMessage != null) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                  vertical: AppSpacing.md,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.red.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.error_outline, color: Colors.red.shade700, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _errorMessage!,
+                        style: TextStyle(
+                          color: Colors.red.shade700,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+            ],
 
             SizedBox(
               height: 52,

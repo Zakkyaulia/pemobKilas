@@ -5,6 +5,7 @@ import '../../theme/app_colors.dart';
 import '../../theme/app_palette.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_text_styles.dart';
+import '../../models/auth_result.dart';
 import '../../widgets/auth/biometric_login_button.dart';
 import '../../widgets/auth/login_form.dart';
 import '../../widgets/auth/login_header.dart';
@@ -38,19 +39,19 @@ import 'register_screen.dart';
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
 
-  void _handleLogin(BuildContext context, Map<String, String> data) async {
-    // [MISSING API] Login API integration goes here.
-    final identifier = data['email'] ?? '';
-
-    // Simpan sesi login lokal via SharedPreferences
-    await AuthSessionService.saveSession(identifier: identifier);
+  void _handleLogin(BuildContext context, AuthResult result) async {
+    // Simpan sesi login: identifier + token JWT dari response backend
+    await AuthSessionService.saveSession(
+      identifier: result.user.email,
+      token: result.token,
+    );
 
     if (!context.mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Login sukses: $identifier',
+          'Selamat datang, ${result.user.nama}! 👋',
           style: GoogleFonts.plusJakartaSans(
             color: Colors.white,
             fontSize: 13,
@@ -122,7 +123,7 @@ class LoginScreen extends StatelessWidget {
 
                       // ── Login Form Card ─────────────────────────────
                       LoginForm(
-                        onSubmit: (data) => _handleLogin(context, data),
+                        onSubmit: (AuthResult result) => _handleLogin(context, result),
                       ),
                       const SizedBox(height: AppSpacing.xl),
 
