@@ -1,20 +1,24 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+
+import '../../../config/app_config.dart';
+import '../../../services/auth_session_service.dart';
 import '../models/user_profile_model.dart';
 
 /// Singleton repository untuk mengelola state profil pengguna dan log aktivitas pribadi.
 class UserProfileRepository extends ChangeNotifier {
   UserProfileRepository._() {
     _profile = const UserProfileModel(
-      userId: 'usr-2411522036',
-      email: 'ghezy.briliantama@student.unand.ac.id',
-      username: '@ghezz',
-      nama: 'Ghezy Pramudinata .B',
-      bio: 'Aktif melaporkan kondisi fasilitas dan situasi di lingkungan kampus Limau Manis UNAND.',
-      fotoProfil:
-          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
+      userId: '',
+      email: '',
+      username: '',
+      nama: 'Pengguna KILAS',
+      bio: 'Mahasiswa aktif Universitas Andalas.',
+      fotoProfil: null,
       pengingatAktif: true,
-      fakultas: 'Fakultas Teknologi Informasi',
-      jurusan: 'Sistem Informasi UNAND \'24',
+      fakultas: null,
+      jurusan: null,
     );
 
     _activities = [
@@ -59,6 +63,9 @@ class UserProfileRepository extends ChangeNotifier {
         reportId: 'post-4',
       ),
     ];
+
+    // Inisialisasi otomatis jika ada sesi aktif
+    initFromSession();
   }
 
   static final UserProfileRepository _instance = UserProfileRepository._();
@@ -70,6 +77,57 @@ class UserProfileRepository extends ChangeNotifier {
   UserProfileModel get profile => _profile;
   UserProfileModel get currentUser => _profile;
   List<ActivityLogItem> get activities => List.unmodifiable(_activities);
+
+  /// Mengatur data profil pengguna (misalnya setelah login / register).
+  void setProfile(UserProfileModel model) {
+    _profile = model;
+    notifyListeners();
+  }
+
+  /// Memulihkan profil pengguna dari penyimpanan sesi lokal dan memvalidasi ke backend.
+  Future<void> initFromSession() async {
+    final savedData = await AuthSessionService.getSavedUser();
+    if (savedData != null) {
+      _profile = UserProfileModel.fromMap(savedData);
+      notifyListeners();
+    }
+    await fetchProfileFromBackend();
+  }
+
+  /// Memuat profil pengguna saat ini dari backend /api/auth/me jika ada token aktif.
+  Future<void> fetchProfileFromBackend() async {
+    try {
+      final token = await AuthSessionService.getToken();
+      if (token == null || token.isEmpty) return;
+
+      final uri = Uri.parse('${AppConfig.baseUrl}/api/auth/me');
+      final response = await http.get(
+        uri,
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      ).timeout(AppConfig.requestTimeout);
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        final body = jsonDecode(response.body) as Map<String, dynamic>;
+        final data = body['data'];
+        if (data is Map<String, dynamic>) {
+          final userJson = data['user'] is Map<String, dynamic>
+              ? data['user'] as Map<String, dynamic>
+              : data;
+          _profile = UserProfileModel.fromMap(userJson);
+          await AuthSessionService.saveSession(
+            identifier: _profile.email,
+            userData: userJson,
+          );
+          notifyListeners();
+        }
+      }
+    } catch (_) {
+      // Abaikan jika offline / koneksi timeout
+    }
+  }
 
 
   /// Mengubah data profil pengguna (FR-03).
@@ -128,12 +186,6 @@ class UserProfileRepository extends ChangeNotifier {
   /// Menghapus satu item riwayat aktivitas pribadi (FR-C6).
   void removeActivity(String id) {
     _activities.removeWhere((item) => item.id == id);
-    notifyListeners();
-  }
-
-  /// Memperbarui seluruh objek profil pengguna.
-  void setProfile(UserProfileModel model) {
-    _profile = model;
     notifyListeners();
   }
 

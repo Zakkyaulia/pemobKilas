@@ -12,6 +12,8 @@ import '../../widgets/auth/login_header.dart';
 import '../../widgets/auth/student_guide_link.dart';
 import '../../services/auth_session_service.dart';
 import '../main_screen.dart';
+import '../profile/data/user_profile_repository.dart';
+import '../profile/models/user_profile_model.dart';
 import 'register_screen.dart';
 
 /// The Login screen for KILAS — Mahasiswa authentication.
@@ -40,10 +42,26 @@ class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
 
   void _handleLogin(BuildContext context, AuthResult result) async {
-    // Simpan sesi login: identifier + token JWT dari response backend
+    // Simpan sesi login: identifier + token JWT + data user dari response backend
     await AuthSessionService.saveSession(
       identifier: result.user.email,
       token: result.token,
+      userData: result.user.toJson(),
+    );
+
+    // Sinkronkan profil aktif pengguna di UserProfileRepository
+    UserProfileRepository.instance.setProfile(
+      UserProfileModel(
+        userId: result.user.userId,
+        email: result.user.email,
+        username: result.user.username,
+        nama: result.user.nama,
+        bio: result.user.bio ?? 'Mahasiswa aktif Universitas Andalas.',
+        fotoProfil: result.user.fotoProfil,
+        fakultas: result.user.fakultas,
+        jurusan: result.user.jurusan,
+        pengingatAktif: result.user.pengingatAktif,
+      ),
     );
 
     if (!context.mounted) return;

@@ -10,6 +10,8 @@ import '../../services/auth_session_service.dart';
 import '../../widgets/auth/login_header.dart';
 import '../../widgets/auth/register_form.dart';
 import '../main_screen.dart';
+import '../profile/data/user_profile_repository.dart';
+import '../profile/models/user_profile_model.dart';
 import 'login_screen.dart';
 
 class RegisterScreen extends StatelessWidget {
@@ -20,6 +22,22 @@ class RegisterScreen extends StatelessWidget {
     await AuthSessionService.saveSession(
       identifier: result.user.email,
       token: result.token,
+      userData: result.user.toJson(),
+    );
+
+    // Sinkronkan profil aktif pengguna di UserProfileRepository
+    UserProfileRepository.instance.setProfile(
+      UserProfileModel(
+        userId: result.user.userId,
+        email: result.user.email,
+        username: result.user.username,
+        nama: result.user.nama,
+        bio: result.user.bio ?? 'Mahasiswa aktif Universitas Andalas.',
+        fotoProfil: result.user.fotoProfil,
+        fakultas: result.user.fakultas,
+        jurusan: result.user.jurusan,
+        pengingatAktif: result.user.pengingatAktif,
+      ),
     );
 
     if (!context.mounted) return;

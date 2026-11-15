@@ -34,6 +34,12 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   int _selectedTab = 0;
 
+  @override
+  void initState() {
+    super.initState();
+    UserProfileRepository.instance.fetchProfileFromBackend();
+  }
+
   void _navigateToSettings() {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const SettingsScreen()),

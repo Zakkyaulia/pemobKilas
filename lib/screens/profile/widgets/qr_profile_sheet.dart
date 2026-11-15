@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
+import '../../../services/user_api_service.dart';
 import '../../../theme/app_palette.dart';
 import '../../../theme/app_spacing.dart';
 import '../../../theme/home_colors.dart';
 import '../../../theme/home_text_styles.dart';
+import '../data/campus_users_data.dart';
 import '../data/user_profile_repository.dart';
 import '../public_profile_screen.dart';
+import '../qr_scanner_screen.dart';
 
 /// Modal sheet untuk menampilkan QR Profil sendiri ("QR Saya") dan memindai
 /// QR pengguna lain ("Pindai QR") untuk membuka Profil Publik (FR-16 & FR-B5).
@@ -32,10 +36,19 @@ class _QrProfileSheetState extends State<QrProfileSheet>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
 
+  // ── State Validasi & Feedback Pemindaian QR ──
+  bool _isProcessingScan = false;
+  String? _scanStatusTitle;
+  String? _scanStatusMessage;
+  IconData? _scanStatusIcon;
+  Color? _scanStatusColor;
+  CampusUserItem? _scannedUser;
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    UserProfileRepository.instance.fetchProfileFromBackend();
   }
 
   @override
@@ -47,99 +60,117 @@ class _QrProfileSheetState extends State<QrProfileSheet>
   @override
   Widget build(BuildContext context) {
     final isDark = AppPalette.isDark(context);
-    final user = UserProfileRepository.instance.profile;
 
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.75,
-      decoration: BoxDecoration(
-        color: AppPalette.surface(context),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: Column(
-        children: [
-          const SizedBox(height: 12),
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
-              borderRadius: BorderRadius.circular(2),
-            ),
+    return AnimatedBuilder(
+      animation: UserProfileRepository.instance,
+      builder: (context, _) {
+        final user = UserProfileRepository.instance.profile;
+
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.86,
+          decoration: BoxDecoration(
+            color: AppPalette.surface(context),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           ),
-          const SizedBox(height: AppSpacing.lg),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'QR Profil Mahasiswa',
-                  style: HomeTextStyles.headlineSm.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: AppPalette.textPrimary(context),
+          child: Column(
+            children: [
+              const SizedBox(height: 12),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'QR Profil Mahasiswa',
+                      style: HomeTextStyles.headlineSm.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: AppPalette.textPrimary(context),
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded),
+                      color: AppPalette.textSecondary(context),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                margin: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.lg,
+                  vertical: AppSpacing.sm,
+                ),
+                decoration: BoxDecoration(
+                  color: AppPalette.canvas(context),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppPalette.divider(context)),
+                ),
+                child: TabBar(
+                  controller: _tabController,
+                  indicator: BoxDecoration(
+                    color: HomeColors.primaryContainer,
+                    borderRadius: BorderRadius.circular(10),
                   ),
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  dividerColor: Colors.transparent,
+                  labelColor: Colors.white,
+                  unselectedLabelColor: AppPalette.textSecondary(context),
+                  labelStyle: HomeTextStyles.labelMd.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                  unselectedLabelStyle: HomeTextStyles.labelMd.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                  tabs: const [
+                    Tab(
+                      icon: Icon(Icons.qr_code_2_rounded, size: 18),
+                      text: 'QR Saya',
+                    ),
+                    Tab(
+                      icon: Icon(Icons.qr_code_scanner_rounded, size: 18),
+                      text: 'Pindai QR',
+                    ),
+                  ],
                 ),
-                IconButton(
-                  icon: const Icon(Icons.close_rounded),
-                  color: AppPalette.textSecondary(context),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            margin: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.lg,
-              vertical: AppSpacing.sm,
-            ),
-            decoration: BoxDecoration(
-              color: AppPalette.canvas(context),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppPalette.divider(context)),
-            ),
-            child: TabBar(
-              controller: _tabController,
-              indicator: BoxDecoration(
-                color: HomeColors.primaryContainer,
-                borderRadius: BorderRadius.circular(10),
               ),
-              indicatorSize: TabBarIndicatorSize.tab,
-              dividerColor: Colors.transparent,
-              labelColor: Colors.white,
-              unselectedLabelColor: AppPalette.textSecondary(context),
-              labelStyle: HomeTextStyles.labelMd.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-              unselectedLabelStyle: HomeTextStyles.labelMd.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-              tabs: const [
-                Tab(
-                  icon: Icon(Icons.qr_code_2_rounded, size: 18),
-                  text: 'QR Saya',
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildMyQrTab(context, user, isDark),
+                    _buildScanQrTab(context, isDark),
+                  ],
                 ),
-                Tab(
-                  icon: Icon(Icons.qr_code_scanner_rounded, size: 18),
-                  text: 'Pindai QR',
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildMyQrTab(context, user, isDark),
-                _buildScanQrTab(context, isDark),
-              ],
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
   Widget _buildMyQrTab(BuildContext context, dynamic user, bool isDark) {
+    final rawUsername = (user.username as String? ?? '').trim();
+    final cleanUsername = rawUsername.replaceAll('@', '').trim();
+    final qrData = cleanUsername.isNotEmpty
+        ? 'https://kilas.app/u/$cleanUsername'
+        : 'https://kilas.app';
+    final displayName = (user.nama as String? ?? '').trim().isNotEmpty
+        ? user.nama as String
+        : 'Mahasiswa UNAND';
+    final displayUsername = rawUsername.isNotEmpty
+        ? (rawUsername.startsWith('@') ? rawUsername : '@$rawUsername')
+        : '@unand';
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.xxl),
       child: Column(
@@ -163,7 +194,7 @@ class _QrProfileSheetState extends State<QrProfileSheet>
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: QrImageView(
-                      data: 'https://kilas.app/u/${user.username.replaceAll('@', '')}',
+                      data: qrData,
                       version: QrVersions.auto,
                       size: 200.0,
                       backgroundColor: Colors.white,
@@ -181,7 +212,7 @@ class _QrProfileSheetState extends State<QrProfileSheet>
                 ),
                 const SizedBox(height: 14),
                 Text(
-                  user.nama,
+                  displayName,
                   style: HomeTextStyles.headlineSm.copyWith(
                     fontWeight: FontWeight.w700,
                     color: const Color(0xFF0F172A),
@@ -189,7 +220,7 @@ class _QrProfileSheetState extends State<QrProfileSheet>
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  user.username,
+                  displayUsername,
                   style: HomeTextStyles.labelMd.copyWith(
                     fontWeight: FontWeight.w600,
                     color: HomeColors.primaryContainer,
@@ -217,12 +248,11 @@ class _QrProfileSheetState extends State<QrProfileSheet>
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             ),
             onPressed: () {
-              final link = 'https://kilas.app/u/${user.username.replaceAll('@', '')}';
-              Clipboard.setData(ClipboardData(text: link));
+              Clipboard.setData(ClipboardData(text: qrData));
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
-                    'Tautan profil ${user.username} berhasil disalin ke clipboard!',
+                    'Tautan profil $displayUsername berhasil disalin ke clipboard!',
                     style: HomeTextStyles.labelMd.copyWith(color: Colors.white),
                   ),
                   backgroundColor: const Color(0xFF1E293B),
@@ -352,9 +382,227 @@ class _QrProfileSheetState extends State<QrProfileSheet>
               ),
             ),
           ),
+          if (_isProcessingScan) _buildScanProcessingCard(isDark),
+          if (_scanStatusMessage != null) _buildScanResultCard(context, isDark),
         ],
       ),
     );
+  }
+
+  Widget _buildScanProcessingCard(bool isDark) {
+    return Container(
+      margin: const EdgeInsets.only(top: 18),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppPalette.divider(context)),
+      ),
+      child: Row(
+        children: [
+          const SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.5,
+              valueColor: AlwaysStoppedAnimation<Color>(HomeColors.primaryContainer),
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Text(
+              'Sedang memproses & memvalidasi QR...',
+              style: HomeTextStyles.labelMd.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppPalette.textPrimary(context),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScanResultCard(BuildContext context, bool isDark) {
+    final color = _scanStatusColor ?? HomeColors.primaryContainer;
+    final isSuccess = _scannedUser != null;
+
+    return Container(
+      margin: const EdgeInsets.only(top: 18),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: isDark ? 0.15 : 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.4), width: 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.18),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  _scanStatusIcon ?? Icons.info_outline_rounded,
+                  size: 20,
+                  color: color,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  _scanStatusTitle ?? 'Hasil Validasi',
+                  style: HomeTextStyles.labelMd.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: color,
+                  ),
+                ),
+              ),
+              GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _scanStatusMessage = null;
+                    _scanStatusTitle = null;
+                    _scannedUser = null;
+                  });
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Icon(
+                    Icons.close_rounded,
+                    size: 18,
+                    color: AppPalette.textSecondary(context),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            _scanStatusMessage ?? '',
+            style: HomeTextStyles.bodySm.copyWith(
+              color: AppPalette.textPrimary(context),
+              height: 1.45,
+            ),
+          ),
+          if (isSuccess && _scannedUser != null) ...[
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppPalette.surface(context),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppPalette.divider(context)),
+              ),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundColor: _scannedUser!.avatarBgColor,
+                    child: Text(
+                      _scannedUser!.initials,
+                      style: TextStyle(
+                        color: _scannedUser!.avatarFgColor,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _scannedUser!.name,
+                          style: HomeTextStyles.labelMd.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: AppPalette.textPrimary(context),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          _scannedUser!.username,
+                          style: HomeTextStyles.bodySm.copyWith(
+                            color: HomeColors.primaryContainer,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 11.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 42,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: HomeColors.primaryContainer,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 1,
+                ),
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => PublicProfileScreen.fromCampusUser(_scannedUser!),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.person_rounded, size: 16),
+                label: const Text(
+                  'Buka Profil Publik',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  String? _extractUsernameFromQr(String raw) {
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) return null;
+
+    final uri = Uri.tryParse(trimmed);
+    if (uri != null && uri.pathSegments.isNotEmpty) {
+      final segments = uri.pathSegments;
+      final uIndex = segments.indexOf('u');
+      if (uIndex != -1 && uIndex + 1 < segments.length) {
+        return segments[uIndex + 1].replaceAll('@', '').trim();
+      }
+      if (segments.length >= 2 && (segments[0] == 'user' || segments[0] == 'profile')) {
+        return segments[1].replaceAll('@', '').trim();
+      }
+    }
+
+    final schemeRegex = RegExp(r'kilas:\/\/(?:u|user)\/([a-zA-Z0-9_.]+)');
+    final match = schemeRegex.firstMatch(trimmed);
+    if (match != null) {
+      return match.group(1)?.replaceAll('@', '').trim();
+    }
+
+    final userMatch = RegExp(r'^@?([a-zA-Z0-9_.]{3,30})$').firstMatch(trimmed);
+    if (userMatch != null) {
+      return userMatch.group(1);
+    }
+
+    return null;
   }
 
   Future<void> _handleScanQr(BuildContext context, {bool fromGallery = false}) async {
@@ -395,8 +643,8 @@ class _QrProfileSheetState extends State<QrProfileSheet>
           children: [
             Text(
               fromGallery
-                  ? 'KILAS UNAND memerlukan izin untuk membuka galeri foto Anda guna memindai gambar QR code profil mahasiswa atau bukti laporan.'
-                  : 'KILAS UNAND memerlukan izin akses kamera perangkat Anda untuk memindai kode QR profil mahasiswa atau memverifikasi keaslian laporan secara langsung.',
+                  ? 'KILAS UNAND memerlukan izin untuk membuka galeri foto Anda guna memindai gambar QR code profil mahasiswa.'
+                  : 'KILAS UNAND memerlukan izin akses kamera perangkat Anda untuk memindai kode QR profil mahasiswa secara langsung.',
               style: HomeTextStyles.bodySm.copyWith(
                 color: AppPalette.textSecondary(context),
                 height: 1.45,
@@ -425,7 +673,7 @@ class _QrProfileSheetState extends State<QrProfileSheet>
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Privasi Terjamin: Akses kamera dan foto hanya diproses secara lokal di perangkat Anda untuk membaca kode QR dan tidak disebarkan ke publik tanpa izin.',
+                      'Privasi Terjamin: Akses kamera dan foto hanya diproses secara lokal di perangkat Anda untuk membaca kode QR.',
                       style: HomeTextStyles.labelSm.copyWith(
                         color: AppPalette.isDark(context)
                             ? const Color(0xFFBFDBFE)
@@ -472,44 +720,150 @@ class _QrProfileSheetState extends State<QrProfileSheet>
       ),
     );
 
-    if (allowCamera != true) return;
+    if (allowCamera != true || !context.mounted) return;
 
-    try {
-      final picker = ImagePicker();
-      final XFile? captured = await picker.pickImage(
-        source: fromGallery ? ImageSource.gallery : ImageSource.camera,
-        maxWidth: 1200,
-        maxHeight: 1200,
+    if (!fromGallery) {
+      // 1. Live camera scanner
+      final scannedData = await Navigator.of(context).push<String>(
+        MaterialPageRoute(builder: (_) => const QrScannerScreen()),
       );
+      if (scannedData == null || !context.mounted) return;
 
-      if (captured == null) return;
+      setState(() {
+        _isProcessingScan = true;
+        _scanStatusMessage = null;
+        _scannedUser = null;
+      });
 
-      if (!context.mounted) return;
+      await _processScannedQrData(context, scannedData);
+    } else {
+      // 2. Dari Galeri
+      try {
+        final picker = ImagePicker();
+        final XFile? file = await picker.pickImage(
+          source: ImageSource.gallery,
+          maxWidth: 1600,
+          maxHeight: 1600,
+        );
+        if (file == null || !context.mounted) return;
 
-      _showScannedProfileDialog(context);
-    } catch (e) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Gagal membuka kamera: $e',
-            style: HomeTextStyles.labelMd.copyWith(color: Colors.white),
-          ),
-          backgroundColor: const Color(0xFFEF4444),
-        ),
-      );
+        setState(() {
+          _isProcessingScan = true;
+          _scanStatusMessage = null;
+          _scannedUser = null;
+        });
+
+        final scannerController = MobileScannerController();
+        final BarcodeCapture? capture = await scannerController.analyzeImage(file.path);
+        await scannerController.dispose();
+
+        if (capture == null || capture.barcodes.isEmpty) {
+          if (!context.mounted) return;
+          setState(() {
+            _isProcessingScan = false;
+            _scannedUser = null;
+            _scanStatusTitle = 'Kode QR Tidak Ditemukan';
+            _scanStatusMessage = 'Gambar yang Anda pilih tidak memuat kode QR. Pastikan memilih foto atau tangkapan layar yang memuat kode QR profil KILAS yang jelas.';
+            _scanStatusIcon = Icons.image_not_supported_outlined;
+            _scanStatusColor = const Color(0xFFEF4444);
+          });
+          return;
+        }
+
+        final rawValue = capture.barcodes.first.rawValue;
+        if (rawValue == null || rawValue.trim().isEmpty) {
+          if (!context.mounted) return;
+          setState(() {
+            _isProcessingScan = false;
+            _scannedUser = null;
+            _scanStatusTitle = 'Kode QR Kosong';
+            _scanStatusMessage = 'Kode QR pada gambar tidak memiliki data atau teks yang dapat dibaca.';
+            _scanStatusIcon = Icons.qr_code_scanner_rounded;
+            _scanStatusColor = const Color(0xFFEF4444);
+          });
+          return;
+        }
+
+        if (!context.mounted) return;
+        await _processScannedQrData(context, rawValue.trim());
+      } catch (e) {
+        if (!context.mounted) return;
+        setState(() {
+          _isProcessingScan = false;
+          _scannedUser = null;
+          _scanStatusTitle = 'Gagal Memproses Gambar';
+          _scanStatusMessage = 'Terjadi kesalahan saat membaca file gambar: $e';
+          _scanStatusIcon = Icons.error_outline_rounded;
+          _scanStatusColor = const Color(0xFFEF4444);
+        });
+      }
     }
   }
 
-  void _showScannedProfileDialog(
-    BuildContext context, {
-    String name = 'Ahmad Fauzan .S',
-    String username = '@ahmadfauzan',
-    String jurusan = 'Sistem Informasi',
-    String fakultas = 'Fakultas Teknologi Informasi',
-    String bio = 'Aktif berkontribusi melaporkan fasilitas di UNAND.',
-    String initials = 'AF',
-  }) {
+  Future<void> _processScannedQrData(BuildContext context, String rawData) async {
+    final username = _extractUsernameFromQr(rawData);
+    if (username == null) {
+      if (!context.mounted) return;
+      setState(() {
+        _isProcessingScan = false;
+        _scannedUser = null;
+        _scanStatusTitle = 'Bukan QR Profil KILAS';
+        _scanStatusMessage = 'Kode QR yang dipindai bukan merupakan format profil mahasiswa KILAS.\n\nData terbaca:\n"$rawData"';
+        _scanStatusIcon = Icons.qr_code_2_rounded;
+        _scanStatusColor = const Color(0xFFEF4444);
+      });
+      return;
+    }
+
+    final lookupResult = await UserApiService.getUserByUsername(username);
+
+    if (!context.mounted) return;
+
+    switch (lookupResult) {
+      case UserLookupSuccess(:final user):
+        setState(() {
+          _isProcessingScan = false;
+          _scannedUser = user;
+          _scanStatusTitle = 'QR Berhasil Divalidasi';
+          _scanStatusMessage = 'Profil mahasiswa terverifikasi: ${user.name} (${user.username})';
+          _scanStatusIcon = Icons.check_circle_rounded;
+          _scanStatusColor = const Color(0xFF10B981);
+        });
+        _showScannedProfileDialog(context, user);
+
+      case UserLookupNotFound(:final username):
+        setState(() {
+          _isProcessingScan = false;
+          _scannedUser = null;
+          _scanStatusTitle = 'Mahasiswa Tidak Terdaftar';
+          _scanStatusMessage = 'Kode QR valid, namun akun @$username tidak ditemukan di database KILAS.';
+          _scanStatusIcon = Icons.person_off_rounded;
+          _scanStatusColor = const Color(0xFFEF4444);
+        });
+
+      case UserLookupNetworkError(:final message):
+        setState(() {
+          _isProcessingScan = false;
+          _scannedUser = null;
+          _scanStatusTitle = 'Koneksi Backend Terputus';
+          _scanStatusMessage = '$message\n\nPastikan adb reverse aktif (adb reverse tcp:3000 tcp:3000).';
+          _scanStatusIcon = Icons.wifi_off_rounded;
+          _scanStatusColor = const Color(0xFFF59E0B);
+        });
+
+      case UserLookupError(:final message):
+        setState(() {
+          _isProcessingScan = false;
+          _scannedUser = null;
+          _scanStatusTitle = 'Validasi Gagal';
+          _scanStatusMessage = message;
+          _scanStatusIcon = Icons.error_outline_rounded;
+          _scanStatusColor = const Color(0xFFEF4444);
+        });
+    }
+  }
+
+  void _showScannedProfileDialog(BuildContext context, CampusUserItem user) {
     final isDarkTheme = AppPalette.isDark(context);
     showModalBottomSheet(
       context: context,
@@ -578,11 +932,11 @@ class _QrProfileSheetState extends State<QrProfileSheet>
                 children: [
                   CircleAvatar(
                     radius: 26,
-                    backgroundColor: HomeColors.primaryContainer,
+                    backgroundColor: user.avatarBgColor,
                     child: Text(
-                      initials,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      user.initials,
+                      style: TextStyle(
+                        color: user.avatarFgColor,
                         fontWeight: FontWeight.w700,
                         fontSize: 16,
                       ),
@@ -593,34 +947,32 @@ class _QrProfileSheetState extends State<QrProfileSheet>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Text(
-                              name,
-                              style: HomeTextStyles.labelMd.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: AppPalette.textPrimary(context),
-                              ),
-                            ),
-                          ],
+                        Text(
+                          user.name,
+                          style: HomeTextStyles.labelMd.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: AppPalette.textPrimary(context),
+                          ),
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          '$jurusan • $fakultas',
+                          user.username,
                           style: HomeTextStyles.bodySm.copyWith(
-                            color: AppPalette.textSecondary(context),
+                            color: HomeColors.primaryContainer,
+                            fontWeight: FontWeight.w600,
                             fontSize: 12,
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          bio,
-                          style: HomeTextStyles.bodySm.copyWith(
-                            color: AppPalette.textPrimary(context),
-                            fontSize: 11.5,
+                        if (user.jurusan != null || user.fakultas != null) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            [user.jurusan, user.fakultas].whereType<String>().join(' • '),
+                            style: HomeTextStyles.bodySm.copyWith(
+                              color: AppPalette.textSecondary(context),
+                              fontSize: 11.5,
+                            ),
                           ),
-                          maxLines: 2,
-                        ),
+                        ],
                       ],
                     ),
                   ),
@@ -647,25 +999,14 @@ class _QrProfileSheetState extends State<QrProfileSheet>
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => PublicProfileScreen(
-                        name: name,
-                        username: username,
-                        jurusan: jurusan,
-                        fakultas: fakultas,
-                        bio: bio,
-                        initials: initials,
-                      ),
+                      builder: (context) => PublicProfileScreen.fromCampusUser(user),
                     ),
                   );
                 },
-                icon: const Icon(Icons.person_search_rounded, size: 22, color: Colors.white),
-                label: Text(
-                  'Lihat Profil & Laporan Mahasiswa',
-                  style: HomeTextStyles.labelMd.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
-                    fontSize: 13.5,
-                  ),
+                icon: const Icon(Icons.person_rounded, size: 18),
+                label: const Text(
+                  'Lihat Profil Lengkap',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
                 ),
               ),
             ),

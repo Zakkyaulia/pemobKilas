@@ -2,7 +2,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 
 import '../../theme/app_palette.dart';
 import '../../theme/app_spacing.dart';
@@ -104,112 +103,6 @@ class PublicProfileScreen extends StatelessWidget {
     AppSnackbar.showSuccess(
       context,
       'Tautan profil $username berhasil disalin!',
-    );
-  }
-
-  void _showQrDialog(BuildContext context) {
-    final isDark = AppPalette.isDark(context);
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => Dialog(
-        backgroundColor: AppPalette.surface(context),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-        child: Container(
-          width: 320,
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
-                      blurRadius: 16,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: RepaintBoundary(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(10),
-                    child: QrImageView(
-                      data: 'https://kilas.app/u/${username.replaceAll('@', '')}',
-                      version: QrVersions.auto,
-                      size: 180.0,
-                      backgroundColor: Colors.white,
-                      padding: const EdgeInsets.all(8),
-                      eyeStyle: const QrEyeStyle(
-                        eyeShape: QrEyeShape.square,
-                        color: Color(0xFF0F172A),
-                      ),
-                      dataModuleStyle: const QrDataModuleStyle(
-                        dataModuleShape: QrDataModuleShape.square,
-                        color: Color(0xFF0F172A),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                name,
-                textAlign: TextAlign.center,
-                style: HomeTextStyles.headlineSm.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: AppPalette.textPrimary(context),
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                username,
-                style: HomeTextStyles.labelMd.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: isDark
-                      ? const Color(0xFF60A5FA)
-                      : HomeColors.primaryContainer,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Pindai QR ini melalui aplikasi KILAS untuk membuka profil mahasiswa ini secara cepat.',
-                textAlign: TextAlign.center,
-                style: HomeTextStyles.bodySm.copyWith(
-                  color: AppPalette.textSecondary(context),
-                  fontSize: 12,
-                ),
-              ),
-              const SizedBox(height: 18),
-              SizedBox(
-                width: double.infinity,
-                height: 44,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: HomeColors.primaryContainer,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 0,
-                  ),
-                  onPressed: () => Navigator.pop(ctx),
-                  child: Text(
-                    'Tutup',
-                    style: HomeTextStyles.labelMd.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 
@@ -523,64 +416,6 @@ class PublicProfileScreen extends StatelessWidget {
               color: AppPalette.textPrimary(context),
               height: 1.45,
             ),
-          ),
-          const SizedBox(height: 16),
-          // Tombol Salin Tautan & QR Profil
-          Row(
-            children: [
-              Expanded(
-                child: SizedBox(
-                  height: 40,
-                  child: OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: AppPalette.divider(context)),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                    ),
-                    onPressed: () => _handleCopyProfileLink(context),
-                    icon: const Icon(Icons.link_rounded, size: 16),
-                    label: Text(
-                      'Salin Tautan',
-                      style: HomeTextStyles.labelMd.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: AppPalette.textPrimary(context),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: SizedBox(
-                  height: 40,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: HomeColors.primaryContainer,
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                    ),
-                    onPressed: () => _showQrDialog(context),
-                    icon: const Icon(
-                      Icons.qr_code_2_rounded,
-                      size: 17,
-                      color: Colors.white,
-                    ),
-                    label: Text(
-                      'QR Mahasiswa',
-                      style: HomeTextStyles.labelMd.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
           ),
         ],
       ),

@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../services/user_api_service.dart';
 import '../../theme/app_palette.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/home_colors.dart';
@@ -191,6 +193,11 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
   /// Cakupan pencarian aktif (Laporan atau Pengguna / Mahasiswa).
   SearchScope _selectedScope = SearchScope.laporan;
 
+  // ── State Pencarian Pengguna (Backend Express API) ────────────────────────
+  List<CampusUserItem> _searchedUsers = [];
+  bool _isSearchingUsers = false;
+  Timer? _userSearchDebounce;
+
   // ── Draft State (Menyimpan pilihan user yang sedang diubah di UI) ────────
   final TextEditingController _searchController = TextEditingController();
 
@@ -251,6 +258,7 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
   void dispose() {
     ReportRepository.instance.removeListener(_onRepoChanged);
     _searchController.removeListener(_onSearchQueryChanged);
+    _userSearchDebounce?.cancel();
     _searchController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -258,18 +266,48 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
 
   void _onSearchQueryChanged() {
     final text = _searchController.text.trim();
-    if (_selectedScope == SearchScope.pengguna) {
-      if (mounted) setState(() {});
-    } else {
-      // Deteksi otomatis jika user mengetik @username
-      if (text.startsWith('@') && text.length > 1) {
-        if (mounted) {
-          setState(() {
-            _selectedScope = SearchScope.pengguna;
-          });
-        }
+    if (text.startsWith('@') && text.length > 1 && _selectedScope != SearchScope.pengguna) {
+      if (mounted) {
+        setState(() {
+          _selectedScope = SearchScope.pengguna;
+        });
       }
     }
+
+    if (_selectedScope == SearchScope.pengguna) {
+      _triggerUserSearch(text);
+    }
+  }
+
+  void _triggerUserSearch(String query) {
+    _userSearchDebounce?.cancel();
+    final clean = query.startsWith('@') ? query.substring(1).trim() : query.trim();
+
+    if (clean.isEmpty) {
+      if (mounted) {
+        setState(() {
+          _searchedUsers = [];
+          _isSearchingUsers = false;
+        });
+      }
+      return;
+    }
+
+    if (mounted) {
+      setState(() {
+        _isSearchingUsers = true;
+      });
+    }
+
+    _userSearchDebounce = Timer(const Duration(milliseconds: 350), () async {
+      final results = await UserApiService.searchUsers(clean);
+      if (mounted) {
+        setState(() {
+          _searchedUsers = results;
+          _isSearchingUsers = false;
+        });
+      }
+    });
   }
 
   void _onRepoChanged() {
@@ -756,6 +794,9 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
           setState(() {
             _selectedScope = scope;
           });
+          if (scope == SearchScope.pengguna) {
+            _triggerUserSearch(_searchController.text.trim());
+          }
         },
         behavior: HitTestBehavior.opaque,
         child: AnimatedContainer(
@@ -809,77 +850,145 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
     final isDark = AppPalette.isDark(context);
     final query = _searchController.text.trim();
     final cleanQuery = query.startsWith('@')
-        ? query.substring(1).toLowerCase()
-        : query.toLowerCase();
-
-    final allUsers = CampusUsersData.getCampusUsers(
-      reports: ReportRepository.instance.reports,
-    );
-
-    final filteredUsers = allUsers.where((u) {
-      if (cleanQuery.isEmpty) return true;
-      final matchName = u.name.toLowerCase().contains(cleanQuery);
-      final matchUsername =
-          u.username.toLowerCase().replaceAll('@', '').contains(cleanQuery);
-      final matchJurusan =
-          u.jurusan?.toLowerCase().contains(cleanQuery) ?? false;
-      return matchName || matchUsername || matchJurusan;
-    }).toList();
+        ? query.substring(1).trim()
+        : query;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                query.isEmpty
-                    ? 'MAHASISWA & KONTRIBUTOR KAMPUS'
-                    : 'HASIL PENCARIAN MAHASISWA',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.8,
-                  color: AppPalette.textSecondary(context),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: isDark
-                      ? const Color(0xFF1E293B)
-                      : const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  '${filteredUsers.length} Mahasiswa',
+          if (cleanQuery.isNotEmpty && !_isSearchingUsers && _searchedUsers.isNotEmpty) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'HASIL PENCARIAN MAHASISWA',
                   style: GoogleFonts.plusJakartaSans(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: isDark
-                        ? const Color(0xFF94A3B8)
-                        : const Color(0xFF475569),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.8,
+                    color: AppPalette.textSecondary(context),
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          if (filteredUsers.isEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: isDark
+                        ? const Color(0xFF1E293B)
+                        : const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    '${_searchedUsers.length} Mahasiswa',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: isDark
+                          ? const Color(0xFF94A3B8)
+                          : const Color(0xFF475569),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+          ],
+          if (cleanQuery.isEmpty)
+            _buildInitialUserPrompt(isDark)
+          else if (_isSearchingUsers)
+            _buildSearchingLoading(isDark)
+          else if (_searchedUsers.isEmpty)
             _buildEmptyUserResult(isDark)
           else
             ListView.separated(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: filteredUsers.length,
+              itemCount: _searchedUsers.length,
               separatorBuilder: (context, index) => const SizedBox(height: 10),
               itemBuilder: (context, index) {
-                final user = filteredUsers[index];
+                final user = _searchedUsers[index];
                 return _buildUserCard(context, isDark, user);
               },
             ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInitialUserPrompt(bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+      decoration: BoxDecoration(
+        color: AppPalette.surface(context),
+        borderRadius: BorderRadius.circular(_kRadiusLg),
+        border: Border.all(color: AppPalette.divider(context)),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : const Color(0xFFEFF6FF),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.search_rounded,
+              color: _kPrimary,
+              size: 28,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'Cari Mahasiswa Kampus',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: AppPalette.textPrimary(context),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Ketik @username atau nama mahasiswa pada kolom pencarian di atas untuk mulai mencari akun.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 13,
+              fontWeight: FontWeight.w400,
+              color: AppPalette.textSecondary(context),
+              height: 1.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchingLoading(bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+      alignment: Alignment.center,
+      child: Column(
+        children: [
+          const SizedBox(
+            width: 28,
+            height: 28,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.5,
+              valueColor: AlwaysStoppedAnimation<Color>(_kPrimary),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'Mencari akun mahasiswa...',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: AppPalette.textSecondary(context),
+            ),
+          ),
         ],
       ),
     );

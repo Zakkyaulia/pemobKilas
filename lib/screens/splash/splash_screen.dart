@@ -5,6 +5,7 @@ import '../../theme/home_colors.dart';
 import '../../theme/home_text_styles.dart';
 import '../auth/login_screen.dart';
 import '../main_screen.dart';
+import '../profile/data/user_profile_repository.dart';
 
 /// Screen pembuka (Splash Screen) dengan animasi logo KILAS,
 /// efek cahaya pulsing (civic pulse), dan transisi halus ke halaman login.
@@ -72,6 +73,9 @@ class _SplashScreenState extends State<SplashScreen>
   void _navigateToNextScreen() async {
     if (!mounted) return;
     final bool isLoggedIn = await AuthSessionService.isLoggedIn();
+    if (isLoggedIn) {
+      await UserProfileRepository.instance.initFromSession();
+    }
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(

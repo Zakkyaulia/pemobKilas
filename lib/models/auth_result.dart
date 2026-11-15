@@ -55,5 +55,19 @@ class AuthUser {
       pengingatAktif: json['pengingat_aktif'] as bool? ?? false,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'user_id': userId,
+      'email': email,
+      'username': username,
+      'nama': nama,
+      'bio': bio,
+      'foto_profil': fotoProfil,
+      'fakultas': fakultas,
+      'jurusan': jurusan,
+      'pengingat_aktif': pengingatAktif,
+    };
+  }
 }
 
