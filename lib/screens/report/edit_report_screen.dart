@@ -510,29 +510,34 @@ class _EditReportScreenState extends State<EditReportScreen> {
     }
   }
 
-  void _executeSaveReport(String title, String description) {
+  Future<void> _executeSaveReport(String title, String description) async {
     setState(() => _isSubmitting = true);
 
-    final isCondition = _selectedCategory == 'Kondisi Kampus';
-    final now = DateTime.now();
+    // Pisahkan berkas lokal baru vs media lama yang sudah ada di server
+    final newMedia = <String>[];
+    for (final path in _media) {
+      if (File(path).existsSync()) {
+        newMedia.add(path);
+      }
+    }
 
-    final updated = widget.report.copyWith(
-      title: title,
-      description: description,
-      badgeLabel: isCondition ? 'Kondisi Kampus' : 'Informasi Penting',
-      badgeVariant: isCondition ? BadgeVariant.dot : BadgeVariant.icon,
-      badgeDotColor: isCondition ? HomeColors.statusCondition : null,
-      badgeIcon: isCondition ? null : Icons.campaign,
-      badgeBgColor: isCondition ? HomeColors.tertiaryFixed : HomeColors.surfaceContainerHigh,
-      badgeTextColor: isCondition ? HomeColors.onTertiaryFixedVariant : HomeColors.primary,
-      mediaUrls: List<String>.from(_media),
-      editedAt: now,
-    );
+    ReportModel? updated;
+    try {
+      updated = await ReportRepository.instance.editReport(
+        reportId: widget.report.id,
+        title: title,
+        description: description,
+        category: _selectedCategory,
+        newMediaPaths: newMedia,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isSubmitting = false);
+      _showErrorSnackBar(e.toString());
+      return;
+    }
 
-    // 1. Simpan perubahan ke ReportRepository
-    ReportRepository.instance.updateById(widget.report.id, updated);
-
-    // 2. Catat riwayat aktivitas pengguna
+    // Catat riwayat aktivitas pengguna
     UserProfileRepository.instance.addActivity(
       actionType: ActivityActionType.ubahLaporan,
       title: 'Mengubah Laporan',

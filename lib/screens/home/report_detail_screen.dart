@@ -50,7 +50,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
     setState(() {
       _report = updated;
     });
-    ReportRepository.instance.updateById(updated.id, updated);
+    ReportRepository.instance.syncUpvote(updated.id, isUpvoted, count);
 
     if (isUpvoted) {
       UserProfileRepository.instance.addActivity(
@@ -182,7 +182,7 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
     setState(() {
       _report = updated;
     });
-    ReportRepository.instance.updateById(updated.id, updated);
+    ReportRepository.instance.syncBookmark(updated.id, isBookmarked);
 
     UserProfileRepository.instance.addActivity(
       actionType: ActivityActionType.bookmark,

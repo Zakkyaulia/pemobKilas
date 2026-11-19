@@ -55,6 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     // Listen to repository changes (e.g. from detail screen) to rebuild feed
     _repo.addListener(_onRepoChanged);
+    _repo.fetchReports();
   }
 
   @override
@@ -146,10 +147,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _handleFeedUpvote(int index, bool isUpvoted, int count) {
     final report = _repo[index];
-    _repo.updateAt(index, report.copyWith(
-      isUpvoted: isUpvoted,
-      upvoteCount: count,
-    ));
+    _repo.syncUpvote(report.id, isUpvoted, count);
 
     if (isUpvoted) {
       UserProfileRepository.instance.addActivity(
@@ -254,9 +252,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _handleFeedBookmark(int index, bool isBookmarked) {
     final report = _repo[index];
-    _repo.updateAt(index, report.copyWith(
-      isBookmarked: isBookmarked,
-    ));
+    _repo.syncBookmark(report.id, isBookmarked);
 
     UserProfileRepository.instance.addActivity(
       actionType: ActivityActionType.bookmark,
@@ -387,7 +383,7 @@ class _HomeScreenState extends State<HomeScreen> {
           // ── Scrollable feed ──────────────────────────────────────
           RefreshIndicator(
             color: HomeColors.primaryContainer,
-            onRefresh: () => Future<void>.delayed(const Duration(seconds: 1)),
+            onRefresh: () => _repo.fetchReports(),
             child: ListView(
               padding: EdgeInsets.only(
                 top: headerHeight,

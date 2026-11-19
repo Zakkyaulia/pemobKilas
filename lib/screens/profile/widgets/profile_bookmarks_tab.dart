@@ -29,8 +29,7 @@ class ProfileBookmarksTab extends StatefulWidget {
 
 class _ProfileBookmarksTabState extends State<ProfileBookmarksTab> {
   void _removeBookmark(ReportModel report) {
-    final updated = report.copyWith(isBookmarked: false);
-    ReportRepository.instance.updateById(report.id, updated);
+    ReportRepository.instance.syncBookmark(report.id, false);
     UserProfileRepository.instance.addActivity(
       actionType: ActivityActionType.bookmark,
       title: 'Menghapus Bookmark',
