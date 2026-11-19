@@ -38,6 +38,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     UserProfileRepository.instance.fetchProfileFromBackend();
+    ReportRepository.instance.fetchBookmarks();
   }
 
   void _navigateToSettings() {

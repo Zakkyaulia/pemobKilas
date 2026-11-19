@@ -99,23 +99,39 @@ class ProfileReportsTab extends StatelessWidget {
               elevation: 0,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
-            onPressed: () {
-              ReportRepository.instance.deleteById(report.id);
-              UserProfileRepository.instance.addActivity(
-                actionType: ActivityActionType.hapusLaporan,
-                title: 'Menghapus Laporan',
-                description: report.title ?? 'Laporan dihapus',
-              );
+            onPressed: () async {
               Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Laporan berhasil dihapus.',
-                    style: HomeTextStyles.labelMd.copyWith(color: Colors.white),
-                  ),
-                  backgroundColor: const Color(0xFFEF4444),
-                ),
-              );
+              try {
+                await ReportRepository.instance.removeReport(report.id);
+                UserProfileRepository.instance.addActivity(
+                  actionType: ActivityActionType.hapusLaporan,
+                  title: 'Menghapus Laporan',
+                  description: report.title ?? 'Laporan dihapus',
+                );
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Laporan berhasil dihapus.',
+                        style: HomeTextStyles.labelMd.copyWith(color: Colors.white),
+                      ),
+                      backgroundColor: const Color(0xFFEF4444),
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        e.toString(),
+                        style: HomeTextStyles.labelMd.copyWith(color: Colors.white),
+                      ),
+                      backgroundColor: const Color(0xFFEF4444),
+                    ),
+                  );
+                }
+              }
             },
             child: Text(
               'Hapus',

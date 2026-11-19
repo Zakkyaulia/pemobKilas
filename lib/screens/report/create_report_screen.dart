@@ -1061,50 +1061,67 @@ class _CreateReportScreenState extends State<CreateReportScreen> {
     _executeSubmitReport(title, description);
   }
 
-  void _executeSubmitReport(String title, String description) {
-    final isCondition = _selectedCategory == 'Kondisi Kampus';
-    final currentUser = UserProfileRepository.instance.currentUser;
-    final initials = currentUser.nama.isNotEmpty
-        ? currentUser.nama
-            .trim()
-            .split(' ')
-            .map((w) => w.isNotEmpty ? w[0] : '')
-            .take(2)
-            .join()
-        : 'U';
-    final newReport = ReportModel(
-      id: 'post-${DateTime.now().millisecondsSinceEpoch}',
-      cardType: CardType.report,
-      authorName: currentUser.nama,
-      authorUsername: currentUser.username,
-      authorInitials: initials,
-      authorAvatarUrl: currentUser.fotoProfil,
-      avatarBgColor: HomeColors.surfaceVariant,
-      avatarFgColor: HomeColors.primary,
-      metaIcon: Icons.location_on,
-      metaIconColor: HomeColors.primary,
-      metaText: '${_resolvedLocationName ?? 'Area Kampus UNAND'} • Baru saja',
-      locationName: _resolvedLocationName,
-      locationDetail: _coordinates,
-      timestamp: 'Baru saja',
-      createdAt: DateTime.now(),
-      badgeLabel: isCondition ? 'Kondisi Kampus' : 'Informasi Penting',
-      badgeVariant: isCondition ? BadgeVariant.dot : BadgeVariant.icon,
-      badgeDotColor: isCondition ? HomeColors.statusCondition : null,
-      badgeIcon: isCondition ? null : Icons.campaign,
-      badgeBgColor: isCondition ? HomeColors.tertiaryFixed : HomeColors.surfaceContainerHigh,
-      badgeTextColor: isCondition ? HomeColors.onTertiaryFixedVariant : HomeColors.primary,
-      title: title,
-      description: description,
-      mediaUrls: _mediaPaths,
-      imageUrl: _mediaPaths.isNotEmpty ? _mediaPaths.first : null,
-      aspectRatio: 16 / 9,
-      imageSemanticLabel: title,
-      upvoteCount: 0,
-      isUpvoted: false,
+  Future<void> _executeSubmitReport(String title, String description) async {
+    // Tampilkan loading dialog selama upload
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          backgroundColor: AppPalette.surface(context),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(_kRadiusLg)),
+          content: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Row(
+              children: [
+                const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: _kPrimary,
+                  ),
+                ),
+                const SizedBox(width: 18),
+                Expanded(
+                  child: Text(
+                    'Mengunggah laporan ke server...',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppPalette.textPrimary(context),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
 
-    ReportRepository.instance.addReport(newReport);
+    ReportModel? newReport;
+    try {
+      newReport = await ReportRepository.instance.submitNewReport(
+        title: title,
+        description: description,
+        category: _selectedCategory,
+        latitude: _latitude ?? -0.9142,
+        longitude: _longitude ?? 100.4608,
+        locationName: _resolvedLocationName,
+        mediaPaths: _mediaPaths,
+      );
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Tutup loading dialog
+        _showErrorSnackBar(e.toString());
+      }
+      return;
+    }
+
+    if (!mounted) return;
+    Navigator.pop(context); // Tutup loading dialog
 
     // Jika laporan berasal dari draft, hapus draft dari repository lokal
     if (widget.initialDraft != null) {
