@@ -192,42 +192,27 @@ abstract final class ReportApiService {
 
   // ── 4. Ubah Laporan Sendiri (PUT /api/reports/:id) ─────────────────────────
 
-  /// FR-A2: Mengedit teks dan media laporan sendiri (maksimal 24 jam).
+  /// FR-A2: Mengedit judul, keterangan, dan kategori laporan sendiri
+  /// (maksimal 24 jam). Media tidak dapat diubah, jadi request berupa JSON biasa.
   static Future<ReportModel> updateReport({
     required String reportId,
     String? title,
     String? description,
     String? category,
-    List<String>? keptMediaIds,
-    List<String>? newMediaPaths,
   }) async {
     final uri = Uri.parse('$_baseUrl/api/reports/$reportId');
-    final token = await AuthSessionService.getToken();
+    final headers = await _authHeaders();
 
-    final request = http.MultipartRequest('PUT', uri);
-    if (token != null && token.isNotEmpty) {
-      request.headers['Authorization'] = 'Bearer $token';
-    }
-    request.headers['Accept'] = 'application/json';
-
-    if (title != null) request.fields['title'] = title;
-    if (description != null) request.fields['description'] = description;
-    if (category != null) request.fields['category'] = category;
-    if (keptMediaIds != null) {
-      request.fields['kept_media_ids'] = jsonEncode(keptMediaIds);
-    }
-
-    if (newMediaPaths != null) {
-      for (final path in newMediaPaths) {
-        if (File(path).existsSync()) {
-          request.files.add(await http.MultipartFile.fromPath('media', path));
-        }
-      }
-    }
+    final payload = <String, String>{
+      'title': ?title,
+      'description': ?description,
+      'category': ?category,
+    };
 
     try {
-      final streamedResponse = await request.send().timeout(const Duration(seconds: 40));
-      final response = await http.Response.fromStream(streamedResponse);
+      final response = await http
+          .put(uri, headers: headers, body: jsonEncode(payload))
+          .timeout(const Duration(seconds: 20));
 
       final body = jsonDecode(response.body) as Map<String, dynamic>;
       _checkResponse(response, body);

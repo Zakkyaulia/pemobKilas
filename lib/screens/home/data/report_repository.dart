@@ -129,16 +129,13 @@ class ReportRepository extends ChangeNotifier {
     String? title,
     String? description,
     String? category,
-    List<String>? keptMediaIds,
-    List<String>? newMediaPaths,
   }) async {
+    // Media tidak dapat diubah saat edit (hanya teks & kategori).
     final updated = await ReportApiService.updateReport(
       reportId: reportId,
       title: title,
       description: description,
       category: category,
-      keptMediaIds: keptMediaIds,
-      newMediaPaths: newMediaPaths,
     );
 
     updateById(reportId, updated);

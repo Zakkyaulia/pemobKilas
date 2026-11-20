@@ -1,20 +1,16 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../../theme/app_colors.dart';
 import '../../theme/app_palette.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/home_colors.dart';
-import '../../widgets/home/video_player_box.dart';
+import '../../widgets/home/report_media_gallery.dart';
 import '../home/data/report_repository.dart';
 import '../home/models/report_model.dart';
 import '../profile/data/user_profile_repository.dart';
 import '../profile/models/user_profile_model.dart';
-import 'media_rules.dart';
 
 // ─── Design tokens mapped to centralized HomeColors ──────────────────────────
 const Color _kPrimary = HomeColors.primary;
@@ -30,13 +26,14 @@ const double _kRadiusSm = 8.0;
 /// Halaman edit laporan (FR-A2) yang 100% konsisten dengan [CreateReportScreen].
 ///
 /// Pengguna dapat mengubah:
-/// 1. Media bukti: tambah / hapus media (1–5, maks. 1 video), lihat [MediaRules]
-/// 2. Kategori laporan ("Kondisi Kampus" vs "Informasi Penting")
-/// 3. Caption / Judul laporan
-/// 4. Keterangan / Deskripsi lengkap (konsisten tanpa validasi kaku 10 karakter)
+/// 1. Kategori laporan ("Kondisi Kampus" vs "Informasi Penting")
+/// 2. Judul laporan
+/// 3. Keterangan / Deskripsi lengkap
 ///
 /// Aturan bisnis:
-/// - Hanya dapat diedit dalam waktu 24 jam sejak diterbitkan (teks maupun media).
+/// - Hanya dapat diedit dalam waktu 24 jam sejak diterbitkan.
+/// - **Media (foto/video) tidak dapat diubah** karena merupakan bukti laporan.
+///   Untuk mengganti media, hapus laporan lalu buat ulang.
 /// - Hasil edit akan ditandai dengan label "diedit".
 class EditReportScreen extends StatefulWidget {
   const EditReportScreen({
@@ -56,11 +53,10 @@ class _EditReportScreenState extends State<EditReportScreen> {
 
   late String _selectedCategory;
   /// Media laporan (path lokal atau URL), 1–5 item, maks. 1 video.
-  late List<String> _media;
-  int _activeMediaIndex = 0;
+  /// Media laporan, hanya ditampilkan (tidak dapat diubah).
+  late final List<String> _media;
   bool _isSubmitting = false;
 
-  final ImagePicker _picker = ImagePicker();
 
   static const int _maxDescriptionLength = 1500;
 
@@ -92,287 +88,6 @@ class _EditReportScreenState extends State<EditReportScreen> {
   }
 
   bool get _canEdit => widget.report.canEdit;
-
-  /// Menambahkan media bila lolos [MediaRules].
-  Future<void> _tryAddMedia(XFile file, {required bool isVideo}) async {
-    final error = MediaRules.validateAdd(
-      current: _media,
-      isVideo: isVideo,
-      bytes: await file.length(),
-    );
-    if (error != null) {
-      _showErrorSnackBar(error);
-      return;
-    }
-    if (!mounted) return;
-    setState(() {
-      _media.add(file.path);
-      _activeMediaIndex = _media.length - 1;
-    });
-  }
-
-  bool _ensureSlotAvailable({bool forVideo = false}) {
-    if (_media.length >= MediaRules.maxMediaPerReport) {
-      _showErrorSnackBar('Maksimal ${MediaRules.maxMediaPerReport} media per laporan.');
-      return false;
-    }
-    if (forVideo && MediaRules.videoCount(_media) >= MediaRules.maxVideoPerReport) {
-      _showErrorSnackBar('Hanya boleh ${MediaRules.maxVideoPerReport} video per laporan.');
-      return false;
-    }
-    return true;
-  }
-
-  Future<void> _handleCameraAction() async {
-    if (!_canEdit || !_ensureSlotAvailable()) return;
-    try {
-      final XFile? photo = await _picker.pickImage(
-        source: ImageSource.camera,
-        maxWidth: 1920,
-        maxHeight: 1080,
-        imageQuality: 85,
-      );
-      if (photo != null) await _tryAddMedia(photo, isVideo: false);
-    } catch (e) {
-      _showErrorSnackBar('Gagal membuka kamera: $e');
-    }
-  }
-
-  Future<void> _handleGalleryAction() async {
-    if (!_canEdit || !_ensureSlotAvailable()) return;
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppPalette.surface(context),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(_kRadiusLg)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppPalette.divider(context),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Pilih Jenis Media',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: AppPalette.textPrimary(context),
-                ),
-              ),
-              const SizedBox(height: 12),
-              ListTile(
-                leading: Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: _kBgBlue100,
-                    borderRadius: BorderRadius.circular(_kRadiusSm),
-                  ),
-                  child: const Icon(Icons.photo_library_outlined, color: _kPrimary, size: 20),
-                ),
-                title: Text(
-                  'Foto dari Galeri',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppPalette.textPrimary(context),
-                  ),
-                ),
-                subtitle: Text(
-                  'JPG/PNG, bisa pilih beberapa (maks. 5MB/foto)',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12,
-                    color: AppPalette.textSecondary(context),
-                  ),
-                ),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _pickPhotoFromGallery();
-                },
-              ),
-              ListTile(
-                leading: Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFEF3C7),
-                    borderRadius: BorderRadius.circular(_kRadiusSm),
-                  ),
-                  child: const Icon(Icons.videocam_outlined, color: Color(0xFFD97706), size: 22),
-                ),
-                title: Text(
-                  'Video dari Galeri',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppPalette.textPrimary(context),
-                  ),
-                ),
-                subtitle: Text(
-                  'Maks. 1 video, 30 detik & 25MB',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12,
-                    color: AppPalette.textSecondary(context),
-                  ),
-                ),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _pickVideoFromGallery();
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _pickPhotoFromGallery() async {
-    try {
-      final photos = await _picker.pickMultiImage(
-        maxWidth: 1920,
-        maxHeight: 1080,
-        imageQuality: 85,
-        limit: MediaRules.remainingSlots(_media),
-      );
-      for (final photo in photos) {
-        final before = _media.length;
-        await _tryAddMedia(photo, isVideo: false);
-        if (_media.length == before) break;
-      }
-    } catch (e) {
-      _showErrorSnackBar('Gagal memilih foto: $e');
-    }
-  }
-
-  Future<void> _pickVideoFromGallery() async {
-    if (!_ensureSlotAvailable(forVideo: true)) return;
-    try {
-      final XFile? video = await _picker.pickVideo(
-        source: ImageSource.gallery,
-        maxDuration: MediaRules.maxVideoDuration,
-      );
-      if (video != null) await _tryAddMedia(video, isVideo: true);
-    } catch (e) {
-      _showErrorSnackBar('Gagal memilih video: $e');
-    }
-  }
-
-  Future<void> _confirmRemoveMedia(int index) async {
-    if (!_canEdit) return;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppPalette.surface(context),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(_kRadiusLg),
-        ),
-        title: Text(
-          'Hapus Lampiran Media?',
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: AppPalette.textPrimary(context),
-            height: 1.2,
-          ),
-        ),
-        content: Text(
-          'Apakah Anda yakin ingin menghapus media ini dari laporan? Laporan tetap wajib memiliki minimal satu foto/video.',
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 13,
-            color: AppPalette.textSecondary(context),
-            height: 1.4,
-          ),
-        ),
-        actions: [
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: AppPalette.divider(context)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(_kRadiusMd),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  onPressed: () => Navigator.pop(ctx, false),
-                  child: Text(
-                    'Batal',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppPalette.textSecondary(context),
-                      height: 1.1,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFEF4444),
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(_kRadiusMd),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  onPressed: () => Navigator.pop(ctx, true),
-                  child: Text(
-                    'Hapus',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                      height: 1.1,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      setState(() {
-        _media.removeAt(index);
-        if (_activeMediaIndex >= _media.length) {
-          _activeMediaIndex = _media.isEmpty ? 0 : _media.length - 1;
-        }
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Lampiran media berhasil dihapus.',
-              style: GoogleFonts.plusJakartaSans(
-                color: Colors.white,
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            backgroundColor: const Color(0xFF1E293B),
-            duration: const Duration(seconds: 2),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    }
-  }
 
   void _showErrorSnackBar(String message) {
     if (!mounted) return;
@@ -406,12 +121,6 @@ class _EditReportScreenState extends State<EditReportScreen> {
 
     // Validasi konsisten persis seperti di CreateReportScreen:
     // Cukup pastikan judul dan keterangan tidak kosong (tanpa batasan minimal 10 karakter yang kaku).
-    // FR-04: laporan wajib memiliki minimal satu foto/video.
-    if (_media.isEmpty) {
-      _showErrorSnackBar('Lampirkan minimal satu foto atau video sebagai bukti laporan.');
-      return;
-    }
-
     if (title.isEmpty) {
       _showErrorSnackBar('Mohon masukkan judul laporan.');
       return;
@@ -513,14 +222,6 @@ class _EditReportScreenState extends State<EditReportScreen> {
   Future<void> _executeSaveReport(String title, String description) async {
     setState(() => _isSubmitting = true);
 
-    // Pisahkan berkas lokal baru vs media lama yang sudah ada di server
-    final newMedia = <String>[];
-    for (final path in _media) {
-      if (File(path).existsSync()) {
-        newMedia.add(path);
-      }
-    }
-
     ReportModel? updated;
     try {
       updated = await ReportRepository.instance.editReport(
@@ -528,7 +229,6 @@ class _EditReportScreenState extends State<EditReportScreen> {
         title: title,
         description: description,
         category: _selectedCategory,
-        newMediaPaths: newMedia,
       );
     } catch (e) {
       if (!mounted) return;
@@ -602,7 +302,7 @@ class _EditReportScreenState extends State<EditReportScreen> {
               _buildTimerBanner(context, isDark),
               const SizedBox(height: AppSpacing.lg),
 
-              // ── 2. Section Media (Gaya CreateReportScreen) ───────────────
+              // ── 2. Media bukti (hanya pratinjau, tidak dapat diubah) ─────
               _buildMediaSection(context, isDark),
               const SizedBox(height: AppSpacing.lg),
 
@@ -776,450 +476,50 @@ class _EditReportScreenState extends State<EditReportScreen> {
     );
   }
 
-  /// Section Media persis dengan gaya CreateReportScreen:
-  /// - Default kosong: Wadah 2 pilihan (Kamera & Galeri)
-  /// - Terlampir: Preview foto/video dengan label dinamis dan aksi Ambil Ulang, Galeri, Hapus
+  /// Media bukti laporan: hanya pratinjau. Media tidak dapat diubah setelah
+  /// laporan dibuat (mencegah bukti ditukar setelah mendapat upvote).
   Widget _buildMediaSection(BuildContext context, bool isDark) {
-    if (_media.isEmpty) {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-        decoration: BoxDecoration(
-          color: AppPalette.surface(context),
-          borderRadius: BorderRadius.circular(_kRadiusLg),
-          border: Border.all(
-            color: AppPalette.divider(context),
-            width: 1.2,
-          ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF162544) : _kBgBlue100,
-                borderRadius: BorderRadius.circular(_kRadiusSm),
-              ),
-              child: Icon(
-                Icons.add_photo_alternate_outlined,
-                color: isDark ? const Color(0xFF60A5FA) : _kPrimary,
-                size: 24,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Unggah Foto atau Video',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: AppPalette.textPrimary(context),
-                height: 1.2,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              MediaRules.summary,
-              textAlign: TextAlign.center,
+    final note = Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppPalette.surfaceSubtle(context),
+        borderRadius: BorderRadius.circular(_kRadiusMd),
+        border: Border.all(color: AppPalette.divider(context)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.lock_outline_rounded, size: 16, color: AppPalette.textSecondary(context)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Media bukti tidak dapat diubah. Untuk mengganti foto/video, hapus laporan lalu buat ulang.',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 12,
                 color: AppPalette.textSecondary(context),
-                height: 1.3,
+                height: 1.4,
               ),
             ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildActionPickerPill(
-                  icon: Icons.camera_alt_outlined,
-                  label: 'Kamera',
-                  onTap: _canEdit ? _handleCameraAction : null,
-                  isDark: isDark,
-                ),
-                const SizedBox(width: 12),
-                _buildActionPickerPill(
-                  icon: Icons.photo_library_outlined,
-                  label: 'Galeri',
-                  onTap: _canEdit ? _handleGalleryAction : null,
-                  isDark: isDark,
-                ),
-              ],
-            ),
-          ],
-        ),
-      );
-    }
-
-    // Media Terlampir: pratinjau media aktif + strip thumbnail
-    final activeIndex = _activeMediaIndex.clamp(0, _media.length - 1);
-    final videoCount = MediaRules.videoCount(_media);
-    final photoCount = _media.length - videoCount;
-    final badgeText = [
-      '${_media.length}/${MediaRules.maxMediaPerReport} Media',
-      if (photoCount > 0) '$photoCount Foto',
-      if (videoCount > 0) '$videoCount Video',
-    ].join(' • ');
-
-    return Column(
-      children: [
-        Container(
-      height: 220,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.black87,
-        borderRadius: BorderRadius.circular(_kRadiusLg),
-        border: Border.all(
-          color: AppPalette.divider(context),
-          width: 1.0,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(_kRadiusLg - 1),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            // Konten Preview Media
-            _buildMediaContentWidget(_media[activeIndex]),
-
-            // Top Badge Pill
-            Positioned(
-              top: 12,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.94),
-                    borderRadius: BorderRadius.circular(9999),
-                    border: Border.all(
-                      color: const Color(0xFFE2E8F0),
-                      width: 1,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.12),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 7,
-                        height: 7,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF10B981),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        badgeText,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFF0F172A),
-                          height: 1.1,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            // Bottom action buttons: Kamera, Galeri, Hapus
-            if (_canEdit)
-              Positioned(
-                bottom: 12,
-                left: 12,
-                right: 12,
-                child: Row(
-                  children: [
-                    _buildMediaActionButton(
-                      icon: Icons.camera_alt_outlined,
-                      label: 'Kamera',
-                      onTap: _handleCameraAction,
-                    ),
-                    const SizedBox(width: 8),
-                    _buildMediaActionButton(
-                      icon: Icons.photo_library_outlined,
-                      label: 'Galeri',
-                      onTap: _handleGalleryAction,
-                    ),
-                    const Spacer(),
-                    GestureDetector(
-                      onTap: () => _confirmRemoveMedia(activeIndex),
-                      child: Container(
-                        width: 38,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: const Color(0xFFFEE2E2),
-                            width: 1,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.15),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: const Center(
-                          child: Icon(
-                            Icons.delete_outline_rounded,
-                            color: Color(0xFFEF4444),
-                            size: 20,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-          ],
-        ),
-      ),
-        ),
-        const SizedBox(height: 10),
-        _buildMediaThumbnailStrip(activeIndex),
-      ],
     );
-  }
 
-  /// Strip thumbnail semua media + petak "Tambah" bila slot masih ada.
-  Widget _buildMediaThumbnailStrip(int activeIndex) {
-    final canAddMore = _canEdit && _media.length < MediaRules.maxMediaPerReport;
-    return SizedBox(
-      height: 64,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: _media.length + (canAddMore ? 1 : 0),
-        separatorBuilder: (_, _) => const SizedBox(width: 8),
-        itemBuilder: (context, i) {
-          if (i == _media.length) {
-            return GestureDetector(
-              onTap: _handleGalleryAction,
-              child: Container(
-                width: 64,
-                decoration: BoxDecoration(
-                  color: AppPalette.surface(context),
-                  borderRadius: BorderRadius.circular(_kRadiusMd),
-                  border: Border.all(color: AppPalette.divider(context), width: 1.2),
-                ),
-                child: const Icon(Icons.add_rounded, color: _kPrimary),
-              ),
-            );
-          }
-          final selected = i == activeIndex;
-          return GestureDetector(
-            onTap: () => setState(() => _activeMediaIndex = i),
-            child: Stack(
-              children: [
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF0F172A),
-                    borderRadius: BorderRadius.circular(_kRadiusMd),
-                    border: Border.all(
-                      color: selected ? _kPrimary : AppPalette.divider(context),
-                      width: selected ? 2 : 1,
-                    ),
-                  ),
-                  clipBehavior: Clip.antiAlias,
-                  child: isVideoMedia(_media[i])
-                      ? const Icon(Icons.play_circle_fill_rounded, color: Colors.white, size: 26)
-                      : _buildMediaContentWidget(_media[i]),
-                ),
-                if (_canEdit)
-                  Positioned(
-                    top: 2,
-                    right: 2,
-                    child: GestureDetector(
-                      onTap: () => _confirmRemoveMedia(i),
-                      child: Container(
-                        width: 20,
-                        height: 20,
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.65),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.close_rounded, color: Colors.white, size: 13),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildMediaContentWidget(String path) {
-    if (isVideoMedia(path)) {
-      return Container(
-        color: const Color(0xFF0F172A),
-        alignment: Alignment.center,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: _kPrimary.withValues(alpha: 0.9),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: _kPrimary.withValues(alpha: 0.4),
-                    blurRadius: 12,
-                  ),
-                ],
-              ),
-              child: const Icon(
-                Icons.play_arrow_rounded,
-                color: Colors.white,
-                size: 36,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                'Video Lampiran Laporan',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white70,
-                  height: 1.2,
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (!path.startsWith('http://') && !path.startsWith('https://')) {
-      return Image.file(
-        File(path),
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => const Center(
-          child: Icon(Icons.broken_image, color: Colors.white),
-        ),
-      );
-    }
-
-    return Image.network(
-      path,
-      fit: BoxFit.cover,
-      errorBuilder: (context, error, stackTrace) => const Center(
-        child: Icon(Icons.broken_image, color: Colors.white),
-      ),
-    );
-  }
-
-  Widget _buildActionPickerPill({
-    required IconData icon,
-    required String label,
-    required VoidCallback? onTap,
-    required bool isDark,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(_kRadiusMd),
-      child: Container(
-        height: 42,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
-          borderRadius: BorderRadius.circular(_kRadiusMd),
-          border: Border.all(
-            color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
-            width: 1,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (_media.isNotEmpty) ...[
+          ReportMediaGallery(
+            media: _media,
+            aspectRatio: widget.report.aspectRatio,
+            singleImageHeight: 220,
+            semanticLabel: widget.report.imageSemanticLabel,
           ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              size: 18,
-              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF475569),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: isDark ? Colors.white : const Color(0xFF0F172A),
-                height: 1.1,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMediaActionButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 38,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(_kRadiusSm),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 16, color: const Color(0xFF0F172A)),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: const Color(0xFF0F172A),
-                height: 1.1,
-              ),
-            ),
-          ],
-        ),
-      ),
+          const SizedBox(height: 10),
+        ],
+        note,
+      ],
     );
   }
 
