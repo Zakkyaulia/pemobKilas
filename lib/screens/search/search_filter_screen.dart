@@ -87,15 +87,16 @@ class SearchResultItem {
   }
 }
 
-/// Batas umur maksimal laporan untuk setiap rentang waktu (null = tanpa batas).
-Duration? _maxAgeFor(TimeRange range) {
+/// Tanggal awal untuk setiap rentang waktu (null = semua waktu).
+/// Dikirim sebagai parameter `from` ke `GET /api/reports`.
+DateTime? _fromDateFor(TimeRange range, DateTime now) {
   switch (range) {
     case TimeRange.hariIni:
-      return const Duration(days: 1);
+      return DateTime(now.year, now.month, now.day); // sejak 00:00 hari ini
     case TimeRange.tujuhHari:
-      return const Duration(days: 7);
+      return now.subtract(const Duration(days: 7));
     case TimeRange.bulanIni:
-      return const Duration(days: 30);
+      return DateTime(now.year, now.month, 1); // sejak tanggal 1 bulan ini
     case TimeRange.semua:
       return null;
   }
@@ -116,13 +117,55 @@ class SearchFilterResult {
   final SortMode sortMode;
   final TimeRange timeRange;
   final int resultCount;
+
+  /// Filter bawaan (sama dengan feed tanpa filter).
+  static const defaultCategories = {ReportCategory.kondisiKampus, ReportCategory.informasiPenting};
+
+  /// Apakah filter ini mempersempit feed (bukan pilihan bawaan).
+  bool get isActive =>
+      query.isNotEmpty ||
+      categories.length == 1 ||
+      sortMode != SortMode.terbaru ||
+      timeRange != TimeRange.semua;
+
+  /// Bentuk filter yang dikirim ke server lewat [ReportRepository].
+  ReportFilter toReportFilter({DateTime? now}) {
+    String? category;
+    if (categories.length == 1) {
+      category = categories.first == ReportCategory.kondisiKampus
+          ? 'kondisi_kampus'
+          : 'informasi_penting';
+    }
+    return ReportFilter(
+      category: category,
+      query: query.isEmpty ? null : query,
+      sort: sortMode == SortMode.upvoteTerbanyak ? 'terpopuler' : 'terbaru',
+      from: _fromDateFor(timeRange, now ?? DateTime.now()),
+    );
+  }
+
+  /// Ringkasan singkat untuk bar "Filter aktif" di Beranda.
+  String get summary {
+    final parts = <String>[
+      if (query.isNotEmpty) '"$query"',
+      if (categories.length == 1)
+        categories.first == ReportCategory.kondisiKampus ? 'Kondisi Kampus' : 'Informasi Penting',
+      switch (timeRange) {
+        TimeRange.hariIni => 'Hari ini',
+        TimeRange.tujuhHari => '7 hari',
+        TimeRange.bulanIni => 'Bulan ini',
+        TimeRange.semua => '',
+      },
+      if (sortMode == SortMode.upvoteTerbanyak) 'Upvote terbanyak',
+    ]..removeWhere((e) => e.isEmpty);
+    return parts.join(' · ');
+  }
 }
 
 // ─── Live Data from Repository ────────────────────────────────────────────────
 
-/// Mapping dari metaText di [ReportModel] ke [Duration] untuk dipakai di filter
-/// rentang waktu halaman search. Parsing sederhana dari string "Xm lalu",
-/// "X jam lalu", "X hari lalu".
+/// Cadangan umur laporan dari metaText ("15m lalu", "1 jam lalu") bila
+/// [ReportModel.createdAt] tidak tersedia.
 Duration _parseAge(String metaText) {
   // metaText format: "Gedung GKB C • 15m lalu" atau "Bundaran PKM UNAND • 1 jam lalu"
   final parts = metaText.split('•');
@@ -155,7 +198,9 @@ List<SearchResultItem> _buildLiveResults() {
       id: r.id,
       title: title,
       location: r.locationName ?? '',
-      age: _parseAge(r.metaText),
+      age: r.createdAt != null
+          ? DateTime.now().difference(r.createdAt!)
+          : _parseAge(r.metaText),
       upvoteCount: r.upvoteCount,
       isUpvoted: r.isUpvoted,
       imageUrl: r.imageUrl ?? '',
@@ -202,19 +247,22 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   /// Kategori yang dipilih user pada draft (bisa lebih dari satu).
-  final Set<ReportCategory> _draftCategories = {ReportCategory.kondisiKampus};
+  final Set<ReportCategory> _draftCategories = {...SearchFilterResult.defaultCategories};
 
   /// Mode sorting pada draft.
   SortMode _draftSortMode = SortMode.terbaru;
 
   /// Rentang waktu pada draft.
-  TimeRange _draftTimeRange = TimeRange.tujuhHari;
+  TimeRange _draftTimeRange = TimeRange.semua;
 
   // ── Applied State (Filter aktif yang menghasilkan data pratinjau) ───────
   String _appliedQuery = '';
-  Set<ReportCategory> _appliedCategories = {ReportCategory.kondisiKampus};
+  Set<ReportCategory> _appliedCategories = {...SearchFilterResult.defaultCategories};
   SortMode _appliedSortMode = SortMode.terbaru;
-  TimeRange _appliedTimeRange = TimeRange.tujuhHari;
+  TimeRange _appliedTimeRange = TimeRange.semua;
+
+  /// Sedang meminta hasil filter ke server.
+  bool _isApplying = false;
 
   /// Hasil laporan yang benar-benar aktif/diterapkan.
   List<SearchResultItem> _appliedResults = [];
@@ -318,44 +366,10 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
     }
   }
 
-  /// Menjalankan filter terhadap mock data hanya berdasarkan applied state.
+  /// Hasil pratinjau = laporan di [ReportRepository] yang sudah difilter server
+  /// (kategori, kata kunci, rentang waktu, dan urutan dikerjakan backend).
   void _executeAppliedFilter() {
-    final query = _appliedQuery.toLowerCase();
-    List<SearchResultItem> results = _buildLiveResults();
-
-    // Filter by category
-    if (_appliedCategories.isNotEmpty) {
-      results = results
-          .where((item) => _appliedCategories.contains(item.category))
-          .toList();
-    }
-
-    // Filter by search query
-    if (query.isNotEmpty) {
-      results = results
-          .where(
-            (item) =>
-                item.title.toLowerCase().contains(query) ||
-                item.location.toLowerCase().contains(query),
-          )
-          .toList();
-    }
-
-    // Filter by time range
-    final maxAge = _maxAgeFor(_appliedTimeRange);
-    if (maxAge != null) {
-      results = results.where((item) => item.age < maxAge).toList();
-    }
-
-    // Sort
-    if (_appliedSortMode == SortMode.upvoteTerbanyak) {
-      results.sort((a, b) => b.upvoteCount.compareTo(a.upvoteCount));
-    } else {
-      // Terbaru: umur laporan paling kecil di atas
-      results.sort((a, b) => a.age.compareTo(b.age));
-    }
-
-    _appliedResults = results;
+    _appliedResults = _buildLiveResults();
   }
 
   // ── 3. Validation ──────────────────────────────────────────────────────
@@ -446,9 +460,9 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
 
   // ── 5. Navigation / Result / Apply ─────────────────────────────────────
 
-  /// Terapkan filter: salin draft state ke applied state dan perbarui pratinjau.
-  /// User tetap berada di layar Cari & Filter (tidak pop).
-  void _applyFilter() {
+  /// Terapkan filter: salin draft ke applied state, lalu minta hasilnya ke server.
+  /// Feed Beranda ikut terfilter karena memakai [ReportRepository] yang sama.
+  Future<void> _applyFilter() async {
     // 3. Validation: cek draft sebelum diterapkan
     if (!_validateFilters()) {
       // 4. Feedback (error)
@@ -456,14 +470,40 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
       return;
     }
 
-    setState(() {
-      // Salin Draft State -> Applied State
-      _appliedQuery = _searchController.text.trim();
-      _appliedCategories = Set.from(_draftCategories);
-      _appliedSortMode = _draftSortMode;
-      _appliedTimeRange = _draftTimeRange;
+    final draft = SearchFilterResult(
+      query: _searchController.text.trim(),
+      categories: Set.from(_draftCategories),
+      sortMode: _draftSortMode,
+      timeRange: _draftTimeRange,
+      resultCount: 0,
+    );
 
-      // Jalankan proses filter
+    setState(() => _isApplying = true);
+    try {
+      await ReportRepository.instance.refresh(filter: draft.toReportFilter());
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isApplying = false);
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('Gagal menerapkan filter. Periksa koneksi lalu coba lagi.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      return;
+    }
+    if (!mounted) return;
+
+    final total = ReportRepository.instance.totalCount ?? ReportRepository.instance.length;
+    setState(() {
+      _isApplying = false;
+      // Salin Draft State -> Applied State
+      _appliedQuery = draft.query;
+      _appliedCategories = Set.from(draft.categories);
+      _appliedSortMode = draft.sortMode;
+      _appliedTimeRange = draft.timeRange;
       _executeAppliedFilter();
 
       // Simpan result untuk dikembalikan ke screen pemanggil saat Back
@@ -472,12 +512,12 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
         categories: Set.from(_appliedCategories),
         sortMode: _appliedSortMode,
         timeRange: _appliedTimeRange,
-        resultCount: _appliedResults.length,
+        resultCount: total,
       );
     });
 
     // 4. Feedback (sukses)
-    _showSuccessFeedback(_appliedResults.length);
+    _showSuccessFeedback(total);
 
     // Auto-scroll ke bagian Pratinjau hasil agar langsung terlihat
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -497,12 +537,14 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
     Navigator.pop(context, _appliedResult);
   }
 
-  /// Reset draft state ke default (tanpa kategori, urutan terbaru, rentang semua, query kosong).
+  /// Reset draft state ke default (semua kategori, urutan terbaru, semua waktu, query kosong).
   /// Tidak langsung mengubah applied state (user tetap perlu menekan Terapkan).
   void _resetFilters() {
     setState(() {
       _searchController.text = '';
-      _draftCategories.clear();
+      _draftCategories
+        ..clear()
+        ..addAll(SearchFilterResult.defaultCategories);
       _draftSortMode = SortMode.terbaru;
       _draftTimeRange = TimeRange.semua;
     });
@@ -1612,7 +1654,7 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
                 ),
               ),
               Text(
-                '${_appliedResults.length} ditemukan',
+                '${ReportRepository.instance.totalCount ?? _appliedResults.length} ditemukan',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
@@ -1958,7 +2000,7 @@ class _SearchFilterScreenState extends State<SearchFilterScreen> {
               height: 48,
               // 1. Input/Event → User tap tombol terapkan filter
               child: ElevatedButton(
-                onPressed: _applyFilter,
+                onPressed: _isApplying ? null : _applyFilter,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: _kPrimary,
                   foregroundColor: _kBgWhite,

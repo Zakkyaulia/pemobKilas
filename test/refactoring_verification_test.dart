@@ -1,12 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pemob_kilas/screens/home/data/report_repository.dart';
+import 'package:pemob_kilas/screens/home/models/report_model.dart';
 import 'package:pemob_kilas/widgets/home/upvote_button.dart';
 
 void main() {
   group('Refactoring Verification - ReportRepository (Single Source of Truth)', () {
     test('Mengupdate status laporan di repository langsung memicu listener secara real-time', () {
       final repo = ReportRepository.instance;
+      // Repository tidak lagi berisi data dummy; isi satu laporan contoh
+      // dengan format yang sama seperti respons GET /api/reports.
+      repo.addReport(ReportModel.fromMap({
+        'id': 'tes-1',
+        'category': 'kondisi_kampus',
+        'title': 'Laporan uji',
+        'description': 'Keterangan uji',
+        'author_name': 'Penguji',
+        'upvote_count': 3,
+        'is_upvoted': false,
+        'media': [],
+      }));
       expect(repo.length, greaterThan(0));
 
       final firstReport = repo[0];

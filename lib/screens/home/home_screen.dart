@@ -33,6 +33,9 @@ const double _kToastBottomMargin = 80;
 /// Horizontal margin for the toast pill.
 const double _kToastHMargin = 40;
 
+/// Jarak sisa scroll (px) ke bawah sebelum halaman berikutnya dimuat.
+const double _kLoadMoreThreshold = 400;
+
 /// Home screen — Beranda feed assembling header, cards, and bottom nav.
 ///
 /// Mengelola state feed laporan lokal `_reports` dan menangani navigasi
@@ -50,22 +53,200 @@ class _HomeScreenState extends State<HomeScreen> {
   /// Filter terakhir yang diterapkan di halaman Cari & Filter (disimpan di memori).
   SearchFilterResult? _lastFilter;
 
+  final ScrollController _scrollController = ScrollController();
+
+  /// Pesan error saat halaman pertama gagal dimuat (feed masih kosong).
+  String? _initialError;
+
   @override
   void initState() {
     super.initState();
     // Listen to repository changes (e.g. from detail screen) to rebuild feed
     _repo.addListener(_onRepoChanged);
-    _repo.fetchReports();
+    _scrollController.addListener(_onScroll);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _refreshFeed());
   }
 
   @override
   void dispose() {
     _repo.removeListener(_onRepoChanged);
+    _scrollController
+      ..removeListener(_onScroll)
+      ..dispose();
     super.dispose();
   }
 
   void _onRepoChanged() {
     if (mounted) setState(() {});
+  }
+
+  /// Infinite scroll: saat mendekati bawah, muat 20 laporan berikutnya.
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    // Setelah gagal, muat ulang hanya lewat tombol "Coba lagi" (cegah spam request).
+    if (_repo.loadMoreError != null) return;
+    if (_scrollController.position.extentAfter < _kLoadMoreThreshold) {
+      _repo.loadMore();
+    }
+  }
+
+  /// Muat ulang feed dari laporan terbaru (buka Home & pull-to-refresh).
+  Future<void> _refreshFeed() async {
+    try {
+      await _repo.refresh();
+      if (mounted) setState(() => _initialError = null);
+    } catch (e) {
+      if (!mounted) return;
+      if (_repo.length == 0) {
+        setState(() => _initialError = e.toString());
+      } else {
+        // Feed lama tetap ditampilkan; cukup beri tahu bahwa refresh gagal.
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(
+              content: Text('Gagal memperbarui laporan. Periksa koneksi lalu coba lagi.'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+      }
+    }
+  }
+
+  /// Kembali ke feed tanpa filter (semua laporan, terbaru di atas).
+  Future<void> _clearFilter() async {
+    setState(() => _lastFilter = null);
+    try {
+      await _repo.refresh(filter: ReportFilter.none);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text('Gagal memuat ulang laporan. Periksa koneksi lalu coba lagi.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+    }
+  }
+
+  /// Bar di atas feed yang menandakan filter sedang aktif.
+  Widget _buildActiveFilterBar(BuildContext context) {
+    final summary = _lastFilter?.summary ?? '';
+    final total = _repo.totalCount;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, AppSpacing.sm),
+      padding: const EdgeInsets.only(left: 12),
+      decoration: BoxDecoration(
+        color: HomeColors.primaryContainer.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: HomeColors.primaryContainer.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.filter_list, size: 18, color: HomeColors.primaryContainer),
+          const SizedBox(width: 8),
+          Expanded(
+            child: GestureDetector(
+              onTap: _navigateToSearch,
+              child: Text(
+                [
+                  'Filter aktif',
+                  if (summary.isNotEmpty) summary,
+                  if (total != null) '$total laporan',
+                ].join(' · '),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: HomeTextStyles.labelMd.copyWith(
+                  color: AppPalette.textPrimary(context),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: _clearFilter,
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Baris paling bawah feed: loading, error, kosong, atau "sudah semua".
+  Widget _buildFeedFooter(BuildContext context) {
+    final secondary = AppPalette.textSecondary(context);
+    Widget message(String text, {IconData? icon, Widget? action}) => Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: 32),
+          child: Column(
+            children: [
+              if (icon != null) ...[
+                Icon(icon, size: 40, color: secondary),
+                const SizedBox(height: 12),
+              ],
+              Text(
+                text,
+                textAlign: TextAlign.center,
+                style: HomeTextStyles.bodySm.copyWith(color: secondary, height: 1.4),
+              ),
+              ?action,
+            ],
+          ),
+        );
+
+    // Halaman pertama belum pernah berhasil dimuat
+    if (!_repo.hasLoadedOnce) {
+      if (_repo.isLoading || _initialError == null) {
+        return const Padding(
+          padding: EdgeInsets.symmetric(vertical: 48),
+          child: Center(child: CircularProgressIndicator()),
+        );
+      }
+      return message(
+        'Gagal memuat laporan. Tarik ke bawah untuk mencoba lagi.',
+        icon: Icons.cloud_off_rounded,
+      );
+    }
+
+    if (_repo.length == 0) {
+      if (_repo.activeFilter.isActive) {
+        return message(
+          'Tidak ada laporan yang cocok dengan filter ini.',
+          icon: Icons.search_off_rounded,
+          action: TextButton(onPressed: _clearFilter, child: const Text('Hapus filter')),
+        );
+      }
+      return message(
+        'Belum ada laporan. Jadilah yang pertama melaporkan kondisi kampus!',
+        icon: Icons.inbox_outlined,
+      );
+    }
+
+    if (_repo.isLoadingMore) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 24),
+        child: Center(
+          child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2.5)),
+        ),
+      );
+    }
+
+    if (_repo.loadMoreError != null) {
+      return message(
+        'Gagal memuat laporan berikutnya.',
+        action: TextButton(
+          onPressed: _repo.loadMore,
+          child: const Text('Coba lagi'),
+        ),
+      );
+    }
+
+    if (!_repo.hasMore) {
+      return message('Semua laporan sudah ditampilkan');
+    }
+
+    return const SizedBox(height: 48);
   }
 
   /// 5. Navigation / Result Workflow:
@@ -99,7 +280,8 @@ class _HomeScreenState extends State<HomeScreen> {
     // 5. Navigation/Result: Terima data result dari screen Cari & Filter
     // (null berarti user kembali tanpa menekan "Terapkan filter")
     if (filterResult != null && mounted) {
-      _lastFilter = filterResult;
+      // Feed sudah difilter oleh layar Cari & Filter (repository yang sama).
+      setState(() => _lastFilter = filterResult.isActive ? filterResult : null);
 
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
@@ -383,41 +565,50 @@ class _HomeScreenState extends State<HomeScreen> {
           // ── Scrollable feed ──────────────────────────────────────
           RefreshIndicator(
             color: HomeColors.primaryContainer,
-            onRefresh: () => _repo.fetchReports(),
-            child: ListView(
+            // Pull-to-refresh: ulang dari laporan terbaru (halaman 1).
+            onRefresh: _refreshFeed,
+            // Infinite scroll: item dibangun saat terlihat, +1 baris footer.
+            child: ListView.builder(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
               padding: EdgeInsets.only(
                 top: headerHeight,
                 bottom: bottomNavHeight,
               ),
-              children: [
-                Container(
+              itemCount: _repo.length + 1 + (_repo.activeFilter.isActive ? 1 : 0),
+              itemBuilder: (context, index) {
+                final hasFilterBar = _repo.activeFilter.isActive;
+                if (hasFilterBar && index == 0) return _buildActiveFilterBar(context);
+                final i = hasFilterBar ? index - 1 : index;
+                if (i == _repo.length) return _buildFeedFooter(context);
+                final report = _repo[i];
+                return ColoredBox(
                   color: AppPalette.surface(context),
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      for (int i = 0; i < _repo.length; i++) ...[
-                        if (i > 0)
-                          Divider(
-                            height: 1,
-                            thickness: 1,
-                            color: AppPalette.divider(context),
-                          ),
-                        _FeedItem(
-                          report: _repo[i],
-                          onTap: () => _navigateToDetail(_repo[i]),
-                          onAuthorTap: () => _navigateToPublicProfile(_repo[i]),
-                          onUpvoteChanged: (isUpvoted, count) =>
-                              _handleFeedUpvote(i, isUpvoted, count),
-                          onUpvoteCooldown: _handleFeedUpvoteCooldown,
-                          onBookmarkChanged: (isBookmarked) =>
-                              _handleFeedBookmark(i, isBookmarked),
-                          onSharePressed: () =>
-                              _showShareToast(context, _repo[i].id),
+                      if (i > 0)
+                        Divider(
+                          height: 1,
+                          thickness: 1,
+                          color: AppPalette.divider(context),
                         ),
-                      ],
+                      _FeedItem(
+                        key: ValueKey(report.id),
+                        report: report,
+                        onTap: () => _navigateToDetail(report),
+                        onAuthorTap: () => _navigateToPublicProfile(report),
+                        onUpvoteChanged: (isUpvoted, count) =>
+                            _handleFeedUpvote(i, isUpvoted, count),
+                        onUpvoteCooldown: _handleFeedUpvoteCooldown,
+                        onBookmarkChanged: (isBookmarked) =>
+                            _handleFeedBookmark(i, isBookmarked),
+                        onSharePressed: () => _showShareToast(context, report.id),
+                      ),
                     ],
                   ),
-                ),
-              ],
+                );
+              },
             ),
           ),
 
@@ -437,6 +628,7 @@ class _HomeScreenState extends State<HomeScreen> {
 /// Maps a [ReportModel] to a uniform [ReportCard] widget.
 class _FeedItem extends StatelessWidget {
   const _FeedItem({
+    super.key,
     required this.report,
     this.onTap,
     this.onAuthorTap,
@@ -495,13 +687,13 @@ class _FeedItem extends StatelessWidget {
     final Widget badge = report.badgeVariant == BadgeVariant.dot
         ? StatusBadge.dot(
             label: report.badgeLabel,
-            dotColor: report.badgeDotColor!,
+            dotColor: report.badgeDotColor ?? HomeColors.statusCondition,
             backgroundColor: report.badgeBgColor,
             textColor: report.badgeTextColor,
           )
         : StatusBadge.icon(
             label: report.badgeLabel,
-            icon: report.badgeIcon!,
+            icon: report.badgeIcon ?? Icons.campaign,
             backgroundColor: report.badgeBgColor,
             textColor: report.badgeTextColor,
           );

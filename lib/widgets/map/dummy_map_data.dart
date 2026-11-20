@@ -22,7 +22,7 @@ class DummyMapData {
   static const double _baseLat = -0.9142;
   static const double _baseLng = 100.4608;
 
-  // 18 Titik sesuai laporan di feed (mock_reports.dart)
+  // 18 titik contoh untuk peta (masih dummy, diganti GET /reports/map nanti)
   static final List<ReportGeoData> basicReports = [
     // post-1: Ghezy — AC Ruang Kuliah GKB C
     ReportGeoData(

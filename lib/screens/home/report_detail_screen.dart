@@ -427,13 +427,13 @@ class _ReportDetailScreenState extends State<ReportDetailScreen> {
     final Widget badge = _report.badgeVariant == BadgeVariant.dot
         ? StatusBadge.dot(
             label: _report.badgeLabel,
-            dotColor: _report.badgeDotColor!,
+            dotColor: _report.badgeDotColor ?? HomeColors.statusCondition,
             backgroundColor: _report.badgeBgColor,
             textColor: _report.badgeTextColor,
           )
         : StatusBadge.icon(
             label: _report.badgeLabel,
-            icon: _report.badgeIcon!,
+            icon: _report.badgeIcon ?? Icons.campaign,
             backgroundColor: _report.badgeBgColor,
             textColor: _report.badgeTextColor,
           );

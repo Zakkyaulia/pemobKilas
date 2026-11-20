@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../utils/time_utils.dart';
+import '../../../theme/home_colors.dart';
 
 /// Type of card in the home feed.
 enum CardType {
@@ -311,8 +312,17 @@ class ReportModel {
     final cTypeStr = (map['card_type'] ?? map['cardType'] ?? 'report').toString();
     final cardType = cTypeStr == 'official' ? CardType.official : CardType.report;
 
-    final bVariantStr = (map['badge_variant'] ?? map['badgeVariant'] ?? 'dot').toString();
-    final badgeVariant = bVariantStr == 'icon' ? BadgeVariant.icon : BadgeVariant.dot;
+    // Tampilan badge diturunkan dari kategori (server mengirim `category`
+    // = kondisi_kampus / informasi_penting), sama dengan saat membuat laporan.
+    final rawCategory = (map['category'] ?? '').toString();
+    final badgeLabel = rawCategory == 'informasi_penting'
+        ? ReportCategories.informasiPenting
+        : rawCategory == 'kondisi_kampus'
+            ? ReportCategories.kondisiKampus
+            : ReportCategories.normalize(
+                (map['badge_label'] ?? map['badgeLabel'] ?? ReportCategories.kondisiKampus)
+                    .toString());
+    final isCondition = !ReportCategories.isImportantInfo(badgeLabel);
 
     DateTime? parseDate(dynamic val) {
       if (val == null) return null;
@@ -346,11 +356,12 @@ class ReportModel {
       timestamp: map['timestamp'],
       createdAt: parseDate(map['created_at'] ?? map['createdAt']),
       editedAt: parseDate(map['edited_at'] ?? map['editedAt']),
-      badgeLabel: ReportCategories.normalize(
-          (map['badge_label'] ?? map['badgeLabel'] ?? 'Fasilitas').toString()),
-      badgeVariant: badgeVariant,
-      badgeBgColor: const Color(0xFFECFDF5),
-      badgeTextColor: const Color(0xFF059669),
+      badgeLabel: badgeLabel,
+      badgeVariant: isCondition ? BadgeVariant.dot : BadgeVariant.icon,
+      badgeDotColor: isCondition ? HomeColors.statusCondition : null,
+      badgeIcon: isCondition ? null : Icons.campaign,
+      badgeBgColor: isCondition ? HomeColors.tertiaryFixed : HomeColors.surfaceContainerHigh,
+      badgeTextColor: isCondition ? HomeColors.onTertiaryFixedVariant : HomeColors.primary,
       title: map['title'],
       description: map['description'],
       imageUrl: mediaFromMap.isNotEmpty
